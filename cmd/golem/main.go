@@ -66,13 +66,13 @@
 // ↣ one package defines one generic type.
 //
 // ↣ concrete types are named after the type, `AnyT` is replaced with `Type`
-//   (e.g `AnyT` -> `Int`).
+// (e.g `AnyT` -> `Int`).
 //
 // ↣ type alias `genT` is repaced with `genType`
-//   (e.g `genT` -> `genInt`).
+// (e.g `genT` -> `genInt`).
 //
 // ↣ file type.go is created in the package
-//   (e.g. `int.go`)
+// (e.g. `int.go`)
 //
 // Application
 //
@@ -84,13 +84,13 @@
 // ↣ one package implements various generic variants for the custom type
 //
 // ↣ concrete types are named after the generic, `AnyT` is replaced with `Generic`
-//   (e.g `AnyT` -> `Stack`).
+// (e.g `AnyT` -> `Stack`).
 //
 // ↣ type alias `genT` is repaced with `genType`
-//   (e.g `genT` -> `genFooBar`).
+// (e.g `genT` -> `genFooBar`).
 //
 // ↣ file generic.go is created in the package
-//   (e.g. `stack.go`)
+// (e.g. `stack.go`)
 //
 package main
 
