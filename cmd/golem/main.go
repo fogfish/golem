@@ -61,7 +61,6 @@
 // As a generic library developer I want to define a generic type and supply its
 // parametrized variants of standard Go type so that my generic is ready for
 // application development.
-//
 // The mode implies a following rules
 //
 // ↣ one package defines one generic type.
@@ -80,7 +79,6 @@
 // As a application developer I want to parametrise a generic types with my own
 // application specific types so that the application benefits from re-use of
 // generic implementations
-//
 // The mode implies a following rules
 //
 // ↣ one package implements various generic variants for the custom type
