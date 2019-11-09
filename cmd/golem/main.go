@@ -6,35 +6,66 @@
 // https://github.com/fogfish/golem
 //
 
-// Golem is a tool to generate generic type wrappers around given type T.
-//
-// Typically this tool is executed by `go generate`, like this:
+// Golem is a tool to instantiate a specific type from generic definition.
+// The absence of generics in Go causes the usage of `go generate` to re-write
+// abstract definition at build time, like this:
 //
 //   //go:generate golem -type Foo -generic github.com/fogfish/golem/stream/stream.go
 //
 // The command takes few arguments:
 //
-//   -type string   defines a parametrization type of generic algorithm.
+//   -type string   defines a parametrization to generic type.
 //
 //   -generic path  locates a path to generic algorithm.
 //
-// The command creates a file generic_type.go in same directory containing a final
-// definition of generic program. Generics takes a type parameter using type aliases.
-//
-//   type TYPE interface{}
-//
-//   func (t TYPE) This() { ... }
-//
-// The unsafe interface{} declaration is replaced with a specied type. The utility replaces
-// each appearance of TYPE token with given value.
-//
-//   type StreamFoo Foo
-//
-//   func (t StreamFoo) This() { ... }
+// The command creates a file in same directory containing a parametrized definition
+// of generic type.
 //
 // Install
 //
 //   go get -u github.com/fogfish/golem/cmd/golem
+//
+// Generics
+//
+// The library uses any type `interface{}` to implement valid generic Go code.
+// Any other language uses a type variables to express generic types, e.g. `Stack[T]`.
+// This Go library uses `genT` type aliases instead of variable for this purpose
+//
+//   package stack
+//
+//   type genT interface{}
+//
+//   type AnyT struct {
+//	   elements []genT
+//   }
+//
+//   func (s AnyT) push(x genT) {/* ... */}
+//   func (s AnyT) pop() genT {/* ... */}
+//
+// Any one is able to use this generic types directly or its its parametrized version
+//
+//   stack.AnyT{}
+//   stack.Int{}
+//   stack.String{}
+//
+// The unsafe type definitions are replaced with a specied type, each literal `genT`
+// and `AnyT` is substitute with value derived from specified type. A few replacement
+// modes are supported
+//
+// Library
+//
+// As a generic library developer I want to define a generic type and supply its
+// parametrized variants of standard Go type so that my generic is ready for
+// application development.
+//
+//
+//
+// Application
+//
+// As a application developer I want to parametrise a generic types with my own
+// application specific types so that the application benefits from re-use of
+// generic implementations
+//
 package main
 
 import (
@@ -54,14 +85,14 @@ import (
 type opts struct {
 	kind    *string
 	generic *string
-	native  *bool
+	lib     *bool
 }
 
 func parseOpts() opts {
 	spec := opts{
-		flag.String("type", "", "defines a parametrization type of generic algorithm."),
-		flag.String("generic", "", "locates a path to generic algorithm."),
-		flag.Bool("native", false, "skip prefix declaration for native types"),
+		flag.String("type", "", "defines a parametrization to generic type."),
+		flag.String("generic", "", "locates a path to generic type."),
+		flag.Bool("lib", false, "use library declaration schema."),
 	}
 	flag.Parse()
 	return spec
@@ -69,17 +100,22 @@ func parseOpts() opts {
 
 //
 func declareType(file []byte, kind string) []byte {
-	return bytes.Replace(file,
-		[]byte("type TYPE interface{}"),
-		[]byte("type TYPE "+kind),
+	a := bytes.Replace(file,
+		[]byte("type genT interface{}"),
+		[]byte(fmt.Sprintf("type gen%s %s", strings.Title(kind), kind)),
 		1,
 	)
+	b := bytes.ReplaceAll(a,
+		[]byte("genT"),
+		[]byte(fmt.Sprintf("gen%s", strings.Title(kind))),
+	)
+	return b
 }
 
 //
 func referenceType(file []byte, kind string) []byte {
 	return bytes.ReplaceAll(file,
-		[]byte("TYPE"),
+		[]byte("AnyT"),
 		[]byte(kind),
 	)
 }
@@ -105,9 +141,9 @@ func main() {
 	source := filepath.Join(build.Default.GOPATH, "src", *opt.generic)
 	generic := strings.TrimSuffix(filepath.Base(source), filepath.Ext(source))
 
-	filename := fmt.Sprintf("%s_%s.go", generic, strings.ToLower(*opt.kind))
-	typename := strings.Title(generic) + strings.Title(*opt.kind)
-	if *opt.native {
+	filename := fmt.Sprintf("%s.go", generic)
+	typename := strings.Title(generic)
+	if *opt.lib {
 		filename = fmt.Sprintf("%s.go", *opt.kind)
 		typename = strings.Title(*opt.kind)
 	}
