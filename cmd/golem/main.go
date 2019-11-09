@@ -50,7 +50,11 @@
 //
 // The unsafe type definitions are replaced with a specied type, each literal `genT`
 // and `AnyT` is substitute with value derived from specified type. A few replacement
-// modes are supported
+// modes are supported, these modes takes an advantage of Go package naming schema
+// and provides intuitive approach to reference generated types, e.g.
+//
+//   stack.Int{}     // generics in library
+//   foobar.Stack{}  // generics in application
 //
 // Library
 //
@@ -58,13 +62,37 @@
 // parametrized variants of standard Go type so that my generic is ready for
 // application development.
 //
+// The mode implies a following rules
 //
+// ↣ one package defines one generic type.
+//
+// ↣ concrete types are named after the type, `AnyT` is replaced with `Type`
+//   (e.g `AnyT` -> `Int`).
+//
+// ↣ type alias `genT` is repaced with `genType`
+//   (e.g `genT` -> `genInt`).
+//
+// ↣ file type.go is created in the package
+//   (e.g. `int.go`)
 //
 // Application
 //
 // As a application developer I want to parametrise a generic types with my own
 // application specific types so that the application benefits from re-use of
 // generic implementations
+//
+// The mode implies a following rules
+//
+// ↣ one package implements various generic variants for the custom type
+//
+// ↣ concrete types are named after the generic, `AnyT` is replaced with `Generic`
+//   (e.g `AnyT` -> `Stack`).
+//
+// ↣ type alias `genT` is repaced with `genType`
+//   (e.g `genT` -> `genFooBar`).
+//
+// ↣ file generic.go is created in the package
+//   (e.g. `stack.go`)
 //
 package main
 
