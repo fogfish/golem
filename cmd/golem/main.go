@@ -10,11 +10,14 @@
 // The absence of generics in Go causes the usage of `go generate` to re-write
 // abstract definition at build time, like this:
 //
-//   //go:generate golem -type Foo -generic github.com/fogfish/golem/stream/stream.go
+//   //go:generate golem -T Foo -generic github.com/fogfish/golem/seq/seq.go
 //
 // The command takes few arguments:
 //
-//   -type string   defines a parametrization to generic type.
+//   -T string   defines a parametrization to `generic.T`, required
+//   -A string   defines a parametrization to `generic.A`, optional
+//   -B string   defines a parametrization to `generic.B`, optional
+//   -C string   defines a parametrization to `generic.C`, optional
 //
 //   -generic path  locates a path to generic algorithm.
 //
@@ -27,28 +30,29 @@
 //
 // Generics
 //
-// The library uses any type `interface{}` to implement valid generic Go code.
-// Any other language uses a type variables to express generic types, e.g. `Stack[T]`.
-// This Go library uses `genT` type aliases instead of variable for this purpose
+// The library uses any type `interface{}` to implement valid, buildable and testable
+// generic Go code. Any other language uses a type variables to express generic types,
+// e.g. `Stack[T]`. This Go library uses `generic.T` literal as type aliases instead
+// of variable for this purpose.
 //
 //   package stack
 //
-//   type genT interface{}
+//   import "github.com/fogfish/golem/generic"
 //
 //   type AnyT struct {
-//	   elements []genT
+//	   elements []generic.T
 //   }
 //
-//   func (s AnyT) push(x genT) {/* ... */}
-//   func (s AnyT) pop() genT {/* ... */}
+//   func (s AnyT) push(x generic.T) {/* ... */}
+//   func (s AnyT) pop() generic.T {/* ... */}
 //
-// Any one is able to use this generic types directly or its its parametrized version
+// Any one is able to use this generic types directly or its its parametrized version.
 //
 //   stack.AnyT{}
 //   stack.Int{}
 //   stack.String{}
 //
-// The unsafe type definitions are replaced with a specied type, each literal `genT`
+// The unsafe type definitions are replaced with a specied type, each literal `generic.T`
 // and `AnyT` is substitute with value derived from specified type. A few replacement
 // modes are supported, these modes takes an advantage of Go package naming schema
 // and provides intuitive approach to reference generated types, e.g.
@@ -68,8 +72,8 @@
 // ↣ concrete types are named after the type, `AnyT` is replaced with `Type`
 // (e.g `AnyT` -> `Int`).
 //
-// ↣ type alias `genT` is repaced with `genType`
-// (e.g `genT` -> `genInt`).
+// ↣ parametrized type value `generic.T` is repaced with defined type
+// (e.g `generic.T` -> `int`).
 //
 // ↣ file type.go is created in the package
 // (e.g. `int.go`)
@@ -86,8 +90,8 @@
 // ↣ concrete types are named after the generic, `AnyT` is replaced with `Generic`
 // (e.g `AnyT` -> `Stack`).
 //
-// ↣ type alias `genT` is repaced with `genType`
-// (e.g `genT` -> `genFooBar`).
+// ↣ type alias `generic.T` is repaced with with defined type
+// (e.g `generic.T` -> `FooBar`).
 //
 // ↣ file generic.go is created in the package
 // (e.g. `stack.go`)
@@ -109,15 +113,21 @@ import (
 
 //
 type opts struct {
-	kind    *string
-	generic *string
-	lib     *bool
+	generic  *string
+	genericT *string
+	genericA *string
+	genericB *string
+	genericC *string
+	lib      *bool
 }
 
 func parseOpts() opts {
 	spec := opts{
-		flag.String("type", "", "defines a parametrization to generic type."),
-		flag.String("generic", "", "locates a path to generic type."),
+		flag.String("generic", "", "locates a path to generic type definition."),
+		flag.String("T", "", "defines a parametrization to generic.T"),
+		flag.String("A", "", "defines a parametrization to generic.A"),
+		flag.String("B", "", "defines a parametrization to generic.B"),
+		flag.String("C", "", "defines a parametrization to generic.C"),
 		flag.Bool("lib", false, "use library declaration schema."),
 	}
 	flag.Parse()
@@ -125,31 +135,49 @@ func parseOpts() opts {
 }
 
 //
-func declareType(file []byte, kind string) []byte {
-	a := bytes.Replace(file,
-		[]byte("type genT interface{}"),
-		[]byte(fmt.Sprintf("type gen%s %s", strings.Title(kind), kind)),
-		1,
-	)
-	b := bytes.ReplaceAll(a,
-		[]byte("genT"),
-		[]byte(fmt.Sprintf("gen%s", strings.Title(kind))),
-	)
-	return b
+func declareTypes(x []byte, spec opts) []byte {
+	t := declareType(x, "T", *spec.genericT)
+	a := declareType(t, "A", *spec.genericA)
+	b := declareType(a, "B", *spec.genericB)
+	c := declareType(b, "C", *spec.genericC)
+	return c
+}
+
+func declareType(content []byte, t string, kind string) []byte {
+	if kind == "" {
+		return content
+	}
+	return bytes.ReplaceAll(content, []byte("generic."+t), []byte(kind))
 }
 
 //
-func referenceType(file []byte, kind string) []byte {
-	return bytes.ReplaceAll(file,
+func referenceType(content []byte, kind string) []byte {
+	return bytes.ReplaceAll(content,
 		[]byte("AnyT"),
 		[]byte(kind),
 	)
 }
 
 //
-func repackage(file []byte, pkg string) []byte {
+func repackage(content []byte, pkg string) []byte {
 	re := regexp.MustCompile(`package (.*)\n`)
-	return re.ReplaceAll(file, []byte("package "+pkg+"\n"))
+	return re.ReplaceAll(content, []byte("package "+pkg+"\n"))
+}
+
+//
+func unimport(content []byte) []byte {
+	a := bytes.ReplaceAll(content,
+		[]byte("import \"github.com/fogfish/golem/generic\"\n"),
+		[]byte(""),
+	)
+
+	b := bytes.ReplaceAll(a,
+		[]byte("\"github.com/fogfish/golem/generic\"\n"),
+		[]byte(""),
+	)
+
+	re := regexp.MustCompile(`import \(\s+\)\n`)
+	return re.ReplaceAll(b, []byte{})
 }
 
 //
@@ -170,8 +198,8 @@ func main() {
 	filename := fmt.Sprintf("%s.go", generic)
 	typename := strings.Title(generic)
 	if *opt.lib {
-		filename = fmt.Sprintf("%s.go", *opt.kind)
-		typename = strings.Title(*opt.kind)
+		filename = fmt.Sprintf("%s.go", *opt.genericT)
+		typename = strings.Title(*opt.genericT)
 	}
 
 	input, err := ioutil.ReadFile(source)
@@ -179,16 +207,17 @@ func main() {
 		log.Fatal(err)
 	}
 
-	a := declareType(input, *opt.kind)
+	a := declareTypes(input, opt)
 	b := referenceType(a, typename)
 	c := repackage(b, pkg.Name)
+	d := unimport(c)
 
 	output := bytes.NewBuffer([]byte{})
 	output.Write([]byte("// Code generated by `golem` package\n"))
 	output.Write([]byte(fmt.Sprintf("// Source: %s\n", *opt.generic)))
 	output.Write([]byte(fmt.Sprintf("// Time: %s\n\n", time.Now().UTC())))
 
-	output.Write(c)
+	output.Write(d)
 
 	ioutil.WriteFile(filepath.Join(pkg.PkgRoot, filename), output.Bytes(), 0777)
 	log.Printf("%s.%s", generic, typename)
