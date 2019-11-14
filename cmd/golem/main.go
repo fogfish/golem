@@ -78,6 +78,16 @@
 // ↣ file type.go is created in the package
 // (e.g. `int.go`)
 //
+//   src/
+//     github.com/fogfish/golem/
+//       seq/                     # package generic pattern (e.g. sequence)
+//         doc.go                 # documentation of generic pattern and go:generate
+//         seq.go                 # generic implementation with parametric type variable
+//         seq_test.go            # testing of implementation
+//         int.go                 # generated code for built-in type int
+//         string.go              # generated code for built-in type string
+//         ..
+//
 // Application
 //
 // As a application developer I want to parametrise a generic types with my own
@@ -85,7 +95,7 @@
 // generic implementations
 // The mode implies a following rules
 //
-// ↣ one package implements various generic variants for the custom type
+// ↣ one package defines a type and parametrization of various generic algorithms
 //
 // ↣ concrete types are named after the generic, `AnyT` is replaced with `Generic`
 // (e.g `AnyT` -> `Stack`).
@@ -96,6 +106,58 @@
 // ↣ file generic.go is created in the package
 // (e.g. `stack.go`)
 //
+//   src/
+//     github.com/fogfish/myapp/
+//       main.go
+//       foobar/                  # a custom type definition
+//         foobar.go              # type definition and go:generate
+//         seq.go                 # parametrization of sequence pattern with foobar type
+//         stream.go              # parametrization of stream pattern with foobar type
+//         ...
+//
+// Package names
+//
+// These workflows and source code structure refers to widely use Go package naming.
+//
+//   // When we are using a generic library then the name of
+//   // generic pattern is visible as package name
+//   seq.AnyT{}
+//   seq.Int{1, 2, 3, 4}
+//   seq.String{"a", "b", "c", "d"}
+//
+//   // When we are using a custom parametrization then the name of
+//   // generic pattern is visible as type name
+//   foobar.Seq{FooBar{1}, FooBar{2}, FooBar{3}}
+//   foobar.Stream{}
+//   foobar.Stack{}
+//
+// How It works
+//
+// Use special labels in your code to define generic types:
+// mandatory `AnyT`, `generic.T`
+// optional `generic.A`, `generic.B` and `generic.C`
+//
+//   type AnyT struct {
+//     t generic.T
+//     a generic.A
+//   }
+//
+//   func foo(x AnyT) generic.B
+//   func bar(x generic.A) generic.B
+//
+//
+// The labels `generic.{T | A | B | C}` are replaced with values supplied
+// via corresponding command line parameters (`-T`, `-A`, `-B` and `-C`).
+// The labels `AnyT` is either replaced with a name of type `T` or generic
+// pattern depending on the used workflow.  Insert the following comment
+// in your source code file:
+//
+//
+//   // Library workflow
+//   //go:generate golem -lib -T int -generic github.com/fogfish/golem/seq/seq.go
+//
+//   // Application workflow
+//   //go:generate golem -T FooBar -generic github.com/fogfish/golem/seq/seq.go
 package main
 
 import (
