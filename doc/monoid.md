@@ -1,6 +1,6 @@
 # Monoids for structural transformations
 
-Golang uses imperative style for structural transformations. The usage of `for` loop is advertised by majority of language tutorials. Usable of `for` loops is an idiomatic replacement for well-known functional constructs map, filter and fold. 
+Golang uses imperative style for structural transformations. The usage of `for` loop is advertised by majority of language tutorials. Usage of `for` loops is an idiomatic replacement for well-known functional constructs map, filter and fold. 
 
 ```go
 sum := 0
@@ -9,7 +9,7 @@ for _, x := listOfInt {
 }
 ```
 
-Usage of `for` loops for anything else than primitive containers requires a lot of boiler plates, which means a lot of repeated code. A functional programming techniques solves this problem with high-order functions. Monoid is most basic concept to apply a structural transformation:
+Usage of `for` loops for anything else than primitive containers requires a lot of boilerplate, which means a lot of repeated code. A functional programming techniques solves this problem with high-order functions. Monoid is most basic concept to apply a structural transformation:
 
 > a monoid is an algebraic structure with a single associative binary operation and an identity element.
 
