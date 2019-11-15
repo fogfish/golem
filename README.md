@@ -16,3 +16,4 @@
 ## Key features
 
 * [Generic](doc/generic.md) with build time code generation.
+* [Monoid](doc/monoid.md) for structural transformation.
