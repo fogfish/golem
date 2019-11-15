@@ -15,4 +15,4 @@
 
 ## Key features
 
-* [Generic](doc/generic.md)
+* [Generic](doc/generic.md) with build time code generation.
