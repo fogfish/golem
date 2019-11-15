@@ -1,5 +1,8 @@
 # Monoids for structural transformations
 
+[![Documentation](https://godoc.org/github.com/fogfish/golem/generic?status.svg)](https://godoc.org/github.com/fogfish/golem/generic)
+
+
 Golang uses imperative style for structural transformations. The usage of `for` loop is advertised by majority of language tutorials. Usage of `for` loops is an idiomatic replacement for well-known functional constructs map, filter and fold. 
 
 ```go
