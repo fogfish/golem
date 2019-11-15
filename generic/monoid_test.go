@@ -9,40 +9,33 @@ import (
 
 //
 // example of monoid implementation
-type seq struct {
-	x []int
+type Int int
+
+func (v Int) Empty() generic.Monoid {
+	return Int(0)
 }
 
-func (s *seq) Empty() generic.Monoid {
-	return &seq{}
-}
-
-func (s *seq) Combine(x interface{}) generic.Monoid {
-	switch v := x.(type) {
-	case int:
-		s.x = append(s.x, v)
-	case *seq:
-		s.x = append(s.x, v.x...)
-	}
-	return s
+func (v Int) Combine(x interface{}) generic.Monoid {
+	return v + x.(Int)
 }
 
 //
-// generic algorithm that uses monoid
-func (s *seq) fmap(f func(int) int) *seq {
-	y := s.Empty()
+// generic algorithm
+type seq struct {
+	x []Int
+}
+
+func (s *seq) fold(f func(Int) Int, m generic.Monoid) generic.Monoid {
+	y := m.Empty()
 	for _, x := range s.x {
-		y.Combine(f(x))
+		y = y.Combine(f(x))
 	}
-	return y.(*seq)
+	return y
 }
 
 func TestIdentity(t *testing.T) {
-	a := &seq{[]int{1}}
-	b := &seq{[]int{1}}
-
-	x := a.Combine(a.Empty())
-	y := b.Empty().Combine(b)
+	x := Int(1).Combine(Int(1).Empty())
+	y := Int(1).Empty().Combine(Int(1))
 
 	if !reflect.DeepEqual(x, y) {
 		t.Fatalf("monoid violates identity %v != %v\n", x, y)
@@ -50,34 +43,43 @@ func TestIdentity(t *testing.T) {
 }
 
 func TestAssociativity(t *testing.T) {
-	x := (&seq{[]int{1}}).Combine(&seq{[]int{2}}).Combine(&seq{[]int{3}})
-	y := (&seq{[]int{1}}).Combine((&seq{[]int{2}}).Combine(&seq{[]int{3}}))
+	x := Int(1).Combine(Int(2)).Combine(Int(3))
+	y := Int(1).Combine(Int(2).Combine(Int(3)))
 
 	if !reflect.DeepEqual(x, y) {
-		t.Fatalf("monodi violates associativity %v != %v\n", x, y)
+		t.Fatalf("monoid violates associativity %v != %v\n", x, y)
 	}
 }
 
-var bSeq *seq
+func TestFold(t *testing.T) {
+	s := seq{[]Int{0, 1, 2, 3, 4, 5}}
+	y := s.fold(func(x Int) Int { return x }, Int(0))
+	if !reflect.DeepEqual(Int(15), y) {
+		t.Fatalf("failed to fold with monoid sum( %v ) != %v\n", s, y)
+	}
+}
+
+var result Int
 
 func BenchmarkMonoid(b *testing.B) {
-	var m *seq
-	x := &seq{[]int{1, 2, 3, 4, 5, 6, 7, 8, 9, 0}}
+	var m Int
+	x := seq{[]Int{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}}
 
 	for n := 0; n < b.N; n++ {
-		m = x.fmap(func(x int) int { return x * 10 })
+		m = x.fold(func(x Int) Int { return x * 10 }, Int(0)).(Int)
 	}
-	bSeq = m
+	result = m
 }
 
 func BenchmarkForLoop(b *testing.B) {
-	var m *seq
-	x := &seq{[]int{1, 2, 3, 4, 5, 6, 7, 8, 9, 0}}
+	var m Int
+	x := seq{[]Int{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}}
+
 	for n := 0; n < b.N; n++ {
-		m = &seq{}
+		m = 0
 		for _, v := range x.x {
-			m.x = append(m.x, v*10)
+			m = m + v*10
 		}
 	}
-	bSeq = m
+	result = m
 }
