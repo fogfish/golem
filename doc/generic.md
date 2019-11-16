@@ -30,7 +30,7 @@ src/
 
 ## Application
 
-> As a application developer I want to parametrise a generic types with my own application specific types so that the application benefits from re-use of generic implementations
+> As a application developer I want to parametrize a generic types with my own application specific types so that the application benefits from re-use of generic implementations
 
 The utility demands - one package defines a type and parametrization of various generic algorithms.
 

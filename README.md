@@ -29,3 +29,55 @@ Functional style programming can be achieved in any language, including Go. Gola
 
 * [Generic](doc/generic.md) with build time code generation.
 * [Monoid](doc/monoid.md) for structural transformation.
+
+## Getting started
+
+The latest version of the library is available at `master` branch. All development, including new features and bug fixes, take place on the `master` branch using forking and pull requests as described in contribution guidelines.
+
+Usage of library requires **installation** of command line utility, see it [documentation](https://godoc.org/github.com/fogfish/golem/cmd/golem) and [workflows](doc/generic.md)
+
+```bash
+go get -u github.com/fogfish/golem/cmd/golem
+```
+
+**Import** the library packages in your code
+
+```go
+import (
+  "github.com/fogfish/golem/..."
+)
+```
+
+**Parametrize** generic templates with
+
+```go
+//go:generate golem -T FooBar -generic github.com/fogfish/golem/seq/seq.go
+```
+
+See the [documentation](http://godoc.org/github.com/fogfish/golem)
+
+
+## How To Contribute
+
+The library is [MIT](LICENSE) licensed and accepts contributions via GitHub pull requests:
+
+1. Fork it
+2. Create your feature branch (`git checkout -b my-new-feature`)
+3. Commit your changes (`git commit -am 'Added some feature'`)
+4. Push to the branch (`git push origin my-new-feature`)
+5. Create new Pull Request
+
+
+The build and testing process requires [Go](https://golang.org) version 1.13 or later.
+
+**Build** and **run** in your development console.
+
+```bash
+git clone https://github.com/fogfish/golem
+cd golem
+go test -cover ./...
+```
+
+## License
+
+[![See LICENSE](https://img.shields.io/github/license/fogfish/golem.svg?style=for-the-badge)](LICENSE)
