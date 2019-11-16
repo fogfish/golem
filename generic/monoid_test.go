@@ -40,18 +40,30 @@ func (seq *MSeq) Combine(x interface{}) generic.Monoid {
 	return seq
 }
 
+// type safe associative binary function
+func (seq *MSeq) Append(x int) {
+	seq.value = append(seq.value, x)
+}
+
 //
 // generic algorithm
 type String struct {
 	value []string
 }
 
-func (seq *String) Map(m generic.Monoid, f func(string) int) generic.Monoid {
+// Map with Monoid
+func (seq *String) MMap(m generic.Monoid, f func(string) int) generic.Monoid {
 	y := m.Empty()
 	for _, x := range seq.value {
 		y = y.Combine(f(x))
 	}
 	return y
+}
+
+func (seq *String) FMap(f func(string)) {
+	for _, x := range seq.value {
+		f(x)
+	}
 }
 
 //
@@ -89,7 +101,7 @@ func TestAssociativity(t *testing.T) {
 
 func TestMap(t *testing.T) {
 	expect := &MSeq{[]int{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}}
-	value := sequence.Map(New(0), atoi)
+	value := sequence.MMap(New(0), atoi)
 
 	if !reflect.DeepEqual(expect, value) {
 		t.Fatalf("failed to map sequence %v != %v\n", expect, value)
@@ -102,7 +114,7 @@ func BenchmarkMonoid(b *testing.B) {
 	var monoid *MSeq
 
 	for n := 0; n < b.N; n++ {
-		monoid = sequence.Map(monoid, atoi).(*MSeq)
+		monoid = sequence.MMap(monoid, atoi).(*MSeq)
 	}
 	result = monoid
 }
@@ -115,6 +127,16 @@ func BenchmarkForLoop(b *testing.B) {
 		for _, x := range sequence.value {
 			seq.value = append(seq.value, atoi(x))
 		}
+	}
+	result = seq
+}
+
+func BenchmarkClojure(b *testing.B) {
+	var seq *MSeq
+
+	for n := 0; n < b.N; n++ {
+		seq = &MSeq{}
+		sequence.FMap(func(x string) { seq.Append(atoi(x)) })
 	}
 	result = seq
 }
