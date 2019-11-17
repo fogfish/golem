@@ -1,6 +1,6 @@
 # Golem: "Scrap Your Boilerplate" for Go
 
-<img src="./doc/logo.svg" width="300" align="left"/>
+<img src="./doc/logo.svg" width="320" align="left"/>
 
 > His dust was "kneaded into a shapeless husk."
 

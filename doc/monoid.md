@@ -100,3 +100,9 @@ clojure     48013251	       253 ns/op	     280 B/op	       6 allocs/op
 ## Afterwords
 
 Monoid is an abstract concept in computer science that helps with validation and implementation of generic algorithms. Usage of monoid in Go makes sense mainly for structural transformations. Developers has choice to implement monoid either with interfaces or closures. This library do not advertises monoid usage outside of transformation use-cases despite a fact that any binary associative operation (e.g. `+`, `*`) can be defined with this abstraction. 
+
+## Related articles
+
+1. [Monoids for Gophers](https://medium.com/@groveriffic/monoids-for-gophers-907175bb6165)
+2. [Cats: Monoid](https://typelevel.org/cats/typeclasses/monoid.html)
+3. [Functors, Applicative Functors and Monoids](http://learnyouahaskell.com/functors-applicative-functors-and-monoids)
