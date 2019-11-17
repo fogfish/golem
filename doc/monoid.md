@@ -104,5 +104,6 @@ Monoid is an abstract concept in computer science that helps with validation and
 ## Related articles
 
 1. [Monoids for Gophers](https://medium.com/@groveriffic/monoids-for-gophers-907175bb6165)
-2. [Cats: Monoid](https://typelevel.org/cats/typeclasses/monoid.html)
-3. [Functors, Applicative Functors and Monoids](http://learnyouahaskell.com/functors-applicative-functors-and-monoids)
+2. [Foldable Go](https://medium.com/zendesk-engineering/foldable-go-d74fb9cf2fc9)
+3. [Cats: Monoid](https://typelevel.org/cats/typeclasses/monoid.html)
+4. [Functors, Applicative Functors and Monoids](http://learnyouahaskell.com/functors-applicative-functors-and-monoids)
