@@ -60,13 +60,13 @@ There are a few Go specific gotchas here:
 The proposed solution is 64.1% slower then `for` loops if we compare a structural transformation of arrays. 
 
 ```
-monoid     	30991990	       384 ns/op	     352 B/op	      15 allocs/op
-for-loop   	51079478	       234 ns/op	     280 B/op	       6 allocs/op
+monoid      30991990	       384 ns/op	     352 B/op	      15 allocs/op
+for-loop    51079478	       234 ns/op	     280 B/op	       6 allocs/op
 ```
 
 ## Structural transformations with clojure
 
-The advantage of Monoid interface is the ability to apply structural transformation to data structure of any shape. The disadvantage is the overhead of runtime type checks. The clojure leverage transformations with proper type saltiness. 
+The advantage of Monoid interface is the ability to apply transformation to data structure of any shape. The disadvantage is the overhead of runtime type checks. The clojure leverage transformations with type safety. 
 
 > Go functions may be closures. A closure is a function value that references variables from outside its body. The function may access and assign to the referenced variables; in this sense the function is "bound" to the variables.
 
@@ -80,7 +80,7 @@ func (seq SeqA) FMap(f func(A)) {
 }
 ```
 
-Now, we can define a monoid with the identity value and associative binary function. The definition becomes less formal in contrast with the interface. The identity value is the type constructor and associative binary function is what-ever combinatio.
+Now, we can define a monoid with the identity value and associative binary function. The definition becomes less formal in contrast with Monoid interface. The identity value is the type constructor and associative binary function is what-ever combine operation.
 
 ```go
 func (seq SeqB) Append(x B) {/* ... */}
@@ -92,9 +92,9 @@ seqA.FMap(func(x A) { seqB.Append(/* A -> B */) })
 Usage of clojure shows comparable performance with `for` loops if we are doing a structural transformation of arrays.
 
 ```
-monoid     	26319433	       389 ns/op	     352 B/op	      15 allocs/op
+monoid      26319433	       389 ns/op	     352 B/op	      15 allocs/op
 for-loop    50883230	       238 ns/op	     280 B/op	       6 allocs/op
-clojure    	48013251	       253 ns/op	     280 B/op	       6 allocs/op
+clojure     48013251	       253 ns/op	     280 B/op	       6 allocs/op
 ```
 
 ## Afterwords
