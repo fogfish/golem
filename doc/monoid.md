@@ -35,7 +35,7 @@ trait Seq[A] {
 It is not possible to implement generic map in Golang due to absence of generics and type covariance. The code generation does not help, we are bloating source code due to high cardinality of `A x B` set. Let's define a Monoid interface and show how it can **solve** an output type parametrization problem for transformations.
 
 ```go
-func (seq Seq) Map(mB Monoid, f func (A) B) Monoid {
+func (seq SeqA) MMap(mB Monoid, f func (A) B) Monoid {
   y := mB.Empty()
 	for _, x := range seq {
 		y = y.Combine(f(x))
@@ -60,7 +60,50 @@ There are a few Go specific gotchas here:
 The proposed solution is 64.1% slower then `for` loops if we compare a structural transformation of arrays. 
 
 ```
-monoid     	30991990	       384 ns/op	     352 B/op	      15 allocs/op
-for-loop   	51079478	       234 ns/op	     280 B/op	       6 allocs/op
+monoid      30991990	       384 ns/op	     352 B/op	      15 allocs/op
+for-loop    51079478	       234 ns/op	     280 B/op	       6 allocs/op
 ```
 
+## Structural transformations with clojure
+
+The advantage of Monoid interface is the ability to apply transformation to data structure of any shape. The disadvantage is the overhead of runtime type checks. The clojure leverage transformations with type safety. 
+
+> Go functions may be closures. A closure is a function value that references variables from outside its body. The function may access and assign to the referenced variables; in this sense the function is "bound" to the variables.
+
+We can assume a generic transformation as application of type-safe closure over data structure elements:
+
+```go
+func (seq SeqA) FMap(f func(A)) {
+	for _, x := range seq.value {
+		f(x)
+	}
+}
+```
+
+Now, we can define a monoid with the identity value and associative binary function. The definition becomes less formal in contrast with Monoid interface. The identity value is the type constructor and associative binary function is what-ever combine operation.
+
+```go
+func (seq SeqB) Append(x B) {/* ... */}
+
+seqB = SeqB{}
+seqA.FMap(func(x A) { seqB.Append(/* A -> B */) })
+```
+
+Usage of clojure shows comparable performance with `for` loops if we are doing a structural transformation of arrays.
+
+```
+monoid      26319433	       389 ns/op	     352 B/op	      15 allocs/op
+for-loop    50883230	       238 ns/op	     280 B/op	       6 allocs/op
+clojure     48013251	       253 ns/op	     280 B/op	       6 allocs/op
+```
+
+## Afterwords
+
+Monoid is an abstract concept in computer science that helps with validation and implementation of generic algorithms. Usage of monoid in Go makes sense mainly for structural transformations. Developers has choice to implement monoid either with interfaces or closures. This library do not advertises monoid usage outside of transformation use-cases despite a fact that any binary associative operation (e.g. `+`, `*`) can be defined with this abstraction. 
+
+## Related articles
+
+1. [Monoids for Gophers](https://medium.com/@groveriffic/monoids-for-gophers-907175bb6165)
+2. [Foldable Go](https://medium.com/zendesk-engineering/foldable-go-d74fb9cf2fc9)
+3. [Cats: Monoid](https://typelevel.org/cats/typeclasses/monoid.html)
+4. [Functors, Applicative Functors and Monoids](http://learnyouahaskell.com/functors-applicative-functors-and-monoids)
