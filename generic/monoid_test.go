@@ -52,7 +52,7 @@ type String struct {
 }
 
 // Map with Monoid
-func (seq *String) MMap(m generic.Monoid, f func(string) int) generic.Monoid {
+func (seq *String) MMap(m generic.Monoid, f func(string) interface{}) generic.Monoid {
 	y := m.Empty()
 	for _, x := range seq.value {
 		y = y.Combine(f(x))
@@ -70,6 +70,11 @@ func (seq *String) FMap(f func(string)) {
 // global constants
 var result *MSeq
 var sequence String = String{[]string{"0", "1", "2", "3", "4", "5", "6", "7", "8", "9"}}
+
+func atog(str string) interface{} {
+	int, _ := strconv.Atoi(str)
+	return int
+}
 
 func atoi(str string) int {
 	int, _ := strconv.Atoi(str)
@@ -101,7 +106,7 @@ func TestAssociativity(t *testing.T) {
 
 func TestMap(t *testing.T) {
 	expect := &MSeq{[]int{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}}
-	value := sequence.MMap(New(0), atoi)
+	value := sequence.MMap(New(0), atog)
 
 	if !reflect.DeepEqual(expect, value) {
 		t.Fatalf("failed to map sequence %v != %v\n", expect, value)
@@ -114,7 +119,7 @@ func BenchmarkMonoid(b *testing.B) {
 	var monoid *MSeq
 
 	for n := 0; n < b.N; n++ {
-		monoid = sequence.MMap(monoid, atoi).(*MSeq)
+		monoid = sequence.MMap(monoid, atog).(*MSeq)
 	}
 	result = monoid
 }
