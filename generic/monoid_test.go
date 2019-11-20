@@ -67,6 +67,21 @@ func (seq *String) FMap(f func(string)) {
 }
 
 //
+// String x Monoid
+type Product struct {
+	String
+	M generic.Monoid
+}
+
+func (p *Product) Map(f func(string) interface{}) generic.Monoid {
+	y := p.M.Empty()
+	for _, x := range p.String.value {
+		y = y.Combine(f(x))
+	}
+	return y
+}
+
+//
 // global constants
 var result *MSeq
 var sequence String = String{[]string{"0", "1", "2", "3", "4", "5", "6", "7", "8", "9"}}
@@ -120,6 +135,16 @@ func BenchmarkMonoid(b *testing.B) {
 
 	for n := 0; n < b.N; n++ {
 		monoid = sequence.MMap(monoid, atog).(*MSeq)
+	}
+	result = monoid
+}
+
+func BenchmarkMonoidProduct(b *testing.B) {
+	var monoid *MSeq
+	product := &Product{sequence, monoid}
+
+	for n := 0; n < b.N; n++ {
+		monoid = product.Map(atog).(*MSeq)
 	}
 	result = monoid
 }
