@@ -52,6 +52,16 @@ type String struct {
 }
 
 // Map with Monoid
+func (seq *String) Map(m generic.Monoid) func(func(string) interface{}) generic.Monoid {
+	return func(f func(string) interface{}) generic.Monoid {
+		y := m.Empty()
+		for _, x := range seq.value {
+			y = y.Combine(f(x))
+		}
+		return y
+	}
+}
+
 func (seq *String) MMap(m generic.Monoid, f func(string) interface{}) generic.Monoid {
 	y := m.Empty()
 	for _, x := range seq.value {
@@ -135,6 +145,16 @@ func BenchmarkMonoid(b *testing.B) {
 
 	for n := 0; n < b.N; n++ {
 		monoid = sequence.MMap(monoid, atog).(*MSeq)
+	}
+	result = monoid
+}
+
+func BenchmarkMonoidHoF(b *testing.B) {
+	var monoid *MSeq
+	mapper := sequence.Map(monoid)
+
+	for n := 0; n < b.N; n++ {
+		monoid = mapper(atog).(*MSeq)
 	}
 	result = monoid
 }
