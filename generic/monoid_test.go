@@ -26,16 +26,16 @@ func New(x int) *MSeq {
 	return &MSeq{[]int{x}}
 }
 
-func (seq *MSeq) Empty() generic.Monoid {
+func (seq *MSeq) Mempty() generic.Monoid {
 	return &MSeq{}
 }
 
-func (seq *MSeq) Combine(x interface{}) generic.Monoid {
+func (seq *MSeq) Mappend(x interface{}) generic.Monoid {
 	switch v := x.(type) {
-	case int:
-		seq.value = append(seq.value, v)
 	case *MSeq:
 		seq.value = append(seq.value, v.value...)
+	case int:
+		seq.value = append(seq.value, v)
 	}
 	return seq
 }
@@ -54,18 +54,18 @@ type String struct {
 // Map with Monoid
 func (seq *String) Map(m generic.Monoid) func(func(string) interface{}) generic.Monoid {
 	return func(f func(string) interface{}) generic.Monoid {
-		y := m.Empty()
+		y := m.Mempty()
 		for _, x := range seq.value {
-			y = y.Combine(f(x))
+			y = y.Mappend(f(x))
 		}
 		return y
 	}
 }
 
 func (seq *String) MMap(m generic.Monoid, f func(string) interface{}) generic.Monoid {
-	y := m.Empty()
+	y := m.Mempty()
 	for _, x := range seq.value {
-		y = y.Combine(f(x))
+		y = y.Mappend(f(x))
 	}
 	return y
 }
@@ -84,9 +84,9 @@ type Product struct {
 }
 
 func (p *Product) Map(f func(string) interface{}) generic.Monoid {
-	y := p.M.Empty()
+	y := p.M.Mempty()
 	for _, x := range p.String.value {
-		y = y.Combine(f(x))
+		y = y.Mappend(f(x))
 	}
 	return y
 }
@@ -112,8 +112,8 @@ func TestIdentity(t *testing.T) {
 	a := New(1)
 	b := New(1)
 
-	x := a.Combine(a.Empty())
-	y := b.Empty().Combine(b)
+	x := a.Mappend(a.Mempty())
+	y := b.Mempty().Mappend(b)
 
 	if !reflect.DeepEqual(x, y) {
 		t.Fatalf("monoid violates identity %v != %v\n", x, y)
@@ -121,8 +121,8 @@ func TestIdentity(t *testing.T) {
 }
 
 func TestAssociativity(t *testing.T) {
-	x := New(1).Combine(New(2)).Combine(New(3))
-	y := New(1).Combine(New(2).Combine(New(3)))
+	x := New(1).Mappend(New(2)).Mappend(New(3))
+	y := New(1).Mappend(New(2).Mappend(New(3)))
 
 	if !reflect.DeepEqual(x, y) {
 		t.Fatalf("monoid violates associativity %v != %v\n", x, y)

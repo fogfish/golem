@@ -24,23 +24,23 @@ package generic
 //
 //   type MSeq struct { value []int }
 //
-//   func (seq *MSeq) Empty() generic.Monoid {
+//   func (seq *MSeq) Mempty() generic.Monoid {
 //     return &MSeq{}
 //   }
 //
-//   func (seq *MSeq) Combine(x interface{}) generic.Monoid {
+//   func (seq *MSeq) Mappend(x interface{}) generic.Monoid {
 //     seq.value = append(seq.value, x.(int))
 //     return seq
 //   }
 //
 type Monoid interface {
-	// Empty returns a type value that hold the identity property for
+	// Mempty returns a type value that hold the identity property for
 	// combine operation, means the following equalities hold for any choice of x.
 	//   t.Combine(t.Empty()) == t.Empty().Combine(t) == t
-	Empty() Monoid
+	Mempty() Monoid
 
-	// Combine applies a side-effect to the structure by appending a given value.
+	// Mappend applies a side-effect to the structure by appending a given value.
 	// Combine must hold associative property
 	//   a.Combine(b).Combine(c) == a.Combine(b.Combine(c))
-	Combine(x interface{}) Monoid
+	Mappend(x interface{}) Monoid
 }
