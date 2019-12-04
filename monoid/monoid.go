@@ -24,11 +24,11 @@ package monoid
 //
 //   type MSeq struct { value []int }
 //
-//   func (seq *MSeq) Mempty() pure.Monoid {
+//   func (seq *MSeq) Mempty() monoid.AnyT {
 //     return &MSeq{}
 //   }
 //
-//   func (seq *MSeq) Mappend(x pure.Monoid) pure.Monoid {
+//   func (seq *MSeq) Mappend(x monoid.AnyT) monoid.AnyT {
 //     seq.value = append(seq.value, x.(*MSeq).value...)
 //     return seq
 //   }
