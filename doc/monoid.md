@@ -48,7 +48,7 @@ type Monoid interface {
   Mempty() Monoid
 
   // an associative binary function
-  Mappend(x interface{}) Monoid
+  Mappend(x Monoid) Monoid
 }
 ```
 
@@ -57,11 +57,11 @@ There are a few Go specific gotchas here:
 * an associative binary function mutates corresponding structure in place but transformation algorithm ensures immutability. 
 * semantic of associative binary function is built with `interface{}` which requires dynamic casting.
 
-The proposed solution is 64.1% slower then `for` loops if we compare a structural transformation of arrays. 
+The proposed solution is slower then `for` loops if we compare a structural transformation of arrays. 
 
 ```
-monoid      30991990	       384 ns/op	     352 B/op	      15 allocs/op
-for-loop    51079478	       234 ns/op	     280 B/op	       6 allocs/op
+monoid      30991990	       791 ns/op	     680 B/op	      26 allocs/op
+for-loop    51079478	       271 ns/op	     280 B/op	       6 allocs/op
 ```
 
 ## Structural transformations with clojure
@@ -92,9 +92,9 @@ seqA.FMap(func(x A) { seqB.Append(/* A -> B */) })
 Usage of clojure shows comparable performance with `for` loops if we are doing a structural transformation of arrays.
 
 ```
-monoid      26319433	       389 ns/op	     352 B/op	      15 allocs/op
-for-loop    50883230	       238 ns/op	     280 B/op	       6 allocs/op
-clojure     48013251	       253 ns/op	     280 B/op	       6 allocs/op
+monoid      26319433	       791 ns/op	     680 B/op	      26 allocs/op
+for-loop    50883230	       271 ns/op	     280 B/op	       6 allocs/op
+clojure     48013251	       248 ns/op	     280 B/op	       6 allocs/op
 ```
 
 ## Afterwords
