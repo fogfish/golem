@@ -6,14 +6,14 @@
 // https://github.com/fogfish/golem
 //
 
-package generic_test
+package monoid_test
 
 import (
 	"reflect"
 	"strconv"
 	"testing"
 
-	"github.com/fogfish/golem/generic"
+	"github.com/fogfish/golem/monoid"
 )
 
 //
@@ -26,23 +26,20 @@ func New(x int) *MSeq {
 	return &MSeq{[]int{x}}
 }
 
-func (seq *MSeq) Mempty() generic.Monoid {
+//
+// Monoid interface for *MSeq
+func (seq *MSeq) Mempty() monoid.AnyT {
 	return &MSeq{}
 }
 
-func (seq *MSeq) Mappend(x interface{}) generic.Monoid {
-	switch v := x.(type) {
-	case *MSeq:
-		seq.value = append(seq.value, v.value...)
-	case int:
-		seq.value = append(seq.value, v)
-	}
+func (seq *MSeq) Mappend(x monoid.AnyT) monoid.AnyT {
+	seq.value = append(seq.value, x.(*MSeq).value...)
 	return seq
 }
 
 // type safe associative binary function
-func (seq *MSeq) Append(x int) {
-	seq.value = append(seq.value, x)
+func (seq *MSeq) Append(x *MSeq) {
+	seq.value = append(seq.value, x.value...)
 }
 
 //
@@ -51,9 +48,12 @@ type String struct {
 	value []string
 }
 
-// Map with Monoid
-func (seq *String) Map(m generic.Monoid) func(func(string) interface{}) generic.Monoid {
-	return func(f func(string) interface{}) generic.Monoid {
+type FMap func(string) monoid.AnyT
+type Mapper func(FMap) monoid.AnyT
+
+// Functor
+func (seq *String) Map(m monoid.AnyT) Mapper {
+	return func(f FMap) monoid.AnyT {
 		y := m.Mempty()
 		for _, x := range seq.value {
 			y = y.Mappend(f(x))
@@ -62,7 +62,8 @@ func (seq *String) Map(m generic.Monoid) func(func(string) interface{}) generic.
 	}
 }
 
-func (seq *String) MMap(m generic.Monoid, f func(string) interface{}) generic.Monoid {
+// Map with Monoid
+func (seq *String) MMap(m monoid.AnyT, f FMap) monoid.AnyT {
 	y := m.Mempty()
 	for _, x := range seq.value {
 		y = y.Mappend(f(x))
@@ -70,6 +71,7 @@ func (seq *String) MMap(m generic.Monoid, f func(string) interface{}) generic.Mo
 	return y
 }
 
+// Map with Closure
 func (seq *String) FMap(f func(string)) {
 	for _, x := range seq.value {
 		f(x)
@@ -80,10 +82,10 @@ func (seq *String) FMap(f func(string)) {
 // String x Monoid
 type Product struct {
 	String
-	M generic.Monoid
+	M monoid.AnyT
 }
 
-func (p *Product) Map(f func(string) interface{}) generic.Monoid {
+func (p *Product) Map(f FMap) monoid.AnyT {
 	y := p.M.Mempty()
 	for _, x := range p.String.value {
 		y = y.Mappend(f(x))
@@ -96,14 +98,14 @@ func (p *Product) Map(f func(string) interface{}) generic.Monoid {
 var result *MSeq
 var sequence String = String{[]string{"0", "1", "2", "3", "4", "5", "6", "7", "8", "9"}}
 
-func atog(str string) interface{} {
-	int, _ := strconv.Atoi(str)
-	return int
+func atog(str string) monoid.AnyT {
+	x, _ := strconv.Atoi(str)
+	return &MSeq{[]int{x}}
 }
 
-func atoi(str string) int {
-	int, _ := strconv.Atoi(str)
-	return int
+func atoi(str string) *MSeq {
+	x, _ := strconv.Atoi(str)
+	return &MSeq{[]int{x}}
 }
 
 //
@@ -175,7 +177,7 @@ func BenchmarkForLoop(b *testing.B) {
 	for n := 0; n < b.N; n++ {
 		seq = &MSeq{}
 		for _, x := range sequence.value {
-			seq.value = append(seq.value, atoi(x))
+			seq.value = append(seq.value, atoi(x).value...)
 		}
 	}
 	result = seq

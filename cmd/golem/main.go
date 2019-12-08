@@ -256,11 +256,16 @@ func main() {
 
 	source := filepath.Join(build.Default.GOPATH, "src", *opt.generic)
 	generic := strings.TrimSuffix(filepath.Base(source), filepath.Ext(source))
+	subtype := strings.Split(generic, "_")
+	suffix := ""
+	if len(subtype) > 1 {
+		suffix = "_" + subtype[1]
+	}
 
-	filename := fmt.Sprintf("%s.go", generic)
+	filename := fmt.Sprintf("g_%s%s.go", generic, suffix)
 	typename := strings.Title(generic)
 	if *opt.lib {
-		filename = fmt.Sprintf("%s.go", *opt.genericT)
+		filename = fmt.Sprintf("g_%s%s.go", *opt.genericT, suffix)
 		typename = strings.Title(*opt.genericT)
 	}
 
@@ -281,6 +286,6 @@ func main() {
 
 	output.Write(d)
 
-	ioutil.WriteFile(filepath.Join(pkg.PkgRoot, filename), output.Bytes(), 0777)
+	ioutil.WriteFile(filepath.Join(pkg.PkgRoot, filename), output.Bytes(), 0666)
 	log.Printf("%s.%s", generic, typename)
 }

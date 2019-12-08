@@ -6,7 +6,7 @@
 // https://github.com/fogfish/golem
 //
 
-package generic
+package monoid
 
 // Monoid supports the generic implementation of strcutural transformations.
 // It is an algebraic structure https://en.wikipedia.org/wiki/Monoid
@@ -24,23 +24,23 @@ package generic
 //
 //   type MSeq struct { value []int }
 //
-//   func (seq *MSeq) Mempty() generic.Monoid {
+//   func (seq *MSeq) Mempty() monoid.AnyT {
 //     return &MSeq{}
 //   }
 //
-//   func (seq *MSeq) Mappend(x interface{}) generic.Monoid {
-//     seq.value = append(seq.value, x.(int))
+//   func (seq *MSeq) Mappend(x monoid.AnyT) monoid.AnyT {
+//     seq.value = append(seq.value, x.(*MSeq).value...)
 //     return seq
 //   }
 //
-type Monoid interface {
+type AnyT interface {
 	// Mempty returns a type value that hold the identity property for
 	// combine operation, means the following equalities hold for any choice of x.
 	//   t.Combine(t.Empty()) == t.Empty().Combine(t) == t
-	Mempty() Monoid
+	Mempty() AnyT
 
 	// Mappend applies a side-effect to the structure by appending a given value.
 	// Combine must hold associative property
 	//   a.Combine(b).Combine(c) == a.Combine(b.Combine(c))
-	Mappend(x interface{}) Monoid
+	Mappend(x AnyT) AnyT
 }
