@@ -167,7 +167,7 @@ func (seq AnyT) TakeWhile(p func(generic.T) bool) AnyT {
 			return append(seq[:0:0], seq[:i]...)
 		}
 	}
-	return AnyT{}
+	return append(AnyT{}, seq...)
 }
 
 /*

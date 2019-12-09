@@ -63,7 +63,10 @@ func TestSeqDrop(t *testing.T) {
 func TestSeqDropWhile(t *testing.T) {
 	it.Ok(t).
 		If(sequence.DropWhile(beforeThree)).
-		Should().Equal(seq.AnyT{3, 4, 5, 6, 7, 8, 9})
+		Should().Equal(seq.AnyT{3, 4, 5, 6, 7, 8, 9}).
+		//
+		If(sequence.DropWhile(beforeTen)).
+		Should().Equal(seq.AnyT{})
 }
 
 func TestSeqFilter(t *testing.T) {
@@ -117,7 +120,11 @@ func TestSeqTake(t *testing.T) {
 
 func TestSeqTakeWhile(t *testing.T) {
 	it.Ok(t).
-		If(sequence.TakeWhile(beforeThree)).Should().Equal(seq.AnyT{0, 1, 2})
+		If(sequence.TakeWhile(beforeThree)).
+		Should().Equal(seq.AnyT{0, 1, 2}).
+		//
+		If(sequence.TakeWhile(beforeTen)).
+		Should().Equal(sequence)
 }
 
 func TestSeqMonoidLawIdentity(t *testing.T) {
