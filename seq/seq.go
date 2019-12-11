@@ -115,6 +115,15 @@ func (seq AnyT) FMap(f func(generic.T)) {
 	}
 }
 
+// Fold applies associative binary operator to sequence
+func (seq AnyT) Fold(f func(generic.T, generic.T) generic.T, empty generic.T) generic.T {
+	acc := empty
+	for _, x := range seq {
+		acc = f(x, acc)
+	}
+	return acc
+}
+
 // Map applies high-order function to all element of sequence
 func (seq AnyT) Map(f func(generic.T) generic.T) AnyT {
 	s := AnyT{}

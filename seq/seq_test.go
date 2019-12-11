@@ -35,6 +35,10 @@ func x10(x generic.T) generic.T {
 	return x.(int) * 10
 }
 
+func sum(x generic.T, y generic.T) generic.T {
+	return x.(int) + y.(int)
+}
+
 func TestSeqContain(t *testing.T) {
 	it.Ok(t).
 		If(sequence.Contain(0)).Should().Equal(true).
@@ -98,6 +102,11 @@ func TestSeqFMap(t *testing.T) {
 
 	it.Ok(t).
 		If(sum).Should().Equal(45)
+}
+
+func TestSeqFold(t *testing.T) {
+	it.Ok(t).
+		If(sequence.Fold(sum, 0)).Should().Equal(45)
 }
 
 func TestSeqMap(t *testing.T) {
