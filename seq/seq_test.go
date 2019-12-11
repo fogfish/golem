@@ -31,6 +31,10 @@ func beforeTen(x generic.T) bool {
 	return x.(int) < 10
 }
 
+func x10(x generic.T) generic.T {
+	return x.(int) * 10
+}
+
 func TestSeqContain(t *testing.T) {
 	it.Ok(t).
 		If(sequence.Contain(0)).Should().Equal(true).
@@ -88,6 +92,20 @@ func TestSeqForAll(t *testing.T) {
 		If(seq.AnyT{}.ForAll(beforeThree)).Should().Equal(false)
 }
 
+func TestSeqFMap(t *testing.T) {
+	sum := 0
+	sequence.FMap(func(x generic.T) { sum = sum + x.(int) })
+
+	it.Ok(t).
+		If(sum).Should().Equal(45)
+}
+
+func TestSeqMap(t *testing.T) {
+	it.Ok(t).
+		If(sequence.Map(x10)).
+		Should().Equal(seq.AnyT{0, 10, 20, 30, 40, 50, 60, 70, 80, 90})
+}
+
 func TestSeqGroupBy(t *testing.T) {
 	it.Ok(t).
 		If(sequence.GroupBy(func(x generic.T) int { return x.(int) % 2 })).
@@ -139,44 +157,9 @@ func TestSeqMonoidLawAssociativity(t *testing.T) {
 		Eq(seq.AnyT{1}.Mappend(seq.AnyT{2}.Mappend(seq.AnyT{3})))
 }
 
-// func TestMap(t *testing.T) {
-// 	s := seq.AnyT{1, 2, 3, 4, 5, 6, 7, 8, 9}
-// 	s.Map(func(x generic.T) { fmt.Println(x) })
-// }
-
-// var r = 0
-
-// func BenchmarkMap(b *testing.B) {
-// 	s := seq.Int{1, 2, 3, 4, 5, 6, 7, 8, 9}
-// 	for n := 0; n < b.N; n++ {
-// 		i := 0
-// 		s.Map(func(x int) { i = x + 1 })
-// 		r = i
-// 		// s.Map(do)
-// 	}
-
-// }
-
-// // func do(x seq.TInt) {
-// // i = x + 1
-// // }
-
-// /*
-// func xz(x int) interface{} {
-// 	return x * 10
-// }
-
-// func TestSeq(t *testing.T) {
-// 	x := seq.AnyT{1, 2, 3}
-// 	z := seq.Int{}
-// 	// x.Tt()
-
-// 	for _, i := range x {
-// 		fmt.Printf("%v %T\n", i, i)
-// 		fmt.Printf("%v %T\n", xz(i.(int)), xz(i.(int)))
-// 		z = append(z, xz(i.(int)).(int))
-// 	}
-
-// 	fmt.Println(z)
-// }
-// */
+func TestSeqMonoidMap(t *testing.T) {
+	fmap := sequence.MMap(seq.AnyT{})
+	it.Ok(t).
+		If(fmap(func(x generic.T) seq.AnyT { return seq.AnyT{x.(int) * 10} })).
+		Should().Equal(seq.AnyT{0, 10, 20, 30, 40, 50, 60, 70, 80, 90})
+}

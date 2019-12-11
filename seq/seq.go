@@ -108,8 +108,21 @@ func (seq AnyT) ForAll(p func(generic.T) bool) bool {
 	return true
 }
 
-// ForEach applies a clojure to all elements of sequence
-// func (seq AnyT) ForEach(f func(generic.T))
+// FMap applies high-order function (clojure) to all elements of sequence
+func (seq AnyT) FMap(f func(generic.T)) {
+	for _, x := range seq {
+		f(x)
+	}
+}
+
+// Map applies high-order function to all element of sequence
+func (seq AnyT) Map(f func(generic.T) generic.T) AnyT {
+	s := AnyT{}
+	for _, x := range seq {
+		s = append(s, f(x))
+	}
+	return s
+}
 
 // GroupBy shards sequence into map of sequences with descriminator function
 func (seq AnyT) GroupBy(f func(generic.T) int) map[int]AnyT {
@@ -169,23 +182,3 @@ func (seq AnyT) TakeWhile(p func(generic.T) bool) AnyT {
 	}
 	return append(AnyT{}, seq...)
 }
-
-/*
-	Functor(m generic.Monoid) func(func(generic.T) interface{}) generic.Monoid
-	MapM(m generic.Monoid, func(generic.T) interface{}) generic.Monoid
-*/
-
-// Map xxx
-func (seq AnyT) Map(f func(x generic.T)) {
-	for _, x := range seq {
-		f(x)
-	}
-}
-
-//
-// Required to support product types
-//
-// Map for same type
-// andThen for same type
-// Function
-//
