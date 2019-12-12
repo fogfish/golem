@@ -109,12 +109,6 @@ func TestSeqFold(t *testing.T) {
 		If(sequence.Fold(sum, 0)).Should().Equal(45)
 }
 
-func TestSeqMap(t *testing.T) {
-	it.Ok(t).
-		If(sequence.Map(x10)).
-		Should().Equal(seq.AnyT{0, 10, 20, 30, 40, 50, 60, 70, 80, 90})
-}
-
 func TestSeqGroupBy(t *testing.T) {
 	it.Ok(t).
 		If(sequence.GroupBy(func(x generic.T) int { return x.(int) % 2 })).
@@ -124,6 +118,17 @@ func TestSeqGroupBy(t *testing.T) {
 			1: seq.AnyT{1, 3, 5, 7, 9},
 		},
 	)
+}
+
+func TestSeqJoin(t *testing.T) {
+	it.Ok(t).
+		If(seq.AnyT{}.Join(sequence)).Should().Equal(sequence)
+}
+
+func TestSeqMap(t *testing.T) {
+	it.Ok(t).
+		If(sequence.Map(x10)).
+		Should().Equal(seq.AnyT{0, 10, 20, 30, 40, 50, 60, 70, 80, 90})
 }
 
 func TestSeqPartition(t *testing.T) {

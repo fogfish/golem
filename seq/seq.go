@@ -124,15 +124,6 @@ func (seq AnyT) Fold(f func(generic.T, generic.T) generic.T, empty generic.T) ge
 	return acc
 }
 
-// Map applies high-order function to all element of sequence
-func (seq AnyT) Map(f func(generic.T) generic.T) AnyT {
-	s := AnyT{}
-	for _, x := range seq {
-		s = append(s, f(x))
-	}
-	return s
-}
-
 // GroupBy shards sequence into map of sequences with descriminator function
 func (seq AnyT) GroupBy(f func(generic.T) int) map[int]AnyT {
 	s := make(map[int]AnyT)
@@ -148,11 +139,23 @@ func (seq AnyT) GroupBy(f func(generic.T) int) map[int]AnyT {
 	return s
 }
 
+// Join takes sequence of sequence, flattens and append it
+func (seq AnyT) Join(subseq AnyT) AnyT {
+	seq = append(seq, subseq...)
+	return seq
+}
+
 // Intersect computes the intersection of sequences: seq ^ that
 // func (seq AnyT) Intersect(that AnyT) AnyT
 
-// ??? Monoid
-// func (seq AnyT) Map(f func(generic.T))
+// Map applies high-order function to all element of sequence
+func (seq AnyT) Map(f func(generic.T) generic.T) AnyT {
+	s := AnyT{}
+	for _, x := range seq {
+		s = append(s, f(x))
+	}
+	return s
+}
 
 // Partition split sequence into two sequence accroding to predicate
 // It is equivalent of consequent calls to Filter/FilterNot
