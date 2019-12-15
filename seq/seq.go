@@ -12,7 +12,8 @@ import (
 	"github.com/fogfish/golem/generic"
 )
 
-// AnyT is Seq data type build of generic.T elements
+// AnyT is Seq data type build of `generic.T` elements.
+// It is a type alias of `[]generic.T`
 type AnyT []generic.T
 
 // Contain tests if sequence contains an element
@@ -148,7 +149,7 @@ func (seq AnyT) Join(subseq AnyT) AnyT {
 // Intersect computes the intersection of sequences: seq ^ that
 // func (seq AnyT) Intersect(that AnyT) AnyT
 
-// Map applies high-order function to all element of sequence
+// Map applies high-order function to all element of sequence.
 func (seq AnyT) Map(f func(generic.T) generic.T) AnyT {
 	s := AnyT{}
 	for _, x := range seq {

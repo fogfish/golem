@@ -18,6 +18,10 @@
 // modifying them in immutable manner.
 //
 // Sequence do not implement methods to append element or
-// concatenate another sequence, a built-in Golang
-// `append`, `len` and `cap` shall be used.
+// concatenate another sequence. Use built-in Golang function:
+//
+//   append(seq.AnyT{}, ...)
+//   len(seq.AnyT{})
+//   cap(seq.AnyT{})
+//
 package seq
