@@ -11,4 +11,6 @@
 
 // Package monoid implements an algebraic structure with a single associative
 // binary operation and an identity element.
+// See the post about monoid in Go:
+// https://github.com/fogfish/golem/blob/master/doc/monoid.md
 package monoid
