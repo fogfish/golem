@@ -19,6 +19,10 @@ func odd(x generic.T) bool {
 	return x.(int)%2 == 0
 }
 
+func even(x generic.T) bool {
+	return x.(int)%2 != 0
+}
+
 func beforeThree(x generic.T) bool {
 	return x.(int) < 3
 }
@@ -143,6 +147,14 @@ func left(a seq.AnyT, b seq.AnyT) seq.AnyT {
 
 func right(a seq.AnyT, b seq.AnyT) seq.AnyT {
 	return b
+}
+
+func TestSplit(t *testing.T) {
+	it.Ok(t).
+		If(sequence.Split(odd)).Should().Equal([]seq.AnyT{{0, 1}, {2, 3}, {4, 5}, {6, 7}, {8, 9}}).
+		If(sequence.Split(even)).Should().Equal([]seq.AnyT{{0}, {1, 2}, {3, 4}, {5, 6}, {7, 8}, {9}}).
+		If(sequence.Split(func(x generic.T) bool { return false })).Should().Equal([]seq.AnyT{sequence}).
+		If(sequence.Split(func(x generic.T) bool { return true })).Should().Equal([]seq.AnyT{{0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}})
 }
 
 func TestSeqTake(t *testing.T) {

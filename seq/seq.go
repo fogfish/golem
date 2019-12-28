@@ -180,6 +180,22 @@ func (seq AnyT) Partition(p func(generic.T) bool) (AnyT, AnyT) {
 // It is equivalent of consequent calls to TakeWhile/DropWhile
 // func (seq AnyT) Span(p Predicate) AnyT, AnyT
 
+// Split sequence to nested sequence with given splitting predicated
+func (seq AnyT) Split(p func(generic.T) bool) []AnyT {
+	s := make([]AnyT, 0)
+	i := 0
+	for j, x := range seq {
+		if p(x) {
+			if i != j {
+				s = append(s, seq[i:j])
+			}
+			i = j
+		}
+	}
+	s = append(s, seq[i:])
+	return s
+}
+
 // Take accepts n elements from head of sequence
 func (seq AnyT) Take(n int) AnyT {
 	return append(seq[:0:0], seq[:n]...)
