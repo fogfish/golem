@@ -6,14 +6,14 @@
 // https://github.com/fogfish/golem
 //
 
-package monoid_test
+package pure_test
 
 import (
 	"reflect"
 	"strconv"
 	"testing"
 
-	"github.com/fogfish/golem/monoid"
+	"github.com/fogfish/golem/pure"
 )
 
 //
@@ -28,11 +28,11 @@ func New(x int) *MSeq {
 
 //
 // Monoid interface for *MSeq
-func (seq *MSeq) Mempty() monoid.AnyT {
+func (seq *MSeq) Mempty() pure.Monoid {
 	return &MSeq{}
 }
 
-func (seq *MSeq) Mappend(x monoid.AnyT) monoid.AnyT {
+func (seq *MSeq) Mappend(x pure.Monoid) pure.Monoid {
 	seq.value = append(seq.value, x.(*MSeq).value...)
 	return seq
 }
@@ -48,12 +48,12 @@ type String struct {
 	value []string
 }
 
-type FMap func(string) monoid.AnyT
-type Mapper func(FMap) monoid.AnyT
+type FMap func(string) pure.Monoid
+type Mapper func(FMap) pure.Monoid
 
 // Functor
-func (seq *String) Map(m monoid.AnyT) Mapper {
-	return func(f FMap) monoid.AnyT {
+func (seq *String) Map(m pure.Monoid) Mapper {
+	return func(f FMap) pure.Monoid {
 		y := m.Mempty()
 		for _, x := range seq.value {
 			y = y.Mappend(f(x))
@@ -63,7 +63,7 @@ func (seq *String) Map(m monoid.AnyT) Mapper {
 }
 
 // Map with Monoid
-func (seq *String) MMap(m monoid.AnyT, f FMap) monoid.AnyT {
+func (seq *String) MMap(m pure.Monoid, f FMap) pure.Monoid {
 	y := m.Mempty()
 	for _, x := range seq.value {
 		y = y.Mappend(f(x))
@@ -82,10 +82,10 @@ func (seq *String) FMap(f func(string)) {
 // String x Monoid
 type Product struct {
 	String
-	M monoid.AnyT
+	M pure.Monoid
 }
 
-func (p *Product) Map(f FMap) monoid.AnyT {
+func (p *Product) Map(f FMap) pure.Monoid {
 	y := p.M.Mempty()
 	for _, x := range p.String.value {
 		y = y.Mappend(f(x))
@@ -98,7 +98,7 @@ func (p *Product) Map(f FMap) monoid.AnyT {
 var result *MSeq
 var sequence String = String{[]string{"0", "1", "2", "3", "4", "5", "6", "7", "8", "9"}}
 
-func atog(str string) monoid.AnyT {
+func atog(str string) pure.Monoid {
 	x, _ := strconv.Atoi(str)
 	return &MSeq{[]int{x}}
 }
