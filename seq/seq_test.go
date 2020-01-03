@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/fogfish/golem/generic"
+	"github.com/fogfish/golem/pure"
 
 	"github.com/fogfish/golem/seq"
 	"github.com/fogfish/it"
@@ -186,6 +187,6 @@ func TestSeqMonoidLawAssociativity(t *testing.T) {
 func TestSeqMonoidMap(t *testing.T) {
 	fmap := sequence.MMap(seq.AnyT{})
 	it.Ok(t).
-		If(fmap(func(x generic.T) seq.AnyT { return seq.AnyT{x.(int) * 10} })).
+		If(fmap(func(x generic.T) pure.Monoid { return seq.AnyT{x.(int) * 10} })).
 		Should().Equal(seq.AnyT{0, 10, 20, 30, 40, 50, 60, 70, 80, 90})
 }

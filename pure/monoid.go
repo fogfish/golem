@@ -6,8 +6,13 @@
 // https://github.com/fogfish/golem
 //
 
-package monoid
+package pure
 
+// Monoid implements an algebraic structure with a single associative
+// binary operation and an identity element.
+// See the post about monoid in Go:
+// https://github.com/fogfish/golem/blob/master/doc/monoid.md
+//
 // Monoid supports the generic implementation of strcutural transformations.
 // It is an algebraic structure https://en.wikipedia.org/wiki/Monoid
 // with identity element and associative binary function.
@@ -24,23 +29,23 @@ package monoid
 //
 //   type MSeq struct { value []int }
 //
-//   func (seq *MSeq) Mempty() monoid.AnyT {
+//   func (seq *MSeq) Mempty() pure.Monoid {
 //     return &MSeq{}
 //   }
 //
-//   func (seq *MSeq) Mappend(x monoid.AnyT) monoid.AnyT {
+//   func (seq *MSeq) Mappend(x pure.Monoid) pure.Monoid {
 //     seq.value = append(seq.value, x.(*MSeq).value...)
 //     return seq
 //   }
 //
-type AnyT interface {
+type Monoid interface {
 	// Mempty returns a type value that hold the identity property for
 	// combine operation, means the following equalities hold for any choice of x.
 	//   t.Combine(t.Empty()) == t.Empty().Combine(t) == t
-	Mempty() AnyT
+	Mempty() Monoid
 
 	// Mappend applies a side-effect to the structure by appending a given value.
 	// Combine must hold associative property
 	//   a.Combine(b).Combine(c) == a.Combine(b.Combine(c))
-	Mappend(x AnyT) AnyT
+	Mappend(x Monoid) Monoid
 }
