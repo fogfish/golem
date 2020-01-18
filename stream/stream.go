@@ -28,7 +28,7 @@ func (s AnyT) Empty() bool {
 	return !s.nonempty
 }
 
-// FMap applies high-order function (clojure) to all elements of sequence
+// FMap applies high-order function (clojure) to all elements of sequence.
 func (s AnyT) FMap(f func(generic.T)) {
 	stream := s
 	for !stream.Empty() {
