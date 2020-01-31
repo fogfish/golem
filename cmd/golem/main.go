@@ -15,9 +15,6 @@
 // The command takes few arguments:
 //
 //   -T string   defines a parametrization to `generic.T`, required
-//   -A string   defines a parametrization to `generic.A`, optional
-//   -B string   defines a parametrization to `generic.B`, optional
-//   -C string   defines a parametrization to `generic.C`, optional
 //
 //   -generic path  locates a path to generic algorithm.
 //
@@ -30,7 +27,7 @@
 //
 // Generics
 //
-// The library uses any type `interface{}` to implement valid, buildable and testable
+// You can use any type (e.g. `interface{}`) to implement valid, buildable and testable
 // generic Go code. Any other language uses a type variables to express generic types,
 // e.g. `Stack[T]`. This Go library uses `generic.T` literal as type aliases instead
 // of variable for this purpose.
@@ -135,19 +132,17 @@
 //
 // Use special labels in your code to define generic types:
 // mandatory `AnyT`, `generic.T`
-// optional `generic.A`, `generic.B` and `generic.C`
 //
 //   type AnyT struct {
 //     t generic.T
-//     a generic.A
 //   }
 //
-//   func foo(x AnyT) generic.B
-//   func bar(x generic.A) generic.B
+//   func foo(x AnyT) generic.T
+//   func bar(x generic.T) generic.T
 //
 //
-// The labels `generic.{T | A | B | C}` are replaced with values supplied
-// via corresponding command line parameters (`-T`, `-A`, `-B` and `-C`).
+// The label `generic.T` is replaced with values supplied
+// via corresponding command line parameter `-T`.
 // The labels `AnyT` is either replaced with a name of type `T` or generic
 // pattern depending on the used workflow.  Insert the following comment
 // in your source code file:
@@ -161,14 +156,16 @@
 package main
 
 import (
-	"bytes"
 	"flag"
 	"fmt"
+	"go/ast"
 	"go/build"
-	"io/ioutil"
+	"go/parser"
+	"go/printer"
+	"go/token"
 	"log"
+	"os"
 	"path/filepath"
-	"regexp"
 	"strings"
 	"time"
 )
@@ -177,9 +174,6 @@ import (
 type opts struct {
 	generic  *string
 	genericT *string
-	genericA *string
-	genericB *string
-	genericC *string
 	lib      *bool
 }
 
@@ -187,75 +181,88 @@ func parseOpts() opts {
 	spec := opts{
 		flag.String("generic", "", "locates a path to generic type definition."),
 		flag.String("T", "", "defines a parametrization to generic.T"),
-		flag.String("A", "", "defines a parametrization to generic.A"),
-		flag.String("B", "", "defines a parametrization to generic.B"),
-		flag.String("C", "", "defines a parametrization to generic.C"),
 		flag.Bool("lib", false, "use library declaration schema."),
 	}
 	flag.Parse()
 	return spec
 }
 
-//
-func declareTypes(x []byte, spec opts) []byte {
-	t := declareType(x, "T", *spec.genericT)
-	a := declareType(t, "A", *spec.genericA)
-	b := declareType(a, "B", *spec.genericB)
-	c := declareType(b, "C", *spec.genericC)
-	return c
-}
-
-func declareType(content []byte, t string, kind string) []byte {
-	if kind == "" {
-		return content
+func isGenericType(node ast.Node) bool {
+	switch spec := node.(type) {
+	case *ast.SelectorExpr:
+		switch v := spec.X.(type) {
+		case *ast.Ident:
+			if v.Name == "generic" {
+				return true
+			}
+		}
 	}
-	return bytes.ReplaceAll(content, []byte("generic."+t), []byte(kind))
+	return false
 }
 
 //
-func referenceType(content []byte, kind string) []byte {
-	return bytes.ReplaceAll(content,
-		[]byte("AnyT"),
-		[]byte(kind),
-	)
-}
-
-//
-func repackage(content []byte, pkg string) []byte {
-	re := regexp.MustCompile(`package (.*)\n`)
-	return re.ReplaceAll(content, []byte("package "+pkg+"\n"))
-}
-
-//
-func unimport(content []byte) []byte {
-	a := bytes.ReplaceAll(content,
-		[]byte("import \"github.com/fogfish/golem/generic\"\n"),
-		[]byte(""),
-	)
-
-	b := bytes.ReplaceAll(a,
-		[]byte("\"github.com/fogfish/golem/generic\"\n"),
-		[]byte(""),
-	)
-
-	re := regexp.MustCompile(`import \(\s+\)\n`)
-	return re.ReplaceAll(b, []byte{})
-}
-
-//
-func main() {
-	var err error
-	log.SetFlags(0)
-	log.SetPrefix("==> golem: ")
-	opt := parseOpts()
-
-	pkg, err := build.Default.ImportDir(".", 0)
-	if err != nil {
-		log.Fatal(err)
+func transform(pkg, tGenT, tAnyT string) func(ast.Node) bool {
+	return func(node ast.Node) bool {
+		switch spec := node.(type) {
+		case *ast.File:
+			spec.Name.Name = pkg
+		case *ast.ImportSpec:
+			if strings.HasSuffix(spec.Path.Value, "golem/generic\"") {
+				spec.Path.Value = ""
+			}
+		case *ast.TypeSpec:
+			if isGenericType(spec.Type) {
+				spec.Type = &ast.Ident{Name: tGenT}
+			}
+		case *ast.Field:
+			if isGenericType(spec.Type) {
+				spec.Type = &ast.Ident{Name: tGenT}
+			}
+		case *ast.ValueSpec:
+			if isGenericType(spec.Type) {
+				spec.Type = &ast.Ident{Name: tGenT}
+			}
+		case *ast.Ident:
+			if spec.Name == "AnyT" {
+				spec.Name = tAnyT
+			}
+		}
+		return true
 	}
+}
 
-	source := filepath.Join(build.Default.GOPATH, "src", *opt.generic)
+// The code generator assumes two major development workflows.
+//
+// Library development.
+// One package defines one generic type.
+//
+// As a generic library developer I want to define a generic type and supply its
+// parametrized variants of standard Go type so that my generic is ready for application
+// development.
+//
+// App development
+// One package defines a type and parametrization of various generic algorithms
+//
+// As a application developer I want to parametrize a generic types with my own
+// application specific types so that the application benefits from re-use of generic
+// implementations.
+//
+func typeGenericT(source string, opt *opts) string {
+	return *opt.genericT
+}
+
+func typeAnyT(source string, opt *opts) string {
 	generic := strings.TrimSuffix(filepath.Base(source), filepath.Ext(source))
+	typename := strings.Title(generic)
+	if *opt.lib {
+		typename = strings.Title(*opt.genericT)
+	}
+	return typename
+}
+
+func genericFileName(source string, opt *opts) string {
+	generic := strings.TrimSuffix(filepath.Base(source), filepath.Ext(source))
+
 	subtype := strings.Split(generic, "_")
 	suffix := ""
 	if len(subtype) > 1 {
@@ -263,29 +270,63 @@ func main() {
 	}
 
 	filename := fmt.Sprintf("g_%s%s.go", generic, suffix)
-	typename := strings.Title(generic)
 	if *opt.lib {
 		filename = fmt.Sprintf("g_%s%s.go", *opt.genericT, suffix)
-		typename = strings.Title(*opt.genericT)
 	}
+	return strings.ToLower(filename)
+}
 
-	input, err := ioutil.ReadFile(source)
+//
+func disclaimer(generic string) *ast.CommentGroup {
+	comment := &ast.Comment{
+		Text:  fmt.Sprintf("//\n// Code generated by `golem` package\n// Source: %s\n// Time: %s\n//\n\n", generic, time.Now().UTC()),
+		Slash: 1,
+	}
+	return &ast.CommentGroup{
+		List: []*ast.Comment{comment},
+	}
+}
+
+//
+func main() {
+	log.SetFlags(0)
+	log.SetPrefix("==> golem: ")
+	opt := parseOpts()
+
+	// detect spec of building package
+	pkg, err := build.Default.ImportDir(".", 0)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	a := declareTypes(input, opt)
-	b := referenceType(a, typename)
-	c := repackage(b, pkg.Name)
-	d := unimport(c)
+	// generic spec
+	source := filepath.Join(build.Default.GOPATH, "src", *opt.generic)
+	generic := strings.TrimSuffix(filepath.Base(source), filepath.Ext(source))
 
-	output := bytes.NewBuffer([]byte{})
-	output.Write([]byte("// Code generated by `golem` package\n"))
-	output.Write([]byte(fmt.Sprintf("// Source: %s\n", *opt.generic)))
-	output.Write([]byte(fmt.Sprintf("// Time: %s\n\n", time.Now().UTC())))
+	// parse generic definition
+	fgroup := token.NewFileSet()
+	file, err := parser.ParseFile(fgroup, source, nil, parser.ParseComments)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	output.Write(d)
+	// re-write generic definition
+	tGenT := typeGenericT(source, &opt)
+	tAnyT := typeAnyT(source, &opt)
 
-	ioutil.WriteFile(filepath.Join(pkg.PkgRoot, filename), output.Bytes(), 0666)
-	log.Printf("%s.%s", generic, typename)
+	ast.Inspect(file,
+		transform(pkg.Name, tGenT, tAnyT))
+
+	// append comment
+	doc := disclaimer(*opt.generic)
+	file.Doc = doc
+	file.Comments = append([]*ast.CommentGroup{doc}, file.Comments...)
+
+	// writes destination file
+	filename := filepath.Join(pkg.PkgRoot, genericFileName(source, &opt))
+	fd, err := os.Create(filename)
+	defer fd.Close()
+
+	printer.Fprint(fd, fgroup, file)
+	log.Printf("%s.%s", generic, tAnyT)
 }
