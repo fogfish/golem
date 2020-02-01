@@ -2,15 +2,25 @@
   <img src="./doc/logo.svg" height="180" />
   <h3 align="center">Golem</h3>
   <p align="center"><strong>"Scrap Your Boilerplate" for Go</strong></p>
+
+  <p align="center">
+    <a href="http://godoc.org/github.com/fogfish/golem">
+      <img src="https://godoc.org/github.com/fogfish/golem?status.svg" />
+    </a>
+    <a href="http://travis-ci.org/fogfish/golem">
+      <img src="https://secure.travis-ci.org/fogfish/golem.svg?branch=master" />
+    </a>
+  </p>
 </p>
 
---- 
 
 [![Documentation](https://godoc.org/github.com/fogfish/golem?status.svg)](http://godoc.org/github.com/fogfish/golem)
 [![Build Status](https://secure.travis-ci.org/fogfish/golem.svg?branch=master)](http://travis-ci.org/fogfish/golem)
 [![Git Hub](https://img.shields.io/github/last-commit/fogfish/golem.svg)](http://travis-ci.org/fogfish/golem)
 [![Coverage Status](https://coveralls.io/repos/github/fogfish/golem/badge.svg?branch=master)](https://coveralls.io/github/fogfish/golem?branch=master)
 [![Go Report Card](https://goreportcard.com/badge/github.com/fogfish/golem)](https://goreportcard.com/report/github.com/fogfish/golem)
+
+--- 
 
 
 # Golem: "Scrap Your Boilerplate" for Go
