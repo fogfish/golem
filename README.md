@@ -1,15 +1,10 @@
 <p align="center">
-  <img src="./doc/logo.svg" height="140" />
+  <img src="./doc/logo.svg" height="180" />
   <h3 align="center">Golem</h3>
-
   <p align="center">"Scrap Your Boilerplate" for Go</p>
-  <blockquote align="center"><p align="center">
-    His dust was "kneaded into a shapeless husk."
-  </p></blockquote>
-  <blockquote><p>
-    You could do this with a macro, but... the best macro is a macro you don't maintain.
-  </p></blockquote>
 </p>
+
+-- 
 
 [![Documentation](https://godoc.org/github.com/fogfish/golem?status.svg)](http://godoc.org/github.com/fogfish/golem)
 [![Build Status](https://secure.travis-ci.org/fogfish/golem.svg?branch=master)](http://travis-ci.org/fogfish/golem)
@@ -17,7 +12,6 @@
 [![Coverage Status](https://coveralls.io/repos/github/fogfish/golem/badge.svg?branch=master)](https://coveralls.io/github/fogfish/golem?branch=master)
 [![Go Report Card](https://goreportcard.com/badge/github.com/fogfish/golem)](https://goreportcard.com/report/github.com/fogfish/golem)
 
----
 
 # Golem: "Scrap Your Boilerplate" for Go
 
