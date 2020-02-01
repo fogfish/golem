@@ -3,7 +3,7 @@
   <h3 align="center">Golem</h3>
 
   <p align="center">"Scrap Your Boilerplate" for Go</p>
-  <blockquote><p>
+  <blockquote><p align="center">
     His dust was "kneaded into a shapeless husk."
   </p></blockquote>
   <blockquote><p>
