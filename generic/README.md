@@ -4,7 +4,7 @@
 
 > Generic programming is a style of computer programming in which algorithms are written in terms of types to-be-specified-later that are then instantiated when needed for specific types provided as parameters. -- said by [Wikipedia](https://en.wikipedia.org/wiki/Generic_programming).
 
-The discussion about Generics in Go is [never ending story](https://github.com/golang/go/wiki/ExperienceReports#generics). There is one article that draws a perfect bottom line on this subject: [Who needs generic? Use ... instead!](https://appliedgo.net/generics/). The primary reason for generics is the ability to [scrap your boilerplate code](https://www.microsoft.com/en-us/research/publication/scrap-your-boilerplate-with-class/). Copy-and-Paste is not an option, it only works perfectly with Stack Overflow. However, code generator is a **perfect** solution that resembles a macros in Scala or parse transforms in Erlang. The implementation of golem command-line utility is heavily inspired by [genny](https://github.com/cheekybits/genny). 
+The discussion about Generics in Go is [never ending story](https://github.com/golang/go/wiki/ExperienceReports#generics), may be in release 1.15. There is one article that draws a perfect bottom line on this subject: [Who needs generic? Use ... instead!](https://appliedgo.net/generics/). The primary reason for generics is the ability to [scrap your boilerplate code](https://www.microsoft.com/en-us/research/publication/scrap-your-boilerplate-with-class/). Copy-and-Paste is not an option, it only works perfectly with Stack Overflow. However, code generator is a **perfect** solution that resembles a macros in Scala or parse transforms in Erlang. The implementation of golem command-line utility is inspired by [genny](https://github.com/cheekybits/genny). 
 
 The code generator solution allows to write a valid Go code, which is **compilable** and **testable** with standard Go tools. Generic libraries deals with valid Go code. All generic algorithms are covered with unit testing and benchmarking. You can even use non-parametrized generics algorithms directly in your applications with small performance penalty. The build time replacement of type variables with specific type mitigates all drawback.
 
@@ -65,21 +65,18 @@ foobar.Stack{}
 
 ## How It works
 
-Use special labels in your code to define generic types:
-* mandatory `AnyT`, `generic.T`
-* optional `generic.A`, `generic.B` and `generic.C`
+Use special labels in your code to define generic types: `AnyT`, `generic.T`
 
 ```go
 type AnyT struct {
   t generic.T
-  a generic.A
 }
 
-func foo(x AnyT) generic.B
-func bar(x generic.A) generic.B
+func foo(x AnyT) generic.T
+func bar(x generic.T) generic.T
 ```
 
-The labels `generic.{T | A | B | C}` are replaced with values supplied via corresponding command line parameters (`-T`, `-A`, `-B` and `-C`). The labels `AnyT` is either replaced with a name of type `T` or generic pattern depending on the used workflow.  Insert the following comment in your source code file:
+The label `generic.T` is replaced with values supplied via corresponding command line parameter `-T`. The labels `AnyT` is either replaced with a name of type `T` or generic pattern depending on the used workflow.  Insert the following comment in your source code file:
 
 ```go
 // Library workflow
