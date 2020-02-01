@@ -4,35 +4,35 @@
   <p align="center"><strong>"Scrap Your Boilerplate" for Go</strong></p>
 
   <p align="center">
+    <!-- Documentation -->
     <a href="http://godoc.org/github.com/fogfish/golem">
       <img src="https://godoc.org/github.com/fogfish/golem?status.svg" />
     </a>
+    <!-- Build Status  -->
     <a href="http://travis-ci.org/fogfish/golem">
       <img src="https://secure.travis-ci.org/fogfish/golem.svg?branch=master" />
+    </a>
+    <!-- GitHub -->
+    <a href="http://github.com/fogfish/golem">
+      <img src="https://img.shields.io/github/last-commit/fogfish/golem.svg" />
+    </a>
+    <!-- Coverage -->
+    <a href="https://coveralls.io/github/fogfish/golem?branch=master">
+      <img src="https://coveralls.io/repos/github/fogfish/golem/badge.svg?branch=master" />
+    </a>
+    <!-- Go Card -->
+    <a href="https://goreportcard.com/report/github.com/fogfish/golem">
+      <img src="https://goreportcard.com/badge/github.com/fogfish/golem" />
     </a>
   </p>
 </p>
 
-
-[![Documentation](https://godoc.org/github.com/fogfish/golem?status.svg)](http://godoc.org/github.com/fogfish/golem)
-[![Build Status](https://secure.travis-ci.org/fogfish/golem.svg?branch=master)](http://travis-ci.org/fogfish/golem)
-[![Git Hub](https://img.shields.io/github/last-commit/fogfish/golem.svg)](http://travis-ci.org/fogfish/golem)
-[![Coverage Status](https://coveralls.io/repos/github/fogfish/golem/badge.svg?branch=master)](https://coveralls.io/github/fogfish/golem?branch=master)
-[![Go Report Card](https://goreportcard.com/badge/github.com/fogfish/golem)](https://goreportcard.com/report/github.com/fogfish/golem)
-
 --- 
-
-
-# Golem: "Scrap Your Boilerplate" for Go
-
-<img src="./doc/logo.svg" width="320" align="left"/>
 
 > His dust was "kneaded into a shapeless husk."
 
 > You could do this with a macro, but...
 > the best macro is a macro you don't maintain
-
-
 
 **golem** is a pure functional and generic programming for Go. It had its origins in [Purely Functional Data Structures](https://www.cs.cmu.edu/~rwh/theses/okasaki.pdf) by Chris Okasaki, on implementing a various higher rank functional abstractions and patterns, on dealing with [scrap your boilerplate](https://www.microsoft.com/en-us/research/publication/scrap-your-boilerplate-with-class/) and gaining experience from other functional languages primary Scala, Haskell and heavily inspired by Erlang twin library [datum](https://github.com/fogfish/datum). Golem is testing the limits of functional abstractions in Go.
 
