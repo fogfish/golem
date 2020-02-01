@@ -1,6 +1,5 @@
 <p align="center">
   <img src="./doc/logo.svg" height="140" />
-  <img src="https://cdn.rawgit.com/awnumar/memguard/master/logo.svg" height="140" />
   <h3 align="center">Golem</h3>
 
   <p align="center">"Scrap Your Boilerplate" for Go</p>
