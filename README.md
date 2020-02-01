@@ -1,10 +1,10 @@
 <p align="center">
   <img src="./doc/logo.svg" height="180" />
   <h3 align="center">Golem</h3>
-  <p align="center">"Scrap Your Boilerplate" for Go</p>
+  <p align="center"><strong>"Scrap Your Boilerplate" for Go</strong></p>
 </p>
 
--- 
+--- 
 
 [![Documentation](https://godoc.org/github.com/fogfish/golem?status.svg)](http://godoc.org/github.com/fogfish/golem)
 [![Build Status](https://secure.travis-ci.org/fogfish/golem.svg?branch=master)](http://travis-ci.org/fogfish/golem)
