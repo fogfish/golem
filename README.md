@@ -51,6 +51,7 @@ Functional style programming can be achieved in any language, including Go. Gola
 
 * [Generic](generic) with build time code generation.
 * [Monoid](doc/monoid.md) for structural transformation.
+* Semi-automatic [cipher](crypto) for Algebraic Data Types.
 * [Seq](https://godoc.org/github.com/fogfish/golem/seq) is a special case for slice that support convenient methods. 
 
 
@@ -58,13 +59,9 @@ Functional style programming can be achieved in any language, including Go. Gola
 
 The latest version of the library is available at `master` branch. All development, including new features and bug fixes, take place on the `master` branch using forking and pull requests as described in contribution guidelines.
 
-Usage of library requires **installation** of command line utility, see it [documentation](https://godoc.org/github.com/fogfish/golem/cmd/golem) and [workflows](doc/generic.md)
+The library implements rich set of [generic patterns](#key-features) and command-line utility to instantiate a specific type from generic algorithm.
 
-```bash
-go get -u github.com/fogfish/golem/cmd/golem
-```
-
-**Import** the library packages in your code
+**Import** library packages in your code.
 
 ```go
 import (
@@ -72,13 +69,21 @@ import (
 )
 ```
 
-**Parametrize** generic templates with
+Usage of generic requires **installation** of command line utility, see it [documentation](https://godoc.org/github.com/fogfish/golem/cmd/golem) and [typical workflows](generic).
+
+```bash
+go get -u github.com/fogfish/golem/cmd/golem
+```
+
+**Instruct** code generator to parametrize generic algorithm with you data type.
 
 ```go
 //go:generate golem -T FooBar -generic github.com/fogfish/golem/seq/seq.go
 ```
 
-See the [documentation](http://godoc.org/github.com/fogfish/golem)
+Use `go generate` to generate parametrized code, all newly created files has prefix `g_`.
+
+See the [library documentation](http://godoc.org/github.com/fogfish/golem)
 
 
 ## How To Contribute
