@@ -6,7 +6,8 @@
 // https://github.com/fogfish/golem
 //
 
+// Package cipher implements crypto algorithms for crypto generic.
 package cipher
 
-//
+// Default is global variable with reference to default cipher.
 var Default = NewKMS()

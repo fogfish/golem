@@ -15,10 +15,10 @@ import (
 	"github.com/fogfish/golem/generic"
 )
 
-//
+// AnyT is generic definition of sensitive structures
 type AnyT generic.L
 
-//
+// UnmarshalJSON implements automatic decryption of data
 func (value *AnyT) UnmarshalJSON(b []byte) (err error) {
 	type Referable AnyT
 
@@ -37,7 +37,7 @@ func (value *AnyT) UnmarshalJSON(b []byte) (err error) {
 	return
 }
 
-//
+// MarshalJSON implements automatic encryption of sensitive strings during data marshalling.
 func (value AnyT) MarshalJSON() (bytes []byte, err error) {
 	type Referable AnyT
 
@@ -54,7 +54,7 @@ func (value AnyT) MarshalJSON() (bytes []byte, err error) {
 	return json.Marshal(text)
 }
 
-//
+// PlainText returns plain text value
 func (value AnyT) PlainText() generic.L {
 	return generic.L(value)
 }

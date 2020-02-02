@@ -13,10 +13,13 @@ import (
 	"github.com/fogfish/golem/crypto/cipher"
 )
 
-//
+// String is an alias built-in `string`. It shall be used as a container for sensitive
+// data. Its sensitive value is not assignable to variable of type `string`. You have
+// to either use helper method `PlainText` or cast it to string. This makes a simple
+// protection against accidental leakage.
 type String string
 
-//
+// UnmarshalJSON implements automatic decryption of data
 func (value *String) UnmarshalJSON(b []byte) (err error) {
 	var cryptotext string
 	if err = json.Unmarshal(b, &cryptotext); err != nil {
@@ -28,7 +31,7 @@ func (value *String) UnmarshalJSON(b []byte) (err error) {
 	return
 }
 
-//
+// MarshalJSON implements automatic encryption of sensitive strings during data marshalling.
 func (value String) MarshalJSON() (bytes []byte, err error) {
 	text, err := cipher.Default.Encrypt([]byte(value))
 	if err != nil {
@@ -38,7 +41,7 @@ func (value String) MarshalJSON() (bytes []byte, err error) {
 	return json.Marshal(text)
 }
 
-//
+// PlainText returns plain text value
 func (value String) PlainText() string {
 	return string(value)
 }

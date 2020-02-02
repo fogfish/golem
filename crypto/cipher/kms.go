@@ -17,13 +17,13 @@ import (
 	"github.com/aws/aws-sdk-go/service/kms/kmsiface"
 )
 
-//
+// KMS is the context of AWS KMS cipher
 type KMS struct {
 	api kmsiface.KMSAPI
 	key string
 }
 
-//
+// NewKMS returns AWS KMS context
 func NewKMS() *KMS {
 	return &KMS{
 		kms.New(session.Must(session.NewSession())),
@@ -31,17 +31,17 @@ func NewKMS() *KMS {
 	}
 }
 
-//
+// Mock replaces instances of AWS KMS API
 func (c *KMS) Mock(api kmsiface.KMSAPI) {
 	c.api = api
 }
 
-//
+// UseKey defines encryption key
 func (c *KMS) UseKey(key string) {
 	c.key = key
 }
 
-//
+// Decrypt uses AWS KMS API to decrypt cryptotext.
 func (c *KMS) Decrypt(cryptotext string) (plaintext []byte, err error) {
 	bytes, err := base64.StdEncoding.DecodeString(cryptotext)
 	if err != nil {
@@ -60,7 +60,7 @@ func (c *KMS) Decrypt(cryptotext string) (plaintext []byte, err error) {
 	return result.Plaintext, nil
 }
 
-//
+// Encrypt uses AWS KMS API to encrypt plaintext.
 func (c *KMS) Encrypt(plaintext []byte) (cryptotext string, err error) {
 	input := &kms.EncryptInput{
 		KeyId:     aws.String(c.key),
