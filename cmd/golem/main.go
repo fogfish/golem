@@ -222,6 +222,10 @@ func transform(pkg, tGenT, tAnyT string) func(ast.Node) bool {
 			if isGenericType(spec.Type) {
 				spec.Type = &ast.Ident{Name: tGenT}
 			}
+		case *ast.CallExpr:
+			if isGenericType(spec.Fun) {
+				spec.Fun = &ast.Ident{Name: tGenT}
+			}
 		case *ast.Ident:
 			if spec.Name == "AnyT" {
 				spec.Name = tAnyT

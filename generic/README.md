@@ -65,9 +65,13 @@ foobar.Stack{}
 
 ## How It works
 
+### Library
+
 Use special labels in your code to define generic types: `AnyT`, `generic.T`
 
 ```go
+package foobar
+
 type AnyT struct {
   t generic.T
 }
@@ -76,12 +80,37 @@ func foo(x AnyT) generic.T
 func bar(x generic.T) generic.T
 ```
 
-The label `generic.T` is replaced with values supplied via corresponding command line parameter `-T`. The labels `AnyT` is either replaced with a name of type `T` or generic pattern depending on the used workflow.  Insert the following comment in your source code file:
+The label `generic.T` is replaced with values supplied via corresponding command line parameter `-T`. The labels `AnyT` is either replaced with a name of type `T` or generic pattern depending on the used workflow. Insert the following comment in your source code file:
 
 ```go
-// Library workflow
 //go:generate golem -lib -T int -generic github.com/fogfish/golem/seq/seq.go
+```
 
-// Application workflow
+Execute `go generate`. As the result, you'll get new data type `foobar.Int`.
+
+### Application
+
+Create a new package for your data type and declare your datatype using "traditional" go syntax. Add the `go generate` instruction to parametrize generic algorithm with you data type.
+
+```go
 //go:generate golem -T FooBar -generic github.com/fogfish/golem/seq/seq.go
+package foobar
+
+// Declare a type as standard golang struct.
+type FooBar struct {
+  Foo string
+  Bar int
+}
+```
+
+Execute `go generate`. As the result, you'll get new data type `foobar.Seq` that contains generic pattern adapted to your data structure. Its usage is straight forward:
+
+```go
+import (
+  ".../foobar"
+)
+
+type M struct {
+  FooBar foobar.Seq
+}
 ```

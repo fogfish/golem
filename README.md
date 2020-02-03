@@ -1,18 +1,38 @@
-# Golem: "Scrap Your Boilerplate" for Go
+<p align="center">
+  <img src="./doc/logo.svg" height="180" />
+  <h3 align="center">Golem</h3>
+  <p align="center"><strong>"Scrap Your Boilerplate" for Go</strong></p>
 
-<img src="./doc/logo.svg" width="320" align="left"/>
+  <p align="center">
+    <!-- Documentation -->
+    <a href="http://godoc.org/github.com/fogfish/golem">
+      <img src="https://godoc.org/github.com/fogfish/golem?status.svg" />
+    </a>
+    <!-- Build Status  -->
+    <a href="http://travis-ci.org/fogfish/golem">
+      <img src="https://secure.travis-ci.org/fogfish/golem.svg?branch=master" />
+    </a>
+    <!-- GitHub -->
+    <a href="http://github.com/fogfish/golem">
+      <img src="https://img.shields.io/github/last-commit/fogfish/golem.svg" />
+    </a>
+    <!-- Coverage -->
+    <a href="https://coveralls.io/github/fogfish/golem?branch=master">
+      <img src="https://coveralls.io/repos/github/fogfish/golem/badge.svg?branch=master" />
+    </a>
+    <!-- Go Card -->
+    <a href="https://goreportcard.com/report/github.com/fogfish/golem">
+      <img src="https://goreportcard.com/badge/github.com/fogfish/golem" />
+    </a>
+  </p>
+</p>
+
+--- 
 
 > His dust was "kneaded into a shapeless husk."
 
 > You could do this with a macro, but...
 > the best macro is a macro you don't maintain
-
-[![Documentation](https://godoc.org/github.com/fogfish/golem?status.svg)](http://godoc.org/github.com/fogfish/golem)
-[![Build Status](https://secure.travis-ci.org/fogfish/golem.svg?branch=master)](http://travis-ci.org/fogfish/golem)
-[![Git Hub](https://img.shields.io/github/last-commit/fogfish/golem.svg)](http://travis-ci.org/fogfish/golem)
-[![Coverage Status](https://coveralls.io/repos/github/fogfish/golem/badge.svg?branch=master)](https://coveralls.io/github/fogfish/golem?branch=master)
-[![Go Report Card](https://goreportcard.com/badge/github.com/fogfish/golem)](https://goreportcard.com/report/github.com/fogfish/golem)
-
 
 **golem** is a pure functional and generic programming for Go. It had its origins in [Purely Functional Data Structures](https://www.cs.cmu.edu/~rwh/theses/okasaki.pdf) by Chris Okasaki, on implementing a various higher rank functional abstractions and patterns, on dealing with [scrap your boilerplate](https://www.microsoft.com/en-us/research/publication/scrap-your-boilerplate-with-class/) and gaining experience from other functional languages primary Scala, Haskell and heavily inspired by Erlang twin library [datum](https://github.com/fogfish/datum). Golem is testing the limits of functional abstractions in Go.
 
@@ -31,6 +51,7 @@ Functional style programming can be achieved in any language, including Go. Gola
 
 * [Generic](generic) with build time code generation.
 * [Monoid](doc/monoid.md) for structural transformation.
+* Semi-automatic [cipher](crypto) for Algebraic Data Types.
 * [Seq](https://godoc.org/github.com/fogfish/golem/seq) is a special case for slice that support convenient methods. 
 
 
@@ -38,13 +59,9 @@ Functional style programming can be achieved in any language, including Go. Gola
 
 The latest version of the library is available at `master` branch. All development, including new features and bug fixes, take place on the `master` branch using forking and pull requests as described in contribution guidelines.
 
-Usage of library requires **installation** of command line utility, see it [documentation](https://godoc.org/github.com/fogfish/golem/cmd/golem) and [workflows](doc/generic.md)
+The library implements rich set of [generic patterns](#key-features) and command-line utility to instantiate a specific type from generic algorithm.
 
-```bash
-go get -u github.com/fogfish/golem/cmd/golem
-```
-
-**Import** the library packages in your code
+**Import** library packages in your code.
 
 ```go
 import (
@@ -52,13 +69,21 @@ import (
 )
 ```
 
-**Parametrize** generic templates with
+Usage of generic requires **installation** of command line utility, see it [documentation](https://godoc.org/github.com/fogfish/golem/cmd/golem) and [typical workflows](generic).
+
+```bash
+go get -u github.com/fogfish/golem/cmd/golem
+```
+
+**Instruct** code generator to parametrize generic algorithm with you data type.
 
 ```go
 //go:generate golem -T FooBar -generic github.com/fogfish/golem/seq/seq.go
 ```
 
-See the [documentation](http://godoc.org/github.com/fogfish/golem)
+Use `go generate` to generate parametrized code, all newly created files has prefix `g_`.
+
+See the [library documentation](http://godoc.org/github.com/fogfish/golem)
 
 
 ## How To Contribute
