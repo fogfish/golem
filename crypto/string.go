@@ -23,11 +23,15 @@ type String string
 func (value *String) UnmarshalJSON(b []byte) (err error) {
 	var cryptotext string
 	if err = json.Unmarshal(b, &cryptotext); err != nil {
-		return err
+		return
 	}
-	text, err := cipher.Default.Decrypt(cryptotext)
-	*value = String(text)
 
+	text, err := cipher.Default.Decrypt(cryptotext)
+	if err != nil {
+		return
+	}
+
+	*value = String(text)
 	return
 }
 

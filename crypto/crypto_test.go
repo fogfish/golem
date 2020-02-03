@@ -10,6 +10,7 @@ package crypto_test
 
 import (
 	"encoding/json"
+	"errors"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/kms"
@@ -40,6 +41,20 @@ func TestStringUnmarshalJSON(t *testing.T) {
 		If(value.Secret.PlainText()).Should().Equal("plaintext")
 }
 
+func TestStringUnmarshalFail(t *testing.T) {
+	cipher.Default.Mock(fail{})
+
+	value := MyString{}
+	input := []byte("{\"secret\":\"cGxhaW50ZXh0\"}")
+
+	it.Ok(t).
+		If(
+			func() error {
+				return json.Unmarshal(input, &value)
+			},
+		).Should().Intercept(ErrDecrypt)
+}
+
 func TestStringMarshalJSON(t *testing.T) {
 	cipher.Default.Mock(mock{})
 
@@ -51,19 +66,47 @@ func TestStringMarshalJSON(t *testing.T) {
 		If(bytes).Should().Equal([]byte("{\"secret\":\"cGxhaW50ZXh0\"}"))
 }
 
+func TestStringMarshalFail(t *testing.T) {
+	cipher.Default.Mock(fail{})
+
+	value := MyString{crypto.String("plaintext")}
+
+	it.Ok(t).
+		If(
+			func() error {
+				_, err := json.Marshal(value)
+				return err
+			},
+		).Should().Intercept(ErrEncrypt)
+}
+
 func TestAnyTUnmarshalJSON(t *testing.T) {
 	cipher.Default.Mock(mock{})
 
 	value := MyJSON{}
-	input := "{\"secret\":\"eyJ0ZXh0IjoicGxhaW50ZXh0In0=\"}"
+	input := []byte("{\"secret\":\"eyJ0ZXh0IjoicGxhaW50ZXh0In0=\"}")
 
 	it.Ok(t).
-		If(json.Unmarshal([]byte(input), &value)).Should().Equal(nil).
+		If(json.Unmarshal(input, &value)).Should().Equal(nil).
 		If(value.Secret).Should().Equal(crypto.AnyT{"text": "plaintext"}).
 		If(value.Secret.PlainText()).Should().Equal(generic.L{"text": "plaintext"})
 }
 
-func TestCryptoMarshalJSON(t *testing.T) {
+func TestAnyTUnmarshalFail(t *testing.T) {
+	cipher.Default.Mock(fail{})
+
+	value := MyJSON{}
+	input := []byte("{\"secret\":\"eyJ0ZXh0IjoicGxhaW50ZXh0In0=\"}")
+
+	it.Ok(t).
+		If(
+			func() error {
+				return json.Unmarshal(input, &value)
+			},
+		).Should().Intercept(ErrDecrypt)
+}
+
+func TestAnyTMarshalJSON(t *testing.T) {
 	cipher.Default.Mock(mock{})
 
 	value := MyJSON{crypto.AnyT{"text": "plaintext"}}
@@ -72,6 +115,20 @@ func TestCryptoMarshalJSON(t *testing.T) {
 	it.Ok(t).
 		If(err).Should().Equal(nil).
 		If(bytes).Should().Equal([]byte("{\"secret\":\"eyJ0ZXh0IjoicGxhaW50ZXh0In0=\"}"))
+}
+
+func TestAnyTMarshalFail(t *testing.T) {
+	cipher.Default.Mock(fail{})
+
+	value := MyJSON{crypto.AnyT{"text": "plaintext"}}
+
+	it.Ok(t).
+		If(
+			func() error {
+				_, err := json.Marshal(value)
+				return err
+			},
+		).Should().Intercept(ErrEncrypt)
 }
 
 //
@@ -90,4 +147,21 @@ func (mock) Encrypt(input *kms.EncryptInput) (*kms.EncryptOutput, error) {
 	return &kms.EncryptOutput{
 		CiphertextBlob: input.Plaintext,
 	}, nil
+}
+
+//
+//
+type fail struct {
+	kmsiface.KMSAPI
+}
+
+var ErrDecrypt = errors.New("Unable to decrypt")
+var ErrEncrypt = errors.New("Unable to encrypt")
+
+func (fail) Decrypt(input *kms.DecryptInput) (*kms.DecryptOutput, error) {
+	return nil, ErrDecrypt
+}
+
+func (fail) Encrypt(input *kms.EncryptInput) (*kms.EncryptOutput, error) {
+	return nil, ErrEncrypt
 }

@@ -24,16 +24,20 @@ func (value *AnyT) UnmarshalJSON(b []byte) (err error) {
 
 	var cryptotext string
 	if err = json.Unmarshal(b, &cryptotext); err != nil {
-		return err
+		return
 	}
+
 	text, err := cipher.Default.Decrypt(cryptotext)
+	if err != nil {
+		return
+	}
 
 	var gen Referable
 	if err = json.Unmarshal(text, &gen); err != nil {
-		return err
+		return
 	}
-	*value = AnyT(gen)
 
+	*value = AnyT(gen)
 	return
 }
 
