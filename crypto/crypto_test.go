@@ -57,6 +57,7 @@ func TestStringUnmarshalFail(t *testing.T) {
 
 func TestStringMarshalJSON(t *testing.T) {
 	cipher.Default.Mock(mock{})
+	cipher.Default.UseKey("alias/mykms/key")
 
 	value := MyString{crypto.String("plaintext")}
 	bytes, err := json.Marshal(value)
@@ -94,6 +95,7 @@ func TestAnyTUnmarshalJSON(t *testing.T) {
 
 func TestAnyTUnmarshalFail(t *testing.T) {
 	cipher.Default.Mock(fail{})
+	cipher.Default.UseKey("alias/mykms/key")
 
 	value := MyJSON{}
 	input := []byte("{\"secret\":\"eyJ0ZXh0IjoicGxhaW50ZXh0In0=\"}")
