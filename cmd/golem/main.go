@@ -200,6 +200,14 @@ func isGenericType(node ast.Node) bool {
 	return false
 }
 
+func isGenericSlice(node ast.Node) bool {
+	switch spec := node.(type) {
+	case *ast.ArrayType:
+		return isGenericType(spec.Elt)
+	}
+	return false
+}
+
 //
 func transform(pkg, tGenT, tAnyT string) func(ast.Node) bool {
 	return func(node ast.Node) bool {
@@ -211,8 +219,13 @@ func transform(pkg, tGenT, tAnyT string) func(ast.Node) bool {
 				spec.Path.Value = ""
 			}
 		case *ast.TypeSpec:
-			if isGenericType(spec.Type) {
+			switch {
+			case isGenericType(spec.Type):
 				spec.Type = &ast.Ident{Name: tGenT}
+			case isGenericSlice(spec.Type):
+				spec.Type = &ast.ArrayType{
+					Elt: &ast.Ident{Name: tGenT},
+				}
 			}
 		case *ast.Field:
 			if isGenericType(spec.Type) {
