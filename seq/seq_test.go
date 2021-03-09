@@ -3,190 +3,110 @@ package seq_test
 import (
 	"testing"
 
-	"github.com/fogfish/golem/generic"
-	"github.com/fogfish/golem/pure"
-
 	"github.com/fogfish/golem/seq"
-	"github.com/fogfish/it"
 )
 
-var sequence seq.AnyT = seq.AnyT{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
-
-func element(e generic.T) func(x generic.T) bool {
-	return func(x generic.T) bool { return e == x }
+func BenchmarkSeqAppend(b *testing.B) {
+	mkSeq(b.N)
 }
 
-func odd(x generic.T) bool {
-	return x.(int)%2 == 0
+func BenchmarkSeqFMap(b *testing.B) {
+	b.StopTimer()
+	s := mkSeq(100)
+	b.StartTimer()
+
+	for n := 0; n < b.N; n++ {
+		s.FMap(func(seq.ISeq) error { return nil })
+	}
 }
 
-func even(x generic.T) bool {
-	return x.(int)%2 != 0
+func BenchmarkSeqFMapTyped(b *testing.B) {
+	b.StopTimer()
+	s := mkSeq(100)
+	b.StartTimer()
+
+	for n := 0; n < b.N; n++ {
+		s.FMap(isValue)
+	}
 }
 
-func beforeThree(x generic.T) bool {
-	return x.(int) < 3
+//
+//
+// utility functions
+//
+//
+func mkSeq(size int) seq.Seq {
+	s := seq.Seq{}
+	for n := 0; n < size; n++ {
+		s = append(s, &Value{ID: n})
+	}
+	return s
 }
 
-func afterThree(x generic.T) bool {
-	return x.(int) > 3
-}
+// func pure(n int) []*Value {
+// 	seq := []*Value{}
+// 	for i := 0; i < n; i++ {
+// 		seq = append(seq, &Value{ID: i})
+// 	}
+// 	return seq
+// }
 
-func beforeTen(x generic.T) bool {
-	return x.(int) < 10
-}
+// func unit(n int) seq.Seq {
+// 	seq := seq.Seq{}
+// 	for i := 0; i < n; i++ {
+// 		seq.Append(&Value{ID: i})
+// 	}
+// 	return seq
+// }
 
-func x10(x generic.T) generic.T {
-	return x.(int) * 10
-}
+// var valPure *Value
+// var seqPure []*Value = pure(100)
 
-func sum(x generic.T, y generic.T) generic.T {
-	return x.(int) + y.(int)
-}
+// var valType seq.ISeq
+// var seqType seq.Seq = unit(100)
 
-func TestSeqContain(t *testing.T) {
-	it.Ok(t).
-		If(sequence.Contain(0)).Should().Equal(true).
-		If(sequence.Contain(11)).Should().Equal(false)
-}
+// func BenchmarkAppendPure(b *testing.B) {
+// 	pure(b.N)
+// }
 
-func TestSeqCount(t *testing.T) {
-	it.Ok(t).
-		If(sequence.Count(odd)).Should().Equal(5)
-}
+// func BenchmarkAppendType(b *testing.B) {
+// 	unit(b.N)
+// }
 
-func TestSeqDistinct(t *testing.T) {
-	it.Ok(t).
-		If(sequence.Distinct()).Should().Equal(sequence).
-		If(append(sequence, sequence...).Distinct()).Should().Equal(sequence)
-}
+// func BenchmarkFMapPure(b *testing.B) {
+// 	for n := 0; n < b.N; n++ {
+// 		for _, x := range seqPure {
+// 			if err := usePure(x); err != nil {
+// 				break
+// 			}
+// 		}
+// 	}
+// }
 
-func TestSeqExists(t *testing.T) {
-	it.Ok(t).
-		If(sequence.Exists(element(5))).Should().Equal(true).
-		If(sequence.Exists(element(15))).Should().Equal(false)
-}
+// func BenchmarkFMapType(b *testing.B) {
+// 	for n := 0; n < b.N; n++ {
+// 		seqType.FMap(useType)
+// 	}
+// }
 
-func TestSeqDrop(t *testing.T) {
-	it.Ok(t).
-		If(sequence.Drop(3)).
-		Should().Equal(seq.AnyT{3, 4, 5, 6, 7, 8, 9})
-}
+// func useType(x seq.ISeq) error {
+// 	switch t := x.(type) {
+// 	case *Value:
+// 		valPure = t
+// 	}
+// 	return nil
+// }
 
-func TestSeqDropWhile(t *testing.T) {
-	it.Ok(t).
-		If(sequence.DropWhile(beforeThree)).
-		Should().Equal(seq.AnyT{3, 4, 5, 6, 7, 8, 9}).
-		//
-		If(sequence.DropWhile(beforeTen)).
-		Should().Equal(seq.AnyT{})
-}
+// func usePure(x *Value) error {
+// 	// valPure = x
+// 	return nil
+// }
 
-func TestSeqFilter(t *testing.T) {
-	it.Ok(t).
-		If(sequence.Filter(odd)).Should().
-		Eq(seq.AnyT{0, 2, 4, 6, 8})
-}
+// func BenchmarkX(b *testing.B) {
 
-func TestSeqFind(t *testing.T) {
-	it.Ok(t).
-		If(sequence.Find(afterThree)).Should().Equal(4).
-		If(sequence.Find(func(generic.T) bool { return false })).Should().Equal(nil)
-}
-
-func TestSeqForAll(t *testing.T) {
-	it.Ok(t).
-		If(sequence.ForAll(beforeTen)).Should().Equal(true).
-		If(sequence.ForAll(beforeThree)).Should().Equal(false).
-		If(seq.AnyT{}.ForAll(beforeThree)).Should().Equal(false)
-}
-
-func TestSeqFMap(t *testing.T) {
-	sum := 0
-	sequence.FMap(func(x generic.T) { sum = sum + x.(int) })
-
-	it.Ok(t).
-		If(sum).Should().Equal(45)
-}
-
-func TestSeqFold(t *testing.T) {
-	it.Ok(t).
-		If(sequence.Fold(sum, 0)).Should().Equal(45)
-}
-
-func TestSeqGroupBy(t *testing.T) {
-	it.Ok(t).
-		If(sequence.GroupBy(func(x generic.T) int { return x.(int) % 2 })).
-		Should().Equal(
-		map[int]seq.AnyT{
-			0: seq.AnyT{0, 2, 4, 6, 8},
-			1: seq.AnyT{1, 3, 5, 7, 9},
-		},
-	)
-}
-
-func TestSeqJoin(t *testing.T) {
-	it.Ok(t).
-		If(seq.AnyT{}.Join(sequence)).Should().Equal(sequence)
-}
-
-func TestSeqMap(t *testing.T) {
-	it.Ok(t).
-		If(sequence.Map(x10)).
-		Should().Equal(seq.AnyT{0, 10, 20, 30, 40, 50, 60, 70, 80, 90})
-}
-
-func TestSeqPartition(t *testing.T) {
-	it.Ok(t).
-		If(left(sequence.Partition(odd))).Should().Equal(seq.AnyT{0, 2, 4, 6, 8}).
-		If(right(sequence.Partition(odd))).Should().Equal(seq.AnyT{1, 3, 5, 7, 9})
-}
-
-func left(a seq.AnyT, b seq.AnyT) seq.AnyT {
-	return a
-}
-
-func right(a seq.AnyT, b seq.AnyT) seq.AnyT {
-	return b
-}
-
-func TestSplit(t *testing.T) {
-	it.Ok(t).
-		If(sequence.Split(odd)).Should().Equal([]seq.AnyT{{0, 1}, {2, 3}, {4, 5}, {6, 7}, {8, 9}}).
-		If(sequence.Split(even)).Should().Equal([]seq.AnyT{{0}, {1, 2}, {3, 4}, {5, 6}, {7, 8}, {9}}).
-		If(sequence.Split(func(x generic.T) bool { return false })).Should().Equal([]seq.AnyT{sequence}).
-		If(sequence.Split(func(x generic.T) bool { return true })).Should().Equal([]seq.AnyT{{0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}})
-}
-
-func TestSeqTake(t *testing.T) {
-	it.Ok(t).
-		If(sequence.Take(3)).Should().Equal(seq.AnyT{0, 1, 2})
-}
-
-func TestSeqTakeWhile(t *testing.T) {
-	it.Ok(t).
-		If(sequence.TakeWhile(beforeThree)).
-		Should().Equal(seq.AnyT{0, 1, 2}).
-		//
-		If(sequence.TakeWhile(beforeTen)).
-		Should().Equal(sequence)
-}
-
-func TestSeqMonoidLawIdentity(t *testing.T) {
-	it.Ok(t).
-		If(sequence.Mappend(sequence.Mempty())).Should().
-		Eq(sequence.Mempty().Mappend(sequence))
-}
-
-func TestSeqMonoidLawAssociativity(t *testing.T) {
-	it.Ok(t).
-		If(seq.AnyT{1}.Mappend(seq.AnyT{2}).Mappend(seq.AnyT{3})).Should().
-		Eq(seq.AnyT{1}.Mappend(seq.AnyT{2}.Mappend(seq.AnyT{3})))
-}
-
-func TestSeqMonoidMap(t *testing.T) {
-	fmap := sequence.MMap(seq.AnyT{})
-	it.Ok(t).
-		If(fmap(func(x generic.T) pure.Monoid { return seq.AnyT{x.(int) * 10} })).
-		Should().Equal(seq.AnyT{0, 10, 20, 30, 40, 50, 60, 70, 80, 90})
-}
+// 	for n := 0; n < b.N; n++ {
+// 		v := Value{}
+// 		r := v.X()
+// 		runtime.KeepAlive(r)
+// 	}
+// }
