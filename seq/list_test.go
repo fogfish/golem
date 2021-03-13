@@ -6,6 +6,10 @@ import (
 	"github.com/fogfish/golem/seq"
 )
 
+func TestX(t *testing.T) {
+
+}
+
 func BenchmarkListCons(b *testing.B) {
 	mkList(b.N)
 }
