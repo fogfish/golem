@@ -2,11 +2,10 @@ package golem
 
 /*
 
-Eq interface defines equality and inequality for data types.
+Eq interface defines equality for data types.
 */
 type Eq interface {
 	Eq(Eq) bool
-	Ne(Eq) bool
 }
 
 /*
@@ -23,6 +22,16 @@ type Ord interface {
 Data is a fundamental primitive for data struct
 */
 type Data interface{ Type() }
+
+/*
+
+Traversable ...
+*/
+// type Traversable interface {
+// 	Cons(Ord) Traversable
+// 	Head() Ord
+// 	Tail() Traversable
+// }
 
 /*
 

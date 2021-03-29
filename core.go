@@ -15,10 +15,6 @@ func (s String) Eq(x Eq) bool {
 	}
 }
 
-func (s String) Ne(x Eq) bool {
-	return !s.Eq(x)
-}
-
 func (s String) Lt(x Ord) bool {
 	switch v := x.(type) {
 	case String:
@@ -41,10 +37,6 @@ func (i Int) Eq(x Eq) bool {
 	default:
 		return false
 	}
-}
-
-func (i Int) Ne(x Eq) bool {
-	return !i.Eq(x)
 }
 
 func (i Int) Lt(x Ord) bool {

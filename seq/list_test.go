@@ -3,70 +3,71 @@ package seq_test
 import (
 	"testing"
 
+	"github.com/fogfish/golem"
 	"github.com/fogfish/golem/seq"
 )
 
-func TestX(t *testing.T) {
+//
+//
+type El struct{ ID int }
 
+func (El) Type() {}
+
+func (i El) Eq(x golem.Eq) bool {
+	switch v := x.(type) {
+	case El:
+		return i.ID == v.ID
+	default:
+		return false
+	}
+}
+
+func (i El) Lt(x golem.Ord) bool {
+	switch v := x.(type) {
+	case El:
+		return i.ID < v.ID
+	default:
+		return false
+	}
+}
+
+//
+//
+var (
+	defCap  int       = 1000000
+	defList *seq.List = seq.New()
+
+	el *El
+)
+
+func init() {
+	for n := 0; n < defCap; n++ {
+		defList = defList.Cons(&El{ID: n})
+	}
 }
 
 func BenchmarkListCons(b *testing.B) {
-	mkList(b.N)
+	b.ReportAllocs()
+
+	l := seq.New()
+	for n := 0; n < b.N; n++ {
+		l = l.Cons(&El{ID: n})
+	}
 }
 
-func BenchmarkListFMap(b *testing.B) {
-	b.StopTimer()
-	s := mkList(100)
-	b.StartTimer()
+func BenchmarkListTail(b *testing.B) {
+	b.ReportAllocs()
+
+	l := defList
 
 	for n := 0; n < b.N; n++ {
-		s.FMap(func(seq.ISeq) error { return nil })
+		switch v := l.Head().(type) {
+		case *El:
+			el = v
+		}
+
+		if l = l.Tail(); l == nil {
+			l = defList
+		}
 	}
-}
-
-func BenchmarkListFMapTyped(b *testing.B) {
-	b.StopTimer()
-	s := mkList(100)
-	b.StartTimer()
-
-	for n := 0; n < b.N; n++ {
-		s.FMap(isValue)
-	}
-}
-
-//
-//
-func BenchmarkListTypedCons(b *testing.B) {
-	mkListValue(b.N)
-}
-
-func BenchmarkListTypedFMap(b *testing.B) {
-	b.StopTimer()
-	s := mkListValue(100)
-	b.StartTimer()
-
-	for n := 0; n < b.N; n++ {
-		s.FMap(func(Value) error { return nil })
-	}
-}
-
-//
-//
-// utility functions
-//
-//
-func mkList(size int) *seq.List {
-	s := &seq.List{}
-	for n := 0; n < size; n++ {
-		s = s.Cons(&Value{ID: n})
-	}
-	return s
-}
-
-func mkListValue(size int) *ListValue {
-	s := NewListValue()
-	for n := 0; n < size; n++ {
-		s = s.Cons(&Value{ID: n})
-	}
-	return s
 }

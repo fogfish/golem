@@ -1,28 +1,45 @@
 package seq
 
+import "github.com/fogfish/golem"
+
 // List ...
 type List struct {
-	Head ISeq
-	Tail *List
+	head golem.Ord
+	tail *List
+}
+
+func New() *List {
+	return &List{}
 }
 
 //
-func (list List) Cons(hd ISeq) *List {
-	if list.Head == nil && list.Tail == nil {
-		return &List{Head: hd}
+// https://stackoverflow.com/questions/13476349/check-for-nil-and-nil-interface-in-go
+// var Empty golem.Traversable = (*tList)(nil)
+
+/*
+
+Cons ...
+*/
+func (seq *List) Cons(x golem.Ord) *List {
+	if seq.head == nil && seq.tail == nil {
+		return &List{head: x}
 	}
 
-	return &List{Head: hd, Tail: &list}
+	return &List{head: x, tail: seq}
 }
 
-// FMap ...
-func (list List) FMap(fmap FMap) error {
-	p := &list
-	for p != nil {
-		if err := fmap(p.Head); err != nil {
-			return err
-		}
-		p = p.Tail
-	}
-	return nil
+/*
+
+Head ...
+*/
+func (seq *List) Head() golem.Ord {
+	return seq.head
+}
+
+/*
+
+Tail ...
+*/
+func (seq *List) Tail() *List {
+	return seq.tail
 }
