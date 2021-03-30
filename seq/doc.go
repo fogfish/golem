@@ -6,5 +6,11 @@
 // https://github.com/fogfish/golem
 //
 
-// Package generic contains core types
-package generic
+/*
+
+Package seq implements a base traits for sequential data types.
+It support convenient methods to operate with sequence of elements and
+modifying them in immutable manner.
+
+*/
+package seq

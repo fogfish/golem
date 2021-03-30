@@ -1,36 +1,38 @@
+//
+// Copyright (C) 2019 Dmitry Kolesnikov
+//
+// This file may be modified and distributed under the terms
+// of the MIT license.  See the LICENSE file for details.
+// https://github.com/fogfish/golem
+//
+
 package seq
 
 import "github.com/fogfish/golem"
 
-// List ...
-type List struct {
-	head golem.Ord
-	tail *List
+func NewList() *List {
+	return nil
 }
-
-func New() *List {
-	return &List{}
-}
-
-//
-// https://stackoverflow.com/questions/13476349/check-for-nil-and-nil-interface-in-go
-// var Empty golem.Traversable = (*tList)(nil)
 
 /*
 
-Cons ...
+IsEmpty return true if list does not contain any elements
 */
-func (seq *List) Cons(x golem.Ord) *List {
-	if seq.head == nil && seq.tail == nil {
-		return &List{head: x}
-	}
-
-	return &List{head: x, tail: seq}
+func (list *List) IsEmpty() bool {
+	return list == nil
 }
 
 /*
 
-Head ...
+Cons creates a new list
+*/
+func (list *List) Cons(head golem.Ord) *List {
+	return &List{head: head, tail: list}
+}
+
+/*
+
+Head of the list
 */
 func (seq *List) Head() golem.Ord {
 	return seq.head
@@ -38,7 +40,7 @@ func (seq *List) Head() golem.Ord {
 
 /*
 
-Tail ...
+Tail of the list
 */
 func (seq *List) Tail() *List {
 	return seq.tail

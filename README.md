@@ -49,7 +49,7 @@ Functional style programming can be achieved in any language, including Go. Gola
 
 ## Key features
 
-* [Generic](generic) with build time code generation.
+* Types and data structures using interfaces to define [**generic**](doc/generic.md) behavior traits.
 * [Monoid](doc/monoid.md) for structural transformation.
 * [Seq](https://godoc.org/github.com/fogfish/golem/seq) is a special case for slice that support convenient methods. 
 

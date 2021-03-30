@@ -32,6 +32,9 @@ Traversable ...
 // 	Head() Ord
 // 	Tail() Traversable
 // }
+//
+// https://stackoverflow.com/questions/13476349/check-for-nil-and-nil-interface-in-go
+// var Empty golem.Traversable = (*tList)(nil)
 
 /*
 

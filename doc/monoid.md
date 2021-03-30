@@ -35,7 +35,7 @@ trait Seq[A] {
 It is not possible to implement generic map in Golang due to absence of generics and type covariance. The code generation does not help, we are bloating source code due to high cardinality of `A x B` set. Let's define a Monoid interface and show how it can **solve** an output type parametrization problem for transformations.
 
 ```go
-func (seq SeqA) MapWithMonoid(mB Monoid, f func (A) interface{}) Monoid {
+func (seq SeqA) MapWithMonoid(mB Monoid, f func (A) Monoid) Monoid {
   y := mB.Mempty()
 	for _, x := range seq {
 		y = y.Mappend(f(x))

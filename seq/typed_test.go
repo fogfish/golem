@@ -10,7 +10,7 @@ import (
 type Els seq.List
 
 func NewEls() *Els {
-	return (*Els)(seq.New())
+	return (*Els)(seq.NewList())
 }
 
 func (els *Els) Cons(x *El) *Els {
@@ -45,7 +45,7 @@ func init() {
 func BenchmarkTypedCons(b *testing.B) {
 	b.ReportAllocs()
 
-	l := seq.New()
+	l := NewEls()
 	for n := 0; n < b.N; n++ {
 		l = l.Cons(&El{ID: n})
 	}
