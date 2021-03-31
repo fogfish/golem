@@ -6,11 +6,24 @@
 // https://github.com/fogfish/golem
 //
 
-package seq
+package list
 
 import "github.com/fogfish/golem"
 
-func NewList() *List {
+/*
+
+List is a linked list
+*/
+type Type struct {
+	head golem.Ord
+	tail *Type
+}
+
+/*
+
+New empty list
+*/
+func New() *Type {
 	return nil
 }
 
@@ -18,7 +31,7 @@ func NewList() *List {
 
 IsEmpty return true if list does not contain any elements
 */
-func (list *List) IsEmpty() bool {
+func (list *Type) IsEmpty() bool {
 	return list == nil
 }
 
@@ -26,22 +39,22 @@ func (list *List) IsEmpty() bool {
 
 Cons creates a new list
 */
-func (list *List) Cons(head golem.Ord) *List {
-	return &List{head: head, tail: list}
+func (list *Type) Cons(head golem.Ord) *Type {
+	return &Type{head: head, tail: list}
 }
 
 /*
 
 Head of the list
 */
-func (seq *List) Head() golem.Ord {
-	return seq.head
+func (list *Type) Head() golem.Ord {
+	return list.head
 }
 
 /*
 
 Tail of the list
 */
-func (seq *List) Tail() *List {
-	return seq.tail
+func (list *Type) Tail() *Type {
+	return list.tail
 }

@@ -1,4 +1,4 @@
-package seq_test
+package list_test
 
 import (
 	"container/list"

@@ -1,24 +1,24 @@
-package seq_test
+package list_test
 
 import (
 	"fmt"
 	"testing"
 
-	"github.com/fogfish/golem/seq"
+	"github.com/fogfish/golem/seq/list"
 )
 
-type Els seq.List
+type Els list.Type
 
 func NewEls() *Els {
-	return (*Els)(seq.NewList())
+	return (*Els)(list.New())
 }
 
 func (els *Els) Cons(x *El) *Els {
-	return (*Els)((*seq.List)(els).Cons(x))
+	return (*Els)((*list.Type)(els).Cons(x))
 }
 
 func (els *Els) Head() *El {
-	switch v := (*seq.List)(els).Head().(type) {
+	switch v := (*list.Type)(els).Head().(type) {
 	case *El:
 		return v
 	default:
@@ -27,7 +27,7 @@ func (els *Els) Head() *El {
 }
 
 func (els *Els) Tail() *Els {
-	return (*Els)((*seq.List)(els).Tail())
+	return (*Els)((*list.Type)(els).Tail())
 }
 
 //

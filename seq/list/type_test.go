@@ -1,39 +1,11 @@
-package seq_test
+package list_test
 
 import (
 	"testing"
 
 	"github.com/fogfish/golem"
-	"github.com/fogfish/golem/seq"
-	"github.com/fogfish/it"
+	"github.com/fogfish/golem/seq/list"
 )
-
-func TestListCons(t *testing.T) {
-	x := golem.String("x")
-	z := seq.NewList()
-	a := z.Cons(x)
-
-	it.Ok(t).
-		IfNil(z).
-		IfNotNil(a).
-		IfTrue(a.Head().Eq(x))
-}
-
-func TestListTail(t *testing.T) {
-	x := golem.String("x")
-	z := seq.NewList()
-	a := z.Cons(x)
-	b := a.Cons(x)
-	c := b.Cons(x)
-	d := c.Cons(x)
-
-	it.Ok(t).
-		IfNil(z).
-		If(a.Tail()).Equal(z).
-		If(b.Tail()).Equal(a).
-		If(c.Tail()).Equal(b).
-		If(d.Tail()).Equal(c)
-}
 
 //
 //
@@ -62,8 +34,8 @@ func (i El) Lt(x golem.Ord) bool {
 //
 //
 var (
-	defCap  int       = 1000000
-	defList *seq.List = seq.NewList()
+	defCap  int        = 1000000
+	defList *list.Type = list.New()
 
 	el *El
 )
@@ -77,7 +49,7 @@ func init() {
 func BenchmarkListCons(b *testing.B) {
 	b.ReportAllocs()
 
-	l := seq.NewList()
+	l := list.New()
 	for n := 0; n < b.N; n++ {
 		l = l.Cons(&El{ID: n})
 	}
