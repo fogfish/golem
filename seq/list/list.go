@@ -58,3 +58,13 @@ Tail of the list
 func (list *Type) Tail() *Type {
 	return list.tail
 }
+
+/*
+
+FMap applies closure to each element of the list
+*/
+func (list *Type) FMap(f func(golem.Ord)) {
+	for l := list; l != nil; l = l.Tail() {
+		f(l.head)
+	}
+}

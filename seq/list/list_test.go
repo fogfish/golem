@@ -34,3 +34,12 @@ func TestListTail(t *testing.T) {
 		If(c.Tail()).Equal(b).
 		If(d.Tail()).Equal(c)
 }
+
+func TestListFMap(t *testing.T) {
+	seq := list.New().Cons(golem.Int(1)).Cons(golem.Int(2)).Cons(golem.Int(3))
+
+	acc := golem.Int(0)
+	seq.FMap(func(o golem.Ord) { acc = acc + o.(golem.Int) })
+
+	it.Ok(t).If(acc).Equal(golem.Int(6))
+}
