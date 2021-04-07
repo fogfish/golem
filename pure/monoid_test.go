@@ -41,6 +41,14 @@ func (seq SeqA) MMap(m pure.Monoid, f FMap) pure.Monoid {
 	return y
 }
 
+func (seq SeqA) MM(m M, f func(int) interface{}) interface{} {
+	y := m.Empty()
+	for _, x := range seq {
+		y = m.Append(y, f(x))
+	}
+	return y
+}
+
 // Map with Closure
 func (seq SeqA) FMap(f func(int)) {
 	for _, x := range seq {
@@ -60,11 +68,35 @@ func (seq SeqB) Mappend(x pure.Monoid) pure.Monoid {
 	return seq + x.(SeqB)
 }
 
+// usage of interface instead of pure type causes per penalties
+
+type M interface {
+	Empty() interface{}
+	Append(a, b interface{}) interface{}
+}
+
+type SeqC int
+
+func (SeqC) Empty() interface{} {
+	return 0 //SeqC(0)
+}
+
+func (SeqC) Append(a, b interface{}) interface{} {
+	return a.(int) + b.(int)
+}
+
+// var Mc M = new(SeqC) // SeqC(0)
+
+func Mc() M {
+	return SeqC(0)
+}
+
 //
 // global constants
 var (
 	sequence SeqA = SeqA{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
 	result   pure.Monoid
+	xxx      M
 )
 
 // convAtoB is mapper function, converts type A to B
@@ -88,7 +120,7 @@ func joinAtoB(b SeqB, a int) SeqB {
 
 //
 // benchmarks
-func BenchmarkMonoid(b *testing.B) {
+func _BenchmarkMonoid(b *testing.B) {
 	b.ReportAllocs()
 
 	var monoid pure.Monoid = SeqB(0)
@@ -99,10 +131,20 @@ func BenchmarkMonoid(b *testing.B) {
 	result = monoid
 }
 
-func BenchmarkMonoidHoF(b *testing.B) {
+func _BenchmarkMonoidC(b *testing.B) {
 	b.ReportAllocs()
 
-	// TODO: rename test to instantiation
+	// var monoid SeqC = SeqC(0)
+	mC := Mc()
+	for n := 0; n < b.N; n++ {
+		sequence.MM(mC, func(x int) interface{} { return x })
+	}
+	// xxx = monoid
+}
+
+func _BenchmarkMonoidHoF(b *testing.B) {
+	b.ReportAllocs()
+
 	var monoid pure.Monoid = SeqB(0)
 	mapper := sequence.Map(monoid)
 
@@ -112,7 +154,7 @@ func BenchmarkMonoidHoF(b *testing.B) {
 	result = monoid
 }
 
-func BenchmarkForLoop(b *testing.B) {
+func _BenchmarkForLoop(b *testing.B) {
 	b.ReportAllocs()
 
 	var seq SeqB
@@ -123,7 +165,7 @@ func BenchmarkForLoop(b *testing.B) {
 	result = seq
 }
 
-func BenchmarkClojure(b *testing.B) {
+func _BenchmarkClojure(b *testing.B) {
 	b.ReportAllocs()
 
 	var seq SeqB

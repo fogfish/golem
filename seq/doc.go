@@ -9,8 +9,15 @@
 /*
 
 Package seq implements a base traits for sequential data types.
-It support convenient methods to operate with sequence of elements and
-modifying them in immutable manner.
+Sequences generally behave very much like lists. The package support
+convenient methods to operate with sequence of elements and modifying
+them in immutable manner. The definition of sequence type is inspired by
+Haskell's Data.Sequence and Scala's Seq trait.
+
+TODO: Explain following methods via FMap
+ - scan (partial folds)
+ - fold
+ - map
 
 */
 package seq
