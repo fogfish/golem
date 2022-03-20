@@ -34,7 +34,9 @@ const (
 
 type ordInt string
 
-func (ordInt) Equal(a, b int) bool { return a == b }
+func (ord ordInt) Equal(a, b int) bool {
+	return ord.Compare(a, b) == EQ
+}
 
 func (ordInt) Compare(a, b int) Ordering {
 	switch {

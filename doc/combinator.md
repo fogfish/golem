@@ -14,12 +14,12 @@ Since, "thing" can be any computational "element" including functions and other 
 
 Let's advance this patterns towards Golang type system and define combinators over types and their instances to derive complex structures of type T. There are 7 patterns to consider and express their semantic with Golang:
 
-1.[Type laws pattern](#type-laws-pattern) (`A ⟼ Computation`) declares type class, it's laws and the intent.
+1.[Type laws pattern](#type-laws-pattern) (`𝔗 ⟼ A ⟼ ƒ(𝔗[A], A)`) declares type class, it's laws and the intent.
 2. [Sub-typing](#sub-typing) (`A <: B`) enhances existing type classes.
-3. [Lifting](#lifting) (`ƒ ⟼ A`) transforms a pure function into corresponding type class.
-4. `<a × b × ...> ⟼ C` homogenous composition of types to operate on containers.
-5. `A ⟼ (ƒ: a ⟼ b) ⟼ B` type transformation using functor pattern.
-6. `ƒ: A ⟼ B` generic computation.
+3. [Lifting](#lifting) (`ƒ ⟼ 𝔗[A]`) transforms a pure function into corresponding type class.
+4. [Homogenous product](#homogenous-product) (`A × B × ... ⟼ 𝔗 ⟼ 𝔗[A × B × ...]`) composes type classes of same kind to operate with product type.
+5. [Contra Variant Functor](#contra-variant-functor) (`(ƒ: b ⟼ a) ⟼ 𝔗[A] ⟼ 𝔗[B]`) type transformation using pure function.
+6. [Compose Generic Types](#compose-generic-types) (`𝔗 ⟼ 𝕬 ⟼ 𝔗[𝕬]`) to define generic computation.
 7. `A × B ⟼ C` heterogenous composition of types to define generic computation. 
 
 The implementation of each combinator is considered further in this post using simplest examples in the style of Golang.  
@@ -85,7 +85,7 @@ The type law facilitates the combinator pattern with "atomic" and composable ele
 2. The abstract type T declares computational laws and operational intent, the type class in other words. T is declared using a common interface for an arbitrary set of individually specified types.
 3. The instance of type T is declared for any concrete type by implementing all functions (laws) for the given abstract type T. Golang structural subtyping empowers different unrelated types with type specific implementations. It makes the approach flexible for pure functional combinator libraries and easy ad-hoc type extensions.
 
-The type law pattern looks similar to type classes. The classical Golang interfaces are strictly less powerful than Haskell type classes, they are "a kind of zeroth-order type class". Only Golang generics would allow reuse of the code via higher kinded polymorphism but let's consider this subject in other post. 
+The type law pattern looks similar to type classes. The classical Golang interfaces are strictly less powerful than Haskell type classes, they are "a kind of zeroth-order type class". Let's consider the higher kinded polymorphism using Golang generics in other post.
 
 
 ## Sub-typing
@@ -152,30 +152,145 @@ that "knows" how to compare int.
 var Int Eq[int] = eq.FromEq[int](Equal)
 ```
 
-The lifting pattern is very powerful one. It is not only leverage the gap between functional and type class domains but also facilitates the composable and re-usable definition of type classes.    
+The lifting pattern is very powerful one. It is not only leverage the gap between functional and type class domains but also facilitates the composable and re-usable definition of type classes using closures and other pure functional concepts.     
 
 
-~ * * * ~
+## Homogenous product
 
-**Functor** lifts classes to unary type constructors.
+Type theory and a functional programming operates with algebraic data types. They are known as a composition of other types. The theory defines two classes of compositions: product types and co-product types. Product types are strongly expressed by structs in Golang; co-products are loosely defined (let's skip them at current considerations). It is not always practical to implement type law pattern for each instance of product type. Construction of the complex type law through the composition of existing instances is an alternative solution.  
+
+The **homogenous product** pattern allows an application to construct type laws for product types in a relatively boilerplate-free way. It composes type classes of same kind to operate on containers. Let's consider a product type `T: A × B × ...` together with set of type laws for each of elementary type `Eq[A], Eq[B], ...`. The homogenous product build `Eq[T]: Eq[A] × Eq[B] × ...`. 
 
 ```go
-type Functor[A, B any] struct{ Eq[B] }
+// ExampleType product type is product of primitive types int × string
+type ExampleType struct {
+	A int
+	B string
+}
 
-func (c Functor[A, B]) FMap(f func(A) B) Eq[A] {
-	return FromEq[A](func(a, b A) bool {
-		return c.Eq.Eq(f(a), f(b))
+// The type law is defined for these primitive types
+var (
+	Int    Eq[int]    = FromEq[int](equal[int])
+	String Eq[string] = FromEq[string](equal[string])
+)
+```
+
+Golang's implementation of this combinator requires definition of type `UnApplyN` to "extract" fractions on the product and implementation of corresponding product type `ProductN`for `Eq` type law:
+
+```go
+// UnApply2 is contra-map function for data type T that unwrap product type  
+type UnApply2[T, A, B any] func(T) (A, B)
+
+/*
+
+ProductEq2 is a shortcut due to zeroth-order type class concept in Golang and lack of heterogenous lists. The type just a product "container" of Eq instances
+
+The new instance of Eq for data type ExampleType is created using
+eq := ProductEq2[ExampleType, int, string]{Int, String,
+  func(x ExampleType) (int, string) { return x.A, x.B },
+}
+*/
+type ProductEq2[T, A, B any] struct {
+	Eq1 Eq[A]
+	Eq2 Eq[B]
+  UnApply2[T, A, B]
+}
+
+// implementation of Eq type class for the product
+func (eq ProductEq2[T, A, B]) Equal(a, b T) bool {
+	a0, a1 := eq.UnApply2(a)
+	b0, b1 := eq.UnApply2(b)
+	return eq.Eq1.Equal(a0, b0) && eq.Eq2.Equal(a1, b1)
+}
+```
+
+The homogenous product pattern is a building blocks for composition of "atomic" type classes into complex structures from concrete problem "domain".
+
+
+## Contra Variant Functor
+
+The functor pattern is one of mostly discussed patterns in functional programming. It allows "a generic type to apply a function inside without changing the structure of the generic type". In math, there are many concepts that acts as functors. The **contra variant** pattern just "turn morphisms around". 
+
+A functional programming operates with algebraic data types. It is not always practical to implement type law pattern for each instance of data type. The type mapping is a solution to transform data types so that existing type law instances can be re-used in different context.  
+
+Let's consider two types `A` and `B` and the instance of type class `Eq[A]`. The contra variant functor builds an instance of `Eq[B]` with help of `f: b ⟼ a` transformer. 
+
+```go
+/*
+
+ContraMapEq is a combinator that build a new instance of type class Eq[B] using
+existing instance of Eq[A] and f: b ⟼ a
+*/
+type ContraMapEq[A, B any] struct{ Eq[A] }
+
+// implementation of contra variant functor
+func (c ContraMapEq[A, B]) FMap(f func(B) A) Eq[B] {
+	return FromEq[B](func(a, b B) bool {
+		return c.Eq.Equal(f(a), f(b))
 	})
 }
 ```
 
-https://typelevel.org/cats/typeclasses/functor.html
+Use the combinator to make an instance of `Eq[ExampleType]`
 
 ```go
-type MyType{ ID int }
-
-var eq2 Eq[MyType] = Functor[MyType, int]{Int}.FMap(func(a MyType) int { return a.ID })
+ContraMapEq[int, ExampleType]{Int}.FMap(
+  func(x ExampleType) int { /* ... */ },
+)
 ```
+
+## Compose generic types 
+
+So far, the article has considered a few combinator pattern that builds a new behavior by composing generic types. The type class `𝔗` is composed with type class `𝕬`, which parametrizes `𝔗`. Golang's type system is less powerful than than Haskell type classes, it uses "a kind of zeroth-order type class", higher kinded polymorphism is not well supported. Therefore, an alternative approach is proposed.
+
+Let's consider a `Foldable` abstraction that represents data structures that can be reduced to a summary value one element at a time:
+
+```go
+type Foldable[T any] interface {
+	Fold(a T, seq []T) (x T)
+}
+```
+
+There are infinite possibilities to implement the `Foldable` type class due to unbounded definition of the "reduce to summary" function in the specification. There is an algebraic structure, called `Semigroup`, consisting of a type set together with an associative binary operation.
+
+```go
+type Semigroup[T any] interface {
+	Combine(T, T) T
+}
+```
+
+The composition of generic types `Foldable` over `Semigroup` allow to implement a single variant of data structure reduction algorithm. The `Semigroup` parameter allow to inject the associative binary operation into the algorithms.
+
+The composition of generic types is defined through a new type `Folder`. This type embeds `Semigroup` and implements the `Foldable` type definition:
+
+```go
+type Folder[T any] struct{ Semigroup[T] }
+
+func (f Folder[T]) Fold(a T, seq []T) (x T) {
+	x = a
+	for _, y := range seq {
+		x = f.Semigroup.Combine(x, y)
+	}
+	return
+}
+```
+
+
+
+
+
+6. [Compose Generic Types](#compose-generic-types) (`𝔗 ⟼ 𝕬 ⟼ 𝔗[𝕬]`) to define generic computation.
+
+
+The idea behind the type composition 
+
+
+. A few of these combinators composes 
+
+Few of them are based 
+
+All of them 
+
 
 ~ * * * ~
 
