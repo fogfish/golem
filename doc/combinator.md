@@ -10,18 +10,18 @@ Combinators are simple and do not involve any advanced math in its definition. A
 ƒ: Thing ⟼ Thing ⟼ Thing
 ```
 
-Since, "thing" can be any computational "element" including functions and other combinators. It delivers a powerful **combinator pattern** for functional programming - a style of declaring a small set of primitive abstractions and collection of combinators to defined advanced structures. Golang like any other languages supports first class functions. It allows functions to be assigned to variables, passed as arguments to other functions and returned from other functions. Therefore, combinators of pure functions is a given fact for any Golang application. 
+Since, "thing" can be any computational "element" including functions and other combinators. It delivers powerful **combinator patterns** for functional programming - a style of declaring a small set of primitive abstractions and collection of combinators to defined advanced structures. Golang like any other languages supports first class functions. It allows functions to be assigned to variables, passed as arguments to other functions and returned from other functions. Therefore, combinators of pure functions is a given fact for any Golang application. 
 
 Let's advance this patterns towards Golang type system and define combinators over types and their instances to derive complex structures of type T. There are 7 patterns to consider and express their semantic with Golang:
 
-1.[Type laws pattern](#type-laws-pattern) (`𝔗 ⟼ A ⟼ ƒ(𝔗[A], A)`) declares type class, it's laws and the intent.
+1. [Type laws pattern](#type-laws-pattern) (`𝔗 ⟼ A ⟼ ƒ(𝔗[A], A)`) declares type class, it's laws and the intent.
 2. [Sub-typing](#sub-typing) (`A <: B`) enhances existing type classes.
 3. [Lifting](#lifting) (`ƒ ⟼ 𝔗[A]`) transforms a pure function into corresponding type class.
-4. [Homogenous product](#homogenous-product) (`A × B × ... ⟼ 𝔗 ⟼ 𝔗[A × B × ...]`) composes type classes of same kind to operate with product type.
+4. [Homogenous product](#homogenous-product) (`A × B × … ⟼ 𝔗 ⟼ 𝔗[A × B × …]`) composes type classes of same kind to operate with product type.
 5. [Contra Variant Functor](#contra-variant-functor) (`(ƒ: b ⟼ a) ⟼ 𝔗[A] ⟼ 𝔗[B]`) type transformation using pure function.
 6. [Compose Generic Types](#compose-generic-types) (`𝔗 ⟼ 𝕬 ⟼ 𝔗[𝕬]`) to define generic computation.
-7. `A × B ⟼ C` heterogenous composition of types to define generic computation. 
-
+7. [Heterogenous product](#heterogenous-product) (`𝔗 × 𝕬 × … ⟼ 𝕷`) compose heterogenous type classes into a new type law pattern. 
+ 
 The implementation of each combinator is considered further in this post using simplest examples in the style of Golang.  
 
 
@@ -241,7 +241,7 @@ ContraMapEq[int, ExampleType]{Int}.FMap(
 
 ## Compose generic types 
 
-So far, the article has considered a few combinator pattern that builds a new behavior by composing generic types. The type class `𝔗` is composed with type class `𝕬`, which parametrizes `𝔗`. Golang's type system is less powerful than than Haskell type classes, it uses "a kind of zeroth-order type class", higher kinded polymorphism is not well supported. Therefore, an alternative approach is proposed.
+So far, the article has considered a few combinator pattern that builds a new behavior by composing generic types. The type class `𝔗` is composed with type class `𝕬`, which parametrizes `𝔗` building `𝔗 ⟼ 𝕬 ⟼ 𝔗[𝕬]` construct. Golang's type system is less powerful than than Haskell type classes, it uses "a kind of zeroth-order type class", higher kinded polymorphism is not well supported. Therefore, an alternative approach is proposed.
 
 Let's consider a `Foldable` abstraction that represents data structures that can be reduced to a summary value one element at a time:
 
@@ -275,28 +275,55 @@ func (f Folder[T]) Fold(a T, seq []T) (x T) {
 }
 ```
 
+The approach discussed by the compose generic types pattern is only the solution to parametrize one type class over another one until higher kinded polymorphism is fully supported at Golang.
 
 
+## Heterogenous product
+
+The **heterogenous product** pattern allows an application to compose type laws together building a new one, which "inherits" properties of composed types. Let's evaluate the purpose of the pattern in the context of following types `Seq` and `Eq`:
+
+```go
+/*
+
+Seq defines fundamental general purpose sequence
+*/
+type Seq[S any, T any] interface {
+	Head(S) *T
+	Tail(S) S
+	IsVoid(S) bool
+}
+
+/*
+
+Eq : T ⟼ T ⟼ bool
+Each type implements own equality, mapping pair of value to bool category
+*/
+type Eq[T any] interface {
+	Equal(T, T) bool
+}
+```
+
+The definition of equality for sequence requires the definition of traversal laws. However, the application do not want to re-implement equality for various classes of the sequence. Instead, it aims for re-usability building the new equality laws from existing constructs `Seq × Eq ⟼ SeqEq`. 
+
+```go
+/*
+
+SeqEq is heterogenous product of Seq and Eq laws.
+It composes two types together that "knows" how to compare sequences.
+*/
+type SeqEq[S, T any] struct {
+  Seq[S, T]
+  Eq[T]
+}
+
+// implements equality rule for sequence using Seq & Eq type classes.
+func (seq SeqEq[S, T]) Equal(a, b S) bool { /* ... */ }
+``` 
 
 
-6. [Compose Generic Types](#compose-generic-types) (`𝔗 ⟼ 𝕬 ⟼ 𝔗[𝕬]`) to define generic computation.
+## Afterwords
 
 
-The idea behind the type composition 
-
-
-. A few of these combinators composes 
-
-Few of them are based 
-
-All of them 
-
-
-~ * * * ~
-
-**Struct**
-
-...
 
 
 ~ * * * ~

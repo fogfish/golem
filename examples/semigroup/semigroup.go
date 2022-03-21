@@ -20,9 +20,10 @@ type Semigroup[T any] interface {
 	Combine(T, T) T
 }
 
-//
+// Folder composes Foldable and Semigroup type classes
 type Folder[T any] struct{ Semigroup[T] }
 
+// implementation of Foldable type class over Semigroup
 func (f Folder[T]) Fold(a T, seq []T) (x T) {
 	x = a
 	for _, y := range seq {
