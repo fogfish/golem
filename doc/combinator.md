@@ -14,8 +14,8 @@ Since, "thing" can be any computational "element" including functions and other 
 
 Let's advance this patterns towards Golang type system and define combinators over types and their instances to derive complex structures of type T. There are 7 patterns to consider and express their semantic with Golang:
 
-1. [Type laws pattern](#type-laws-pattern) (`𝔗 ⟼ A ⟼ ƒ(𝔗[A], A)`) declares type class, it's laws and the intent.
-2. [Sub-typing](#sub-typing) (`A <: B`) enhances existing type classes.
+1. [Type trait](#type-trait-pattern) (`𝔗 ⟼ A ⟼ ƒ(𝔗[A], A)`) declares type class, it's laws and the intent.
+2. [Sub-typing](#sub-typing-pattern) (`A <: B`) enhances existing type classes.
 3. [Lifting](#lifting) (`ƒ ⟼ 𝔗[A]`) transforms a pure function into corresponding type class.
 4. [Homogenous product](#homogenous-product) (`A × B × … ⟼ 𝔗 ⟼ 𝔗[A × B × …]`) composes type classes of same kind to operate with product type.
 5. [Contra Variant Functor](#contra-variant-functor) (`(ƒ: b ⟼ a) ⟼ 𝔗[A] ⟼ 𝔗[B]`) type transformation using pure function.
@@ -25,7 +25,7 @@ Let's advance this patterns towards Golang type system and define combinators ov
 The implementation of each combinator is considered further in this post using simplest examples in the style of Golang.  
 
 
-## Type laws pattern
+## Type trait pattern
 
 Equality (==) implements an equivalence relationship where two values comparing "is equal to" if they belong to the same equivalence class in their domain (e.g. equivalence laws of boolean, numbers, strings and other types). Typical comparison operators supports only built-in types, extension of the operator over values of some abstract type T requires a definition of equality function over these types and acting differently for each type. 
 
@@ -33,24 +33,25 @@ Equality (==) implements an equivalence relationship where two values comparing 
 /*
 
 Eq : T ⟼ T ⟼ bool
-Each type implements own equality, mapping pair of value to bool category
+Each trait implements mapping pair of value to bool category using own
+equality rules 
 */
 type Eq [T any] interface {
   Equal(T, T) bool
 }
 ```
 
-The **type law** definition looks like an interface that specifies an equality behavior for some kind of type. Anyone with OOP background might be confused. The OOP style insists on `Equal(T) bool` clamming receiver instance is compared with given value. Object-oriented languages leverage subtype polymorphism, which is not efficient to build advanced combinators. Functional programing is looking towards ad-hoc polymorphism - depict a trait of different unrelated types with type specific implementations. In this example, the interface defines "atomic" trait that knows how to compare type instances (e.g. number equality category, string equality category, etc). The equivalence relationship implementation for Golang `int` type is the following
+The **type trait** definition looks like an interface that specifies an equality behavior for some kind of type. Anyone with OOP background might be confused. The OOP style insists on `Equal(T) bool` clamming receiver instance is compared with given value. Object-oriented languages leverage subtype polymorphism, which is not efficient to build advanced combinators. Functional programing is looking towards ad-hoc polymorphism - depict a trait of different unrelated types with type specific implementations. In this example, the interface defines "atomic" trait that knows how to compare type instances (e.g. number equality category, string equality category, etc). The equivalence relationship implementation for Golang `int` type is the following
 
 ```go
 package eq
 
 /*
 
-eqInt declares a new instance of Eq trait, the instance is a new
-concrete type, the concrete type "knows" everything about equality in
-own domain (e.g. int type). The instance is created over basic string
-type so that constant values enumerates all instances of Eq
+eqInt declares a new instance of Eq trait, which is a real type.
+The real type "knows" everything about equality in own domain (e.g. int type).
+The instance of Eq is created as type over string, it is an intentional
+technique to create a namespace using Golang constants. The instance of trait is referenced as eq.Int in the code.
 */
 type eqInt string
 
@@ -59,45 +60,48 @@ func (eqInt) Equal(a, b int) bool { return a == b }
 
 /*
 
-create a new instance of Eq trait for int domain as immutable value so that 
-other functions can use this constant like `eq.Int.Eq(...)`
+Int is an instance of Eq trait for int domain as immutable value so that
+other functions can use this constant like `eq.Int.Equal(...)`
 */
 const Int = eqInt("eq.int")
 ```
 
-The type law pattern solves the problem of polymorphic algorithm implementations - using the "well-known" function names for various instances that takes different kinds of parameters. For example, equality type law helps with implementation of "haystack" algorithms: 
+This technique supports an ad-hoc polymorphism of the trait `Eq`, and detaches the data type implementation from the behavior. The application is able to implement multiple traits for same data type together with trait sub-typing, which is not achievable if `Eq` is used as standard Golang interface.     
+
+The type trait pattern solves the problem of polymorphic algorithm implementations - using the "well-known" function names for various instances that takes different kinds of parameters. For example, equality type trait helps with implementation of "haystack" algorithms: 
 
 ```go
 type Haystack[T any] struct{ Eq[T] }
 
 func (h Haystack[T]) Lookup(a T, b []T) bool {
-	for _, x := range b {
-		if h.Eq.Equal(a, x) {
-			return true
-		}
-	}
+  for _, x := range b {
+    if h.Eq.Equal(a, x) {
+      return true
+    }
+  }
   return false
 }
 ```
 
-The type law facilitates the combinator pattern with "atomic" and composable element such as
-1. A generic computation (an algorithm) over a some abstract type T. This generic computation is polymorphic due to usage of same function names (type law) defined by T. Although type T is polymorphic only to the computation that uses it, where there are multiple instances for each concrete type.
-2. The abstract type T declares computational laws and operational intent, the type class in other words. T is declared using a common interface for an arbitrary set of individually specified types.
-3. The instance of type T is declared for any concrete type by implementing all functions (laws) for the given abstract type T. Golang structural subtyping empowers different unrelated types with type specific implementations. It makes the approach flexible for pure functional combinator libraries and easy ad-hoc type extensions.
+The type trait is the combinator pattern with "atomic" and composable element such as
+1. A generic computation (an algorithm) over a some type trait T. This generic computation is polymorphic due to usage of same function names defined by T. Although type T is polymorphic only to the computation that uses it, where there are multiple instances for each concrete type.
+2. The type trait T declares computational laws and operational intent. T is declared using a common interface for an arbitrary set of individually specified types.
+3. The instance of type trait T is declared for any concrete type by implementing declared interface for T. Golang's [structural type system](https://en.wikipedia.org/wiki/Structural_type_system) empowers different unrelated types with type specific implementations. It makes the approach flexible for pure functional combinator libraries and easy ad-hoc type extensions.
 
-The type law pattern looks similar to type classes. The classical Golang interfaces are strictly less powerful than Haskell type classes, they are "a kind of zeroth-order type class". Let's consider the higher kinded polymorphism using Golang generics in other post.
+The type trait pattern looks similar to type class. The computer science has defined "the type class is construct that supports ad hoc polymorphism. This is achieved by adding constraints to type variables in parametrically polymorphic types. Such a constraint typically involves a type class T and a type variable a, and means that a can only be instantiated to a type whose members support the overloaded operations associated with T.". However, Golang type system is  strictly less powerful than type classes, they are "a kind of zeroth-order type class", while concepts around type classes are often associated with higher-kinded polymorphism. The type trait abstraction as it is defined here provides better composability that Golang interface but less powerful in comparison with Haskell's type classes.    
 
 
-## Sub-typing
+## Sub-typing pattern
 
-**Sub-typing** (or inclusion polymorphism) creates a new type law (type trait) from existing one. Sub-typing is a classical interface embedding in Golang. For example the class of totally ordered types `Ord` is a sub-type of `Eq`. 
+A **Sub-typing** pattern (or inclusion polymorphism) creates a new type trait from existing one. Sub-typing is a classical polymorphism used in object-oriented programming, sub-typing is roughly comparable with Golang embedding. The purpose of sub-typing is enhance the interface of existing trait with declaration of new behavior. For example the class of totally ordered types `Ord` is a sub-type of `Eq`. 
 
 ```go
+package ord
+
 /*
 
 Ord : T ⟼ T ⟼ Ordering
-Each type implements compare rules, mapping pair of value to
-enum{ LT, EQ, GT }
+Each type implements compare rules, mapping pair of value to enum{ LT, EQ, GT }
 */
 type Ord [T any] interface {
   Eq[T]
@@ -111,6 +115,13 @@ The implementation of `Ord` type instances does not differs from `Eq`, each type
 ```go
 func (ordInt) Compare(a, b int) Ordering { /* ... */ }
 ```
+
+TBD: subtyping of existing trait () valid sub-typing when new implementation re-uses previously defined implementation 
+
+```go
+func (ordInt) Equal(a, b, int) bool { return eq.Int.Equal(a, b) }
+```
+
 
 Sub-typing is a composition of "atomic" type laws into complex one. It also defines the notion of substitutability and allows the generic computation, which is written to operate elements of type T, can also operate on instances of sub-types.
 
@@ -340,78 +351,7 @@ Usage of interfaces is a valid approach to declare a
 High-order function is 
 
 
-## Best practice of the "type class" declaration
 
-1. define a data type. data type incorporates basic features.
-
-```go
-type MyType struct{}
-```
-
-2. type class declares a law, a set of ops about data type
-e.g. Seq, Eq, New, 
-
-```go
-class Show a where
-  show :: String
-
-type Show interface {
-  Show() string
-}
-
-type MyTypes interface {
-
-}
-```
-
-3. instantiate type class for data type
-
-```go
-type showMyType string
-var (
-	_ Show = showMyType("")
-	_ Show = (*showMyType)(nil)
-)
-
-func (showMyType) Show() string { ... }
-
-type myTypes string
-
-func (myTypes) ...
-```
-
-4. instantiate type class
-
-```go
-const (
-	// NewAccount ...
-	ShowAccount = newAccount("type.new.account")
-  // Or (if data type is declared somewhere else)
-  Account = newAccount("type.new.account")
-
-  // Note: plular form here because it is mostly use
-  //       package.MyTypes.Show()
-  MyTypes = new showMyTypes() 
-)
-```
-
-```go
-
-type ShapeID struct{ curie.IRI }
-
-func (id ShapeID) Child() ShapeID {
-	return ShapeID{id.Join(guid.Seq.ID())}
-}
-
-const ShapeIDs = ShapeIDˆ("type.earth.ShapeID")
-
-type ShapeIDˆ string
-
-func (ShapeIDˆ) New(user string) ShapeID {
-	return ShapeID{curie.New("geo:%s", user)}
-}
-
-```
 
 ## Absence of type-classes
 

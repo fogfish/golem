@@ -13,10 +13,10 @@ type Eq[T any] interface {
 
 /*
 
-eqInt declares a new instance of Eq trait, the instance is a new
-concrete type, the concrete type "knows" everything about equality in
-own domain (e.g. int type). The instance is created over basic string
-type so that constant values enumerates all instances of Eq
+eqInt declares a new instance of Eq trait, which is a real type.
+The real type "knows" everything about equality in own domain (e.g. int type).
+The instance of Eq is created as type over string, it is an intentional
+technique to create a namespace using Golang constants. The instance of trait is referenced as eq.Int in the code.
 */
 type eqInt string
 
@@ -25,8 +25,8 @@ func (eqInt) Equal(a, b int) bool { return a == b }
 
 /*
 
-Int create a new instance of Eq trait for int domain as immutable value so that
-other functions can use this constant like `eq.Int.Eq(...)`
+Int is an instance of Eq trait for int domain as immutable value so that
+other functions can use this constant like `eq.Int.Equal(...)`
 */
 const Int = eqInt("eq.int")
 
