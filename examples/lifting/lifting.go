@@ -13,7 +13,8 @@ type Eq[T any] interface {
 
 /*
 
-FromEq is a combinator that lifts T ⟼ T ⟼ bool function to Eq type class
+FromEq is a combinator that lifts T ⟼ T ⟼ bool function to
+an instance of Eq type trait
 */
 type FromEq[T any] func(T, T) bool
 

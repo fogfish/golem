@@ -14,18 +14,18 @@ Since, "thing" can be any computational "element" including functions and other 
 
 Let's advance this patterns towards Golang type system and define combinators over types and their instances to derive complex structures of type T. There are 7 patterns to consider and express their semantic with Golang:
 
-1. [Type trait](#type-trait-pattern) (`𝔗 ⟼ A ⟼ ƒ(𝔗[A], A)`) declares type class, it's laws and the intent.
-2. [Sub-typing](#sub-typing-pattern) (`A <: B`) enhances existing type classes.
-3. [Lifting](#lifting) (`ƒ ⟼ 𝔗[A]`) transforms a pure function into corresponding type class.
+1. [Type trait](#type-trait) (`𝔗 ⟼ A ⟼ ƒ(𝔗[A], A)`) declares type class, it's laws and the intent.
+2. [Sub-typing](#sub-typing) (`A <: B`) enhances existing type classes.
+3. [Lifting](#lifting) (`ƒ ⟼ 𝔗[A]`) transforms a pure function into corresponding type trait.
 4. [Homogenous product](#homogenous-product) (`A × B × … ⟼ 𝔗 ⟼ 𝔗[A × B × …]`) composes type classes of same kind to operate with product type.
-5. [Contra Variant Functor](#contra-variant-functor) (`(ƒ: b ⟼ a) ⟼ 𝔗[A] ⟼ 𝔗[B]`) type transformation using pure function.
+5. [Contra Variant Functor](#contra-variant-functor) (`(ƒ: b ⟼ a) ⟼ 𝔗[A] ⟼ 𝔗[B]`) applies type transformation using pure function.
 6. [Compose Generic Types](#compose-generic-types) (`𝔗 ⟼ 𝕬 ⟼ 𝔗[𝕬]`) to define generic computation.
 7. [Heterogenous product](#heterogenous-product) (`𝔗 × 𝕬 × … ⟼ 𝕷`) compose heterogenous type classes into a new type law pattern. 
  
 The implementation of each combinator is considered further in this post using simplest examples in the style of Golang.  
 
 
-## Type trait pattern
+## Type trait
 
 Equality (==) implements an equivalence relationship where two values comparing "is equal to" if they belong to the same equivalence class in their domain (e.g. equivalence laws of boolean, numbers, strings and other types). Typical comparison operators supports only built-in types, extension of the operator over values of some abstract type T requires a definition of equality function over these types and acting differently for each type. 
 
@@ -88,10 +88,10 @@ The type trait is the combinator pattern with "atomic" and composable element su
 2. The type trait T declares computational laws and operational intent. T is declared using a common interface for an arbitrary set of individually specified types.
 3. The instance of type trait T is declared for any concrete type by implementing declared interface for T. Golang's [structural type system](https://en.wikipedia.org/wiki/Structural_type_system) empowers different unrelated types with type specific implementations. It makes the approach flexible for pure functional combinator libraries and easy ad-hoc type extensions.
 
-The type trait pattern looks similar to type class. The computer science has defined "the type class is construct that supports ad hoc polymorphism. This is achieved by adding constraints to type variables in parametrically polymorphic types. Such a constraint typically involves a type class T and a type variable a, and means that a can only be instantiated to a type whose members support the overloaded operations associated with T.". However, Golang type system is  strictly less powerful than type classes, they are "a kind of zeroth-order type class", while concepts around type classes are often associated with higher-kinded polymorphism. The type trait abstraction as it is defined here provides better composability that Golang interface but less powerful in comparison with Haskell's type classes.    
+The type trait pattern looks similar to type class. The computer science has defined the type class as a construct "that supports ad hoc polymorphism. This is achieved by adding constraints to type variables in parametrically polymorphic types. Such a constraint typically involves a type class T and a type variable a, and means that a can only be instantiated to a type whose members support the overloaded operations associated with T.". However, Golang type system is strictly less powerful and do not support type classes, it only support "a kind of zeroth-order type class", while concepts around type classes are often associated with higher-kinded polymorphism. The type trait abstraction as it is defined here provides better composability that Golang interface but less powerful in comparison with Haskell's type classes.    
 
 
-## Sub-typing pattern
+## Sub-typing
 
 A **Sub-typing** pattern (or inclusion polymorphism) creates a new type trait from existing one. Sub-typing is a classical polymorphism used in object-oriented programming, sub-typing is roughly comparable with Golang embedding. The purpose of sub-typing is enhance the interface of existing trait with declaration of new behavior. For example the class of totally ordered types `Ord` is a sub-type of `Eq`. 
 
@@ -110,25 +110,24 @@ type Ord [T any] interface {
 }
 ```
 
-The implementation of `Ord` type instances does not differs from `Eq`, each type "implements" the behavior: 
+Instances of `Ord` trait do not differs from `Eq`, each type "implements" the declared specification: 
 
 ```go
 func (ordInt) Compare(a, b int) Ordering { /* ... */ }
 ```
 
-TBD: subtyping of existing trait () valid sub-typing when new implementation re-uses previously defined implementation 
+Instances of type trait can aggregate other trait that allows to re-use previously defined implementations.
 
 ```go
 func (ordInt) Equal(a, b, int) bool { return eq.Int.Equal(a, b) }
 ```
 
-
-Sub-typing is a composition of "atomic" type laws into complex one. It also defines the notion of substitutability and allows the generic computation, which is written to operate elements of type T, can also operate on instances of sub-types.
+Sub-typing combinator is simple but yet powerful to built a complex structures from "atomic" type traits. It also defines the notion of substitutability in the generic computation, which is written to operate elements of type T, can also operate on instances of sub-types.
 
 
 ## Lifting
 
-Function and types are first class citizen in Golang. The **lifting** pattern transforms a pure function into corresponding type class - the combinator constructs a class from the function. Let's consider the example, there is equality function `equal: T ⟼ T ⟼ bool` and type class `Eq`. The combinator `FromEq` create an instance of `Eq` for the function so that
+Function and types are first class citizen in Golang. The **lifting** pattern transforms a pure function into the instance of corresponding type trait - the combinator constructs an new instance from the function. Let's consider the example, there is equality function `equal: T ⟼ T ⟼ bool` and type trait `Eq`. The combinator `FromEq` create an instance of `Eq` for the function so that
 
 ```
 FromEq: (T ⟼ T ⟼ bool) -> Eq
@@ -139,7 +138,8 @@ Golang implementation of this combinator requires definition of type `FromEq` an
 ```go
 /*
 
-FromEq is a combinator that lifts T ⟼ T ⟼ bool function to Eq type class
+FromEq is a combinator that lifts T ⟼ T ⟼ bool function to
+an instance of Eq type trait
 */
 type FromEq[T any] func(T, T) bool
 
@@ -147,9 +147,7 @@ type FromEq[T any] func(T, T) bool
 func (f FromEq[T]) Equal(a, b T) bool { return f(a, b)}
 ```
 
-The usage of lifting pattern is straight forward:
-
-The combinator lifts any function `T ⟼ T ⟼ bool` 
+The constructor `FromEq` takes a function `T ⟼ T ⟼ bool` as parameter, the output returns an instance of `Eq`: 
 
 ```go
 // Equal is a pure function that compares two integers
@@ -157,20 +155,20 @@ func Equal(a, b int) bool { return a == b }
 
 /*
 
-The combinator creates a new instance of Eq data type
+The combinator creates a new instance of Eq trait
 that "knows" how to compare int.
 */
 var Int Eq[int] = eq.FromEq[int](Equal)
 ```
 
-The lifting pattern is very powerful one. It is not only leverage the gap between functional and type class domains but also facilitates the composable and re-usable definition of type classes using closures and other pure functional concepts.     
+The lifting pattern is very powerful one. It is not only leverage the gap between functional and type traits domains but also facilitates the composable and re-usable definition of type traits using closures and other pure functional concepts.
 
 
 ## Homogenous product
 
-Type theory and a functional programming operates with algebraic data types. They are known as a composition of other types. The theory defines two classes of compositions: product types and co-product types. Product types are strongly expressed by structs in Golang; co-products are loosely defined (let's skip them at current considerations). It is not always practical to implement type law pattern for each instance of product type. Construction of the complex type law through the composition of existing instances is an alternative solution.  
+Type theory and a functional programming operates with algebraic data types. They are known as a composition of other types. The theory defines two classes of compositions: product types and co-product types. Product types are strongly expressed by structs in Golang; co-products are loosely defined (let's skip them at current considerations). It is not always practical to implement instances of type trait for each product type. Construction of new instances of type trait through the composition of existing instances is an alternative solution.  
 
-The **homogenous product** pattern allows an application to construct type laws for product types in a relatively boilerplate-free way. It composes type classes of same kind to operate on containers. Let's consider a product type `T: A × B × ...` together with set of type laws for each of elementary type `Eq[A], Eq[B], ...`. The homogenous product build `Eq[T]: Eq[A] × Eq[B] × ...`. 
+The **homogenous product** pattern allows an application to create an instance of type trait for product types in a relatively boilerplate-free way. It composes type traits of same kind to operate on algebraic data types. Let's consider a product type `T: A × B × ...` together with set of type traits for each of "elementary" type `𝔗: Eq[A], Eq[B], ...`. The homogenous product build `Eq[T]: Eq[A] × Eq[B] × ...`. 
 
 ```go
 // ExampleType product type is product of primitive types int × string
@@ -179,27 +177,26 @@ type ExampleType struct {
 	B string
 }
 
-// The type law is defined for these primitive types
+// Instances of Eq type trait for primitive types
 var (
 	Int    Eq[int]    = FromEq[int](equal[int])
 	String Eq[string] = FromEq[string](equal[string])
 )
 ```
 
-Golang's implementation of this combinator requires definition of type `UnApplyN` to "extract" fractions on the product and implementation of corresponding product type `ProductN`for `Eq` type law:
+Golang's implementation of homogenous product requires definition of type `UnApplyN` to "extract" fractions on the product and implementation of corresponding product type `ProductN`for `Eq` type law:
 
 ```go
-// UnApply2 is contra-map function for data type T that unwrap product type  
+/*
+
+UnApply2 is like contra-map function for data type T that unwrap product type
+*/  
 type UnApply2[T, A, B any] func(T) (A, B)
 
 /*
 
-ProductEq2 is a shortcut due to zeroth-order type class concept in Golang and lack of heterogenous lists. The type just a product "container" of Eq instances
-
-The new instance of Eq for data type ExampleType is created using
-eq := ProductEq2[ExampleType, int, string]{Int, String,
-  func(x ExampleType) (int, string) { return x.A, x.B },
-}
+ProductEq2 is a container, product of type trait instances.
+Here, the implementation is a shortcut due to absence of heterogenous lists in Golang. 
 */
 type ProductEq2[T, A, B any] struct {
 	Eq1 Eq[A]
@@ -215,21 +212,26 @@ func (eq ProductEq2[T, A, B]) Equal(a, b T) bool {
 }
 ```
 
-The homogenous product pattern is a building blocks for composition of "atomic" type classes into complex structures from concrete problem "domain".
+The homogenous product pattern is a building blocks for composition of "atomic" type traits into complex structures to deal with algebraic data types. The new instance of `Eq` trait for `ExampleType` is created with
 
+```go
+ProductEq2[ExampleType, int, string]{Int, String,
+  func(x ExampleType) (int, string) { return x.A, x.B },
+}
+```
 
 ## Contra Variant Functor
 
 The functor pattern is one of mostly discussed patterns in functional programming. It allows "a generic type to apply a function inside without changing the structure of the generic type". In math, there are many concepts that acts as functors. The **contra variant** pattern just "turn morphisms around". 
 
-A functional programming operates with algebraic data types. It is not always practical to implement type law pattern for each instance of data type. The type mapping is a solution to transform data types so that existing type law instances can be re-used in different context.  
+A functional programming operates with algebraic data types. It is not always practical to implement type trait instances for each data type. The type mapping is a solution to transform data types so that existing type trait instances can be re-used in different context.  
 
 Let's consider two types `A` and `B` and the instance of type class `Eq[A]`. The contra variant functor builds an instance of `Eq[B]` with help of `f: b ⟼ a` transformer. 
 
 ```go
 /*
 
-ContraMapEq is a combinator that build a new instance of type class Eq[B] using
+ContraMapEq is a combinator that build a new instance of type trait Eq[B] using
 existing instance of Eq[A] and f: b ⟼ a
 */
 type ContraMapEq[A, B any] struct{ Eq[A] }
@@ -249,6 +251,9 @@ ContraMapEq[int, ExampleType]{Int}.FMap(
   func(x ExampleType) int { /* ... */ },
 )
 ```
+
+Often, functional programming literature explains the purpose of contra variant functor on the example of type safe sorting or filtering algorithms where applications specific algebraic data types are processed with transformation them into the domain of primitive built-in types.
+
 
 ## Compose generic types 
 
