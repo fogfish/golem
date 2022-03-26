@@ -1,4 +1,4 @@
-# Pure Type Combinators in Golang or How to Stop Worrying and Love the Functional Programming
+# A Guide To Pure Type Combinators in Golang or How to Stop Worrying and Love the Functional Programming
 
 Humans have developed ideas of representing things using a formal "system" since ancient history - Aristotle’s logic, Euclid’s geometry are good examples. The formalism allows anyone to proof and deduct purely within the system so that it defines a concrete solution of the current problem. System of combinators has been known for 100 years since Moses Schönfinkel developed a universal computation system that has been researched since together with mathematical logic, lambda calculus and category theory. Combinators open up an opportunity to depict computation problems in terms of fundamental elements like physics talks about the universe in terms of particles. The only definite purpose of combinators are building blocks for composition of "atomic" functions into computational structures from concrete problem "domain". So far, combinators remain as powerful symbolic expressions in computational languages.  
 
@@ -171,14 +171,14 @@ The **homogenous product** pattern allows an application to create an instance o
 ```go
 // ExampleType product type is product of primitive types int × string
 type ExampleType struct {
-	A int
-	B string
+  A int
+  B string
 }
 
 // Instances of Eq type trait for primitive types
 var (
-	Int    Eq[int]    = FromEq[int](equal[int])
-	String Eq[string] = FromEq[string](equal[string])
+  Int    Eq[int]    = FromEq[int](equal[int])
+  String Eq[string] = FromEq[string](equal[string])
 )
 ```
 
@@ -197,16 +197,16 @@ ProductEq2 is a container, product of type trait instances.
 Here, the implementation is a shortcut due to the absence of heterogeneous lists in Golang. 
 */
 type ProductEq2[T, A, B any] struct {
-	Eq1 Eq[A]
-	Eq2 Eq[B]
+  Eq1 Eq[A]
+  Eq2 Eq[B]
   UnApply2[T, A, B]
 }
 
 // implementation of Eq type class for the product
 func (eq ProductEq2[T, A, B]) Equal(a, b T) bool {
-	a0, a1 := eq.UnApply2(a)
-	b0, b1 := eq.UnApply2(b)
-	return eq.Eq1.Equal(a0, b0) && eq.Eq2.Equal(a1, b1)
+  a0, a1 := eq.UnApply2(a)
+  b0, b1 := eq.UnApply2(b)
+  return eq.Eq1.Equal(a0, b0) && eq.Eq2.Equal(a1, b1)
 }
 ```
 
@@ -236,9 +236,9 @@ type ContraMapEq[A, B any] struct{ Eq[A] }
 
 // implementation of contra variant functor
 func (c ContraMapEq[A, B]) FMap(f func(B) A) Eq[B] {
-	return FromEq[B](func(a, b B) bool {
-		return c.Eq.Equal(f(a), f(b))
-	})
+  return FromEq[B](func(a, b B) bool {
+    return c.Eq.Equal(f(a), f(b))
+  })
 }
 ```
 
@@ -261,7 +261,7 @@ Let's consider a `Foldable` abstraction that represents data structures that can
 
 ```go
 type Foldable[T any] interface {
-	Fold(a T, seq []T) (x T)
+  Fold(a T, seq []T) (x T)
 }
 ```
 
@@ -269,7 +269,7 @@ There are infinite possibilities to implement the `Foldable` type trait due to t
 
 ```go
 type Semigroup[T any] interface {
-	Combine(T, T) T
+  Combine(T, T) T
 }
 ```
 
@@ -281,11 +281,11 @@ The composition of generic types is defined through a new type `Folder`. This ty
 type Folder[T any] struct{ Semigroup[T] }
 
 func (f Folder[T]) Fold(a T, seq []T) (x T) {
-	x = a
-	for _, y := range seq {
-		x = f.Semigroup.Combine(x, y)
-	}
-	return
+  x = a
+  for _, y := range seq {
+    x = f.Semigroup.Combine(x, y)
+  }
+  return
 }
 ```
 
@@ -303,9 +303,9 @@ The **heterogeneous product** pattern allows an application to compose type trai
 Seq defines fundamental general purpose sequence
 */
 type Seq[S any, T any] interface {
-	Head(S) *T
-	Tail(S) S
-	IsVoid(S) bool
+  Head(S) *T
+  Tail(S) S
+  IsVoid(S) bool
 }
 
 /*
@@ -314,7 +314,7 @@ Eq : T ⟼ T ⟼ bool
 Each type implements own equality, mapping pair of value to bool category
 */
 type Eq[T any] interface {
-	Equal(T, T) bool
+  Equal(T, T) bool
 }
 ```
 
