@@ -6,7 +6,7 @@
 // https://github.com/fogfish/golem
 //
 
-package pure
+package monoid
 
 /*
 
@@ -47,4 +47,8 @@ type Monoid interface {
 	// Combine must hold associative property
 	//   a.Mappend(b).Mappend(c) == a.Mappend(b.Mappend(c))
 	Mappend(x Monoid) Monoid
+}
+
+type Semigroup interface {
+	Mappend()
 }

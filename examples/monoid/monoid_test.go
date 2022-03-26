@@ -6,24 +6,22 @@
 // https://github.com/fogfish/golem
 //
 
-package pure_test
+package monoid
 
 import (
 	"testing"
-
-	"github.com/fogfish/golem/pure"
 )
 
 //
 // container type
 type SeqA []int
 
-type FMap func(int) pure.Monoid
-type Mapper func(FMap) pure.Monoid
+type FMap func(int) Monoid
+type Mapper func(FMap) Monoid
 
 // Map with Monoid, instantiate mapper
-func (seq SeqA) Map(m pure.Monoid) Mapper {
-	return func(f FMap) pure.Monoid {
+func (seq SeqA) Map(m Monoid) Mapper {
+	return func(f FMap) Monoid {
 		y := m.Mempty()
 		for _, x := range seq {
 			y = y.Mappend(f(x))
@@ -33,7 +31,7 @@ func (seq SeqA) Map(m pure.Monoid) Mapper {
 }
 
 // Map with Monoid
-func (seq SeqA) MMap(m pure.Monoid, f FMap) pure.Monoid {
+func (seq SeqA) MMap(m Monoid, f FMap) Monoid {
 	y := m.Mempty()
 	for _, x := range seq {
 		y = y.Mappend(f(x))
@@ -60,11 +58,11 @@ func (seq SeqA) FMap(f func(int)) {
 // accumulator type implements monoid abstraction
 type SeqB int
 
-func (seq SeqB) Mempty() pure.Monoid {
+func (seq SeqB) Mempty() Monoid {
 	return SeqB(0)
 }
 
-func (seq SeqB) Mappend(x pure.Monoid) pure.Monoid {
+func (seq SeqB) Mappend(x Monoid) Monoid {
 	return seq + x.(SeqB)
 }
 
@@ -85,8 +83,6 @@ func (SeqC) Append(a, b interface{}) interface{} {
 	return a.(int) + b.(int)
 }
 
-// var Mc M = new(SeqC) // SeqC(0)
-
 func Mc() M {
 	return SeqC(0)
 }
@@ -95,12 +91,12 @@ func Mc() M {
 // global constants
 var (
 	sequence SeqA = SeqA{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
-	result   pure.Monoid
+	result   Monoid
 	xxx      M
 )
 
 // convAtoB is mapper function, converts type A to B
-func convAtoB(s int) pure.Monoid {
+func convAtoB(s int) Monoid {
 	return SeqB(s)
 }
 
@@ -120,10 +116,10 @@ func joinAtoB(b SeqB, a int) SeqB {
 
 //
 // benchmarks
-func _BenchmarkMonoid(b *testing.B) {
+func BenchmarkMonoid(b *testing.B) {
 	b.ReportAllocs()
 
-	var monoid pure.Monoid = SeqB(0)
+	var monoid Monoid = SeqB(0)
 
 	for n := 0; n < b.N; n++ {
 		monoid = sequence.MMap(monoid, convAtoB)
@@ -131,7 +127,7 @@ func _BenchmarkMonoid(b *testing.B) {
 	result = monoid
 }
 
-func _BenchmarkMonoidC(b *testing.B) {
+func BenchmarkMonoidC(b *testing.B) {
 	b.ReportAllocs()
 
 	// var monoid SeqC = SeqC(0)
@@ -142,10 +138,10 @@ func _BenchmarkMonoidC(b *testing.B) {
 	// xxx = monoid
 }
 
-func _BenchmarkMonoidHoF(b *testing.B) {
+func BenchmarkMonoidHoF(b *testing.B) {
 	b.ReportAllocs()
 
-	var monoid pure.Monoid = SeqB(0)
+	var monoid Monoid = SeqB(0)
 	mapper := sequence.Map(monoid)
 
 	for n := 0; n < b.N; n++ {
@@ -154,7 +150,7 @@ func _BenchmarkMonoidHoF(b *testing.B) {
 	result = monoid
 }
 
-func _BenchmarkForLoop(b *testing.B) {
+func BenchmarkForLoop(b *testing.B) {
 	b.ReportAllocs()
 
 	var seq SeqB
@@ -165,7 +161,7 @@ func _BenchmarkForLoop(b *testing.B) {
 	result = seq
 }
 
-func _BenchmarkClojure(b *testing.B) {
+func BenchmarkClojure(b *testing.B) {
 	b.ReportAllocs()
 
 	var seq SeqB

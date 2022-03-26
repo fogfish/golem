@@ -6,30 +6,29 @@
 // https://github.com/fogfish/golem
 //
 
-package eq_test
+package ord_test
 
 import (
 	"testing"
 
-	"github.com/fogfish/golem/pure/eq"
+	"github.com/fogfish/golem/pure/ord"
 	"github.com/fogfish/it"
 )
 
-var bbEq bool
+var bbOrd ord.Ordering
 
-func TestEqual(t *testing.T) {
+func TestCompare(t *testing.T) {
 	it.Ok(t).
-		IfTrue(eq.Int.Equal(1, 1)).
-		IfFalse(eq.Int.Equal(1, 2)).
-		IfTrue(eq.String.Equal("abcd", "abcd")).
-		IfFalse(eq.String.Equal("abcd", "xxxx"))
+		IfTrue(ord.Int.Compare(0, 1) == ord.LT).
+		IfTrue(ord.Int.Compare(1, 1) == ord.EQ).
+		IfTrue(ord.Int.Compare(1, 0) == ord.GT)
 }
 
-func BenchmarkEqInt(b *testing.B) {
+func BenchmarkOrdInt(b *testing.B) {
 	b.ReportAllocs()
 
 	for n := 0; n < b.N; n++ {
-		bbEq = eq.Int.Equal(n, n+1)
+		bbOrd = ord.Int.Compare(n, n+1)
 	}
 }
 
@@ -38,18 +37,19 @@ type A struct {
 	Name string
 }
 
-var eqByID = eq.ContraMap[int, A]{
-	eq.Int,
+var ordByID = ord.ContraMap[int, A]{
+	ord.Int,
 	func(x A) int { return x.ID },
 }
 
 func TestContraMap(t *testing.T) {
 	a := A{1, "a"}
-	b := A{2, "a"}
+	b := A{0, "a"}
 
 	it.Ok(t).
-		IfTrue(eqByID.Equal(a, a)).
-		IfFalse(eqByID.Equal(a, b))
+		IfTrue(ordByID.Compare(b, a) == ord.LT).
+		IfTrue(ordByID.Compare(a, a) == ord.EQ).
+		IfTrue(ordByID.Compare(a, b) == ord.GT)
 }
 
 func BenchmarkContraMap(b *testing.B) {
@@ -57,6 +57,6 @@ func BenchmarkContraMap(b *testing.B) {
 
 	a := A{1, "a"}
 	for n := 0; n < b.N; n++ {
-		bbEq = eqByID.Equal(a, a)
+		bbOrd = ordByID.Compare(a, a)
 	}
 }

@@ -1,67 +1,64 @@
+//
+// Copyright (C) 2022 Dmitry Kolesnikov
+//
+// This file may be modified and distributed under the terms
+// of the MIT license.  See the LICENSE file for details.
+// https://github.com/fogfish/golem
+//
+
 package eq
 
-import "github.com/fogfish/golem"
+import (
+	"github.com/fogfish/golem/pure"
+)
 
-//
-type Eq interface {
-	Eq(golem.T, golem.T) bool
+/*
+
+Eq : T ⟼ T ⟼ bool
+Each trait implements mapping pair of values to bool category using own
+equality rules
+*/
+type Eq[T any] interface {
+	Equal(T, T) bool
 }
+
+/*
+
+eq generic implementation for built-in types
+*/
+type eq[T pure.AnyOrderable] string
+
+func (eq[T]) Equal(a, b T) bool { return a == b }
 
 //
 const (
-	Int    = eqInt("eq.int")
-	String = eqString("eq.string")
+	Int    = eq[int]("eq.int")
+	String = eq[string]("eq.string")
 )
 
-//
-type eqInt string
+/*
 
-func (eqInt) Eq(a, b golem.T) bool {
-	return a.(int) == b.(int)
+From is a combinator that lifts T ⟼ T ⟼ bool function to
+an instance of Eq type trait
+*/
+type From[T any] func(T, T) bool
+
+func (f From[T]) Equal(a, b T) bool { return f(a, b) }
+
+/*
+
+ContraMap is a combinator that build a new instance of type trait Eq[B] using
+existing instance of Eq[A] and f: b ⟼ a
+*/
+type ContraMap[A, B any] struct {
+	Eq[A]
+	pure.ContraMap[A, B]
 }
 
-//
-type eqString string
-
-func (eqString) Eq(a, b golem.T) bool {
-	return a.(string) == b.(string)
-}
-
-//
-type FromEq func(golem.T, golem.T) bool
-
-func (f FromEq) Eq(a, b golem.T) bool {
-	return f(a, b)
-}
-
-var (
-	_ Eq = FromEq(func(golem.T, golem.T) bool { return false })
-)
-
-//
-type ContraMap struct{ Eq }
-
-func (c ContraMap) From(f func(golem.T) golem.T) Eq {
-	return FromEq(func(a, b golem.T) bool {
-		return c.Eq.Eq(f(a), f(b))
-	})
-}
-
-//
-type Struct []Eq
-
-func (seq Struct) From2(f func(golem.T) (golem.T, golem.T)) Eq {
-	return FromEq(func(a, b golem.T) bool {
-		a0, a1 := f(a)
-		b0, b1 := f(b)
-		return seq[0].Eq(a0, b0) && seq[1].Eq(a1, b1)
-	})
-}
-
-func (seq Struct) From3(f func(golem.T) (golem.T, golem.T, golem.T)) Eq {
-	return FromEq(func(a, b golem.T) bool {
-		a0, a1, a2 := f(a)
-		b0, b1, b2 := f(b)
-		return seq[0].Eq(a0, b0) && seq[1].Eq(a1, b1) && seq[2].Eq(a2, b2)
-	})
+// Equal implementation of contra variant functor
+func (f ContraMap[A, B]) Equal(a, b B) bool {
+	return f.Eq.Equal(
+		f.ContraMap(a),
+		f.ContraMap(b),
+	)
 }
