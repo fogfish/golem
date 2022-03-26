@@ -1,6 +1,4 @@
-# Pure Functional Programming with type combinators in Golang
-
-// Dr. Strangelove or: How I Learned to Stop Worrying and Love the Bomb
+# Pure Type Combinators in Golang or How to Stop Worrying and Love the Functional Programming
 
 Humans have developed ideas of representing things using a formal "system" since ancient history - Aristotle’s logic, Euclid’s geometry are good examples. The formalism allows anyone to proof and deduct purely within the system so that it defines a concrete solution of the current problem. System of combinators has been known for 100 years since Moses Schönfinkel developed a universal computation system that has been researched since together with mathematical logic, lambda calculus and category theory. Combinators open up an opportunity to depict computation problems in terms of fundamental elements like physics talks about the universe in terms of particles. The only definite purpose of combinators are building blocks for composition of "atomic" functions into computational structures from concrete problem "domain". So far, combinators remain as powerful symbolic expressions in computational languages.  
 
@@ -291,7 +289,8 @@ func (f Folder[T]) Fold(a T, seq []T) (x T) {
 }
 ```
 
-The approach discussed by the compose generic types pattern is only the solution to parametrize one type class over another one until higher kinded polymorphism is fully supported at Golang.
+The compose generic types pattern follows Hilbert’s axiomatic method "to build everything from as few notions as possible". It uses standard Golang notations from which other combinator notations are constructed. The approach discussed by the compose generic types pattern is only the solution to parametrize one type class over another one until higher kinded polymorphism is fully supported at Golang.
+
 
 
 ## Heterogeneous product
@@ -341,112 +340,23 @@ Newly composed trait is a product of two types.
 
 ## Afterwords
 
+The post have defined a basic principles of composing types into high order constructs. It follows Hilbert’s axiomatic method "to build everything from as few notions as possible". All defined combinators use standard Golang notations from which other combinator notations are constructed. Think about combinator expressions in the terms of the language being able to define how types and instances should transform. These expressions shown that any universal computational could be reduced to an expression purely in terms of types and combinators. The crucial idea of these expressions is the computational language, which delivers abstractions, where anyone can declare things and then reuse them without having to think about how they're built inside.  
+
+In the end, combinators are fundamentally computational constructs. It is surprising, just how simple the combinator systems can be. Combinators make a bridge to the way humans think, allowing anyone to represent anything using structured symbolic expressions. 
 
 
+## References
 
-~ * * * ~
+The post is based on the following articles.  
 
-We have defined a basic principles of composing "classes" into high order constructs
+1. [Featherweight Go](https://arxiv.org/pdf/2005.11710.pdf)
+2. [Functional design: combinators](https://dev.to/gcanti/functional-design-combinators-14pn)
+3. [Combinators and the Story of Computation](https://writings.stephenwolfram.com/2020/12/combinators-and-the-story-of-computation/)
+4. [Parametric polymorphism, Records, and Subtyping](https://groups.seas.harvard.edu/courses/cs152/2015sp/lectures/lec14-polymorphism.pdf)
+5. [Type classes](https://typelevel.org/cats/typeclasses.html)
+6. [Implementing, and Understanding Type Classes](https://okmij.org/ftp/Computation/typeclass.html)
+6. [Higher-order functions vs interfaces in golang](http://aquaraga.github.io/functional-programming/golang/2016/11/19/golang-interfaces-vs-functions.html)
+7. [Inheritance vs Generics vs TypeClasses in Scala](https://dev.to/jmcclell/inheritance-vs-generics-vs-typeclasses-in-scala-20op)
+8. [Common combinators in JavaScript](https://gist.github.com/Avaq/1f0636ec5c8d6aed2e45)
+9. [Haskell's TypeClasses and Go's Interfaces](https://stackoverflow.com/questions/2982012/haskells-typeclasses-and-gos-interfaces)
 
-
-
-takes a function 
-
-Equality "law" can be defined 
-
-Usage of interfaces is a valid approach to declare a
-High-order function is 
-
-
-
-
-## Absence of type-classes
-
-
-
-* Type Classes vs Sub Typing
-
-* Type Classes vs HoF
-
-A pure functional design 
-
-Use combinators for pure functional design in Golang
-
-Functional Design in Go using combinators
-
-https://dev.to/gcanti/functional-design-combinators-14pn
-
-https://typelevel.org/cats/typeclasses.html
-Type classes are a powerful tool used in functional programming to enable ad-hoc polymorphism, more commonly known as overloading. Where many object-oriented languages leverage subtyping for polymorphic code, functional programming tends towards a combination of parametric polymorphism (think type parameters, like Java generics) and ad-hoc polymorphism.
-
-https://en.wikipedia.org/wiki/Type_class
-
-Basic Logic (It was easy to represent mathematical relations) represent basically anything in terms of symbolic expressions, and transformation rules on them
-* Idempotent law
-* Commutative and associative law
-* Distributive law
-* Identity law
-* Compliment law
-* DeMorgan's law
-* Reflective law
-* Antisymmetric law
-* Transitive law
-^^^ testing
-
-> In computer science, functional programming is a programming paradigm where programs are constructed by applying and composing functions. It is a declarative programming paradigm in which function definitions are trees of expressions that map values to other values, rather than a sequence of imperative statements which update the running state of the program.
-
-> Functional Programming is a declarative style of development that uses side-effect free functions to express solution of the problem domain. The core concepts of functional programming are elaborated by Martin Odersky - First class and high-order functions and immutability. Another key feature in functional programming is the composition - a style of development to build a new things from small reusable elements. Functional code looks great only if functions clearly describe your problem. Usually lines of code per function is only a single metric that reflects quality of the code
-
-
-https://writings.stephenwolfram.com/2020/12/combinators-and-the-story-of-computation/
-
-The Abstract Representation of Things
-
-
-
-that it’s “in the spirit of” Hilbert’s axiomatic method to build everything from as few notions as possible; then he says that what he wants to do is to “seek out those notions from which we shall best be able to construct all other notions of the branch of science in question”.
-
-
-But, OK, so what had he achieved? He’d basically shown that any expression that might appear in predicate logic (with logical connectives, quantifiers, variables, etc.) could be reduced to an expression purely in terms of the combinators S, C (now K) and U.
-
-
-
-I’m sure Schönfinkel was extremely surprised. And here I personally feel a certain commonality with him. Because in my own explorations of the computational universe, what I’ve found over and over again is that it takes only remarkably simple systems to be capable of highly complex behavior—and of universal computation. And even after exploring the computational universe for four decades, I’m still continually surprised at just how simple the systems can be.
-
-In the end, combinators are fundamentally computational constructs
-
-But by and large the important ideas that first arose with combinators ended up being absorbed into practical computing by quite circuitous routes, without direct reference to their origins, or to the specific structure of combinators.
-
-
-
-Yes, it was quite often useful to think of “applying functions to things” (and SMP had its version of lambda, for example), but it was much more powerful to think about symbolic expressions as just “being there” (“x doesn’t have to have a value”)—like things in the world—with the language being able to define how things should transform.
-
-Over time I’ve come to realize that doing this is less about what one can in principle use to construct computations, and more about making a bridge to the way humans think about things. It’s crucial that there’s an underlying structure—symbolic expressions—that can represent anything.
-
-But that would be like having a world without nouns—a world where there’s no name for anything—and the representation of everything has to be built from scratch. But the crucial idea that’s central to human language—and now to computational language—is to be able to have layers of abstraction, where one can name things and then refer to them just by name without having to think about how they’re built up “inside”.
-
-
-
-https://stackoverflow.com/questions/2982012/haskells-typeclasses-and-gos-interfaces
-
-
-http://aquaraga.github.io/functional-programming/golang/2016/11/19/golang-interfaces-vs-functions.html
-
-Featherweight Go
-https://arxiv.org/pdf/2005.11710.pdf
-
-Implementing, and Understanding Type Classes
-http://okmij.org/ftp/Computation/typeclass.html
-
-Inheritance vs Generics vs TypeClasses in Scala
-https://dev.to/jmcclell/inheritance-vs-generics-vs-typeclasses-in-scala-20op
-
-https://writings.stephenwolfram.com/2020/12/combinators-and-the-story-of-computation/
-https://gist.github.com/Avaq/1f0636ec5c8d6aed2e45
-http://okmij.org/ftp/Computation/types.html
-
-
-
-
-Lecture: Parametric polymorphism, Records, and Subtyping
-https://groups.seas.harvard.edu/courses/cs152/2015sp/lectures/lec14-polymorphism.pdf
