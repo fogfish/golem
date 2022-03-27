@@ -30,7 +30,7 @@
     </a>
     <!-- Maintainability -->
     <a href="https://codeclimate.com/github/fogfish/golem/maintainability">
-      <img src="https://api.codeclimate.com/v1/badges/ee132d36361127fa99c9e/maintainability" />
+      <img src="https://api.codeclimate.com/v1/badges/ee132d36361127fa99c9/maintainability" />
     </a>
   </p>
 </p>
