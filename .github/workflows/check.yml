@@ -1,0 +1,51 @@
+name: check
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+
+jobs:
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+
+      - uses: actions/setup-go@v2
+        with:
+          go-version: '1.18'
+
+      - uses: actions/checkout@v3
+
+      - uses: golangci/golangci-lint-action@v3.1.0
+        with:
+          version: latest
+          args: --verbose
+
+      - name: go vet
+        run: |
+          go vet ./...
+
+  check:
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: golang
+        uses: actions/setup-go@v2
+        with:
+          go-version: '1.18'
+
+      - name: checkout
+        uses: actions/checkout@v2
+     
+      - name: go build
+        run: |
+          go build ./...
+    
+      - name: go test
+        run: |
+          go test -v -coverprofile=profile.cov ./...
+
+      - uses: shogo82148/actions-goveralls@v1
+        with:
+          path-to-profile: profile.cov

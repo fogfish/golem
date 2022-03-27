@@ -1,0 +1,8 @@
+"[#] doc": 
+ - any: [ 'doc/**/*', 'examples/**/*' ]
+
+"[#] pure":
+ - any: [ 'pure/**/*' ]
+
+"[#] maplike":
+ - any: [ 'maplike/**/*' ]
