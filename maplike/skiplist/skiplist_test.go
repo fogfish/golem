@@ -74,17 +74,20 @@ func mkSkipList(n int) maplike.MapLike[int, int] {
 	return list
 }
 
+//
+//
 // func mkSkipListRand(n int) maplike.MapLike[int, int] {
 // 	prnd := rand.New(rand.NewSource(time.Now().UnixNano()))
 // 	list := skiplist.New[int, int](ord.Int)
-
+//
 // 	for i := 1; i < n; i++ {
 // 		key := prnd.Intn(n)
 // 		list.Put(key, key)
 // 	}
-
+//
 // 	return list
 // }
+//
 
 //
 // go test -bench=. -benchtime=10s -cpu=1

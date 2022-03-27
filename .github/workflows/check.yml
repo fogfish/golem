@@ -7,7 +7,7 @@ on:
 
 jobs:
 
-  golangci-lint:
+  lint:
     runs-on: ubuntu-latest
     steps:
 
@@ -22,6 +22,10 @@ jobs:
           version: latest
           args: --verbose
 
+      - name: go vet
+        run: |
+          go vet ./...
+
   check:
     runs-on: ubuntu-latest
     steps:
@@ -33,23 +37,11 @@ jobs:
 
       - name: checkout
         uses: actions/checkout@v2
- 
-      # - name: go get tools
-      #   run: |
-      #     go get golang.org/x/lint/golint
-    
+     
       - name: go build
         run: |
           go build ./...
     
-      - name: go vet
-        run: |
-          go vet ./...
-  
-      # - name: golint
-      #   run: |
-      #     golint ./...
-
       - name: go test
         run: |
           go test -v -coverprofile=profile.cov ./...
