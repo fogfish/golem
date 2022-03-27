@@ -4,25 +4,33 @@
   <p align="center"><strong>"Scrap Your Boilerplate" for Go</strong></p>
 
   <p align="center">
+    <!-- Version -->
+    <a href="https://github.com/fogfish/golem/releases">
+      <img src="https://img.shields.io/github/v/tag/fogfish/golem?label=version" />
+    </a> 
     <!-- Documentation -->
-    <a href="http://godoc.org/github.com/fogfish/golem">
-      <img src="https://godoc.org/github.com/fogfish/golem?status.svg" />
+    <a href="https://pkg.go.dev/github.com/fogfish/golem">
+      <img src="https://pkg.go.dev/badge/github.com/fogfish/golem" />
     </a>
     <!-- Build Status  -->
-    <a href="http://travis-ci.org/fogfish/golem">
-      <img src="https://secure.travis-ci.org/fogfish/golem.svg?branch=master" />
+    <a href="https://github.com/fogfish/golem/actions/">
+      <img src="https://github.com/fogfish/golem/workflows/build/badge.svg" />
     </a>
     <!-- GitHub -->
     <a href="http://github.com/fogfish/golem">
       <img src="https://img.shields.io/github/last-commit/fogfish/golem.svg" />
     </a>
     <!-- Coverage -->
-    <a href="https://coveralls.io/github/fogfish/golem?branch=master">
-      <img src="https://coveralls.io/repos/github/fogfish/golem/badge.svg?branch=master" />
+    <a href="https://coveralls.io/github/fogfish/golem?branch=main">
+      <img src="https://coveralls.io/repos/github/fogfish/golem/badge.svg?branch=main" />
     </a>
     <!-- Go Card -->
     <a href="https://goreportcard.com/report/github.com/fogfish/golem">
       <img src="https://goreportcard.com/badge/github.com/fogfish/golem" />
+    </a>
+    <!-- Maintainability -->
+    <a href="https://codeclimate.com/github/fogfish/golem/maintainability">
+      <img src="https://api.codeclimate.com/v1/badges/ee132d36361127fa99c9e/maintainability" />
     </a>
   </p>
 </p>
