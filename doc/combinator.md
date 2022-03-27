@@ -88,6 +88,7 @@ The type trait is the combinator pattern with "atomic" and composable element su
 
 The type trait pattern looks similar to type class. Computer Science has defined the type class as a construct "that supports ad hoc polymorphism. This is achieved by adding constraints to type variables in parametrically polymorphic types. Such a constraint typically involves a type class T and a type variable a, and means that a can only be instantiated to a type whose members support the overloaded operations associated with T.". However, the Golang type system is strictly less powerful and does not support type classes, it only supports "a kind of zeroth-order type class", while concepts around type classes are often associated with higher-kinded polymorphism. The type trait abstraction as it is defined here provides better composability than the Golang interface but less powerful in comparison with Haskell's type classes.    
 
+See [an example of type trait](../examples/typetrait/typetrait.go)
 
 ## Sub-typing
 
@@ -121,6 +122,8 @@ func (ordInt) Equal(a, b, int) bool { return eq.Int.Equal(a, b) }
 ```
 
 Sub-typing combinator is simple but yet powerful to built complex structures from "atomic" type traits. It also defines the notion of substitutability in the generic computation, which is written to operate on elements of type T, and can also operate on instances of sub-types.
+
+See [an example of sub-typing](../examples/subtyping/subtyping.go)
 
 
 ## Lifting
@@ -160,6 +163,8 @@ var Int Eq[int] = eq.FromEq[int](Equal)
 ```
 
 The lifting pattern is a very powerful one. It not only leverages the gap between functional and type traits domains but also facilitates the composable and re-usable definition of type traits using closures and other pure functional concepts.
+
+See [an example of lifting](../examples/lifting/lifting.go)
 
 
 ## Homogenous product
@@ -218,6 +223,9 @@ ProductEq2[ExampleType, int, string]{Int, String,
 }
 ```
 
+See [an example of homogenous product](../examples/homogenous/homogenous.go)
+
+
 ## Contra Variant Functor
 
 The functor pattern is one of the most discussed patterns in functional programming. It allows "a generic type to apply a function inside without changing the structure of the generic type". In math, there are many concepts that act as functors. The **contra variant** pattern just "turn morphisms around". 
@@ -251,6 +259,8 @@ ContraMapEq[int, ExampleType]{Int}.FMap(
 ```
 
 Often, functional programming literature explains the purpose of contra variant functors on the example of type safe sorting or filtering algorithms where applications specific algebraic data types are processed with transformation into the domain of primitive built-in types.
+
+See [an example of contra variant functions](../examples/contramap/contramap.go)
 
 
 ## Compose generic types
@@ -291,6 +301,7 @@ func (f Folder[T]) Fold(a T, seq []T) (x T) {
 
 The compose generic types pattern follows Hilbert’s axiomatic method "to build everything from as few notions as possible". It uses standard Golang notations from which other combinator notations are constructed. The approach discussed by the compose generic types pattern is only the solution to parametrize one type class over another one until higher kinded polymorphism is fully supported at Golang.
 
+See [an example of compose generic types](../examples/semigroup/semigroup.go)
 
 
 ## Heterogeneous product
@@ -336,6 +347,8 @@ func (seq SeqEq[S, T]) Equal(a, b S) bool { /* ... */ }
 ``` 
 
 Newly composed trait is a product of two types.
+
+See [an example of heterogenous product](../examples/heterogenous/heterogenous.go)
 
 
 ## Afterwords
