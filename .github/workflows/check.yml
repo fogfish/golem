@@ -6,6 +6,22 @@ on:
       - synchronize
 
 jobs:
+
+  golangci-lint:
+    runs-on: ubuntu-latest
+    steps:
+
+      - uses: actions/setup-go@v2
+        with:
+          go-version: '1.18'
+
+      - uses: actions/checkout@v3
+
+      - uses: golangci/golangci-lint-action@v3.1.0
+        with:
+          version: latest
+          args: --verbose
+
   check:
     runs-on: ubuntu-latest
     steps:
@@ -13,14 +29,14 @@ jobs:
       - name: golang
         uses: actions/setup-go@v2
         with:
-          go-version: 1.18
+          go-version: '1.18'
 
       - name: checkout
         uses: actions/checkout@v2
  
-      - name: go get tools
-        run: |
-          go get golang.org/x/lint/golint
+      # - name: go get tools
+      #   run: |
+      #     go get golang.org/x/lint/golint
     
       - name: go build
         run: |
@@ -30,9 +46,9 @@ jobs:
         run: |
           go vet ./...
   
-      - name: golint
-        run: |
-          golint ./...
+      # - name: golint
+      #   run: |
+      #     golint ./...
 
       - name: go test
         run: |
