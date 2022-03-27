@@ -49,40 +49,48 @@ Functional style programming can be achieved in any language, including Go. Gola
 
 ## Key features
 
+* [Type combinators](doc/combinator.md) delivers powerful patterns for functional programming.
+<!--
 * Types and data structures using interfaces to define [**generic**](doc/generic.md) behavior traits.
 * [Monoid](doc/monoid.md) for structural transformation.
 * [Seq](https://godoc.org/github.com/fogfish/golem/seq) is a special case for slice that support convenient methods. 
-
+-->
 
 ## Getting started
 
-The latest version of the library is available at `master` branch. All development, including new features and bug fixes, take place on the `master` branch using forking and pull requests as described in contribution guidelines.
+The library requires **Go 1.18** or  later due to usage of [generics](https://go.dev/blog/intro-generics).
 
-The library implements rich set of [generic patterns](#key-features) and command-line utility to instantiate a specific type from generic algorithm.
+The latest version of the library is available at `main` branch. All development, including new features and bug fixes, take place on the `main` branch using forking and pull requests as described in contribution guidelines. The stable version is available via Golang modules.
 
-**Import** library packages in your code.
+1. Use `go get` to retrieve the library and add it as dependency to your application.
+
+```bash
+go get -u github.com/fogfish/golem
+```
+
+2. Import required package in your code
 
 ```go
 import (
-  "github.com/fogfish/golem/..."
+  "github.com/fogfish/golem/..." // <-- path-to-package
 )
 ```
 
-Usage of generic requires **installation** of command line utility, see it [documentation](https://godoc.org/github.com/fogfish/golem/cmd/golem) and [typical workflows](generic).
-
-```bash
-go get -u github.com/fogfish/golem/cmd/golem
-```
-
-**Instruct** code generator to parametrize generic algorithm with you data type.
-
-```go
-//go:generate golem -T FooBar -generic github.com/fogfish/golem/seq/seq.go
-```
-
-Use `go generate` to generate parametrized code, all newly created files has prefix `g_`.
+## Package
 
 See the [library documentation](http://godoc.org/github.com/fogfish/golem)
+
+### Type traits
+
+* [pure/eq](pure/eq/eq.go) is `Eq` (equality) type trait
+* [pure/ord](pure/ord/ord.go) is `Ord` (ordering) type trait
+* [pure/semigroup](pure/semigroup/semigroup.go) is `Semigroup` type trait
+* [maplike](maplike/types.go) is `MapLike` type trait
+
+
+### Data Structures
+
+* [maplike/skiplist](maplike/skiplist/skiplist.go) is mutable skip list.
 
 
 ## How To Contribute
@@ -109,3 +117,44 @@ go test -cover ./...
 ## License
 
 [![See LICENSE](https://img.shields.io/github/license/fogfish/golem.svg?style=for-the-badge)](LICENSE)
+
+<!--
+
+https://writings.stephenwolfram.com/2020/12/combinators-and-the-story-of-computation/
+https://files.wolframcdn.com/pub/www.wolframscience.com/nks/nks-ch12.pdf
+https://www.wolframscience.com/nks/
+
+https://cmc.gitbook.io/go-internals/chapter-ii-interfaces
+https://www.cockroachlabs.com/blog/how-we-built-a-vectorized-execution-engine/
+http://citeseerx.ist.psu.edu/viewdoc/download;jsessionid=B3EBE6337709E0E494DB7074FC4D247A?doi=10.1.1.17.524&rep=rep1&type=pdf
+https://www.cs.cmu.edu/~ckingsf/bioinfo-lectures/skiplists.pdf
+https://github.com/avelino/awesome-go#networking
+
+
+Research on the interface of golang
+https://laptrinhx.com/research-on-the-interface-of-golang-4184713904/
+
+
+Category Theory 10.1: Monads
+https://www.youtube.com/watch?v=gHiyzctYqZ0&list=PLbgaMIhjbmEnaH_LTkxLI7FMa2HsnawM_&index=21&t=4s
+
+TypeScript on Steroids
+https://dev.to/gcanti/getting-started-with-fp-ts-setoid-39f3
+https://dev.to/gcanti/functional-design-combinators-14pn
+https://dev.to/gcanti/getting-started-with-fp-ts-setoid-39f3
+https://dev.to/gcanti/functional-design-combinators-14pn
+
+Scala Cats Monoid
+https://typelevel.org/cats/typeclasses.html
+https://typelevel.org/cats/typeclasses/monoid.html
+https://typelevel.org/cats/typeclasses/semigroup.html
+
+HTK
+https://github.com/ocamllabs/higher
+https://bow-swift.io/docs/fp-concepts/higher-kinded-types/
+https://github.com/gcanti/fp-ts/blob/master/src/Eq.ts
+
+
+https://go101.org/article/details.html
+https://github.com/emirpasic/gods
+-->
