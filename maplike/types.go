@@ -13,7 +13,7 @@ package maplike
 MapLike defines a trait for container, which associate keys with values.
 */
 type MapLike[K, V any] interface {
-	Put(*K, *V) MapLike[K, V]
-	Get(*K) *V
-	// Remove(K) V
+	Put(K, V) MapLike[K, V]
+	Get(K) V
+	Remove(K) V
 }

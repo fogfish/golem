@@ -26,7 +26,7 @@ type Eq[T any] interface {
 
 eq generic implementation for built-in types
 */
-type eq[T pure.AnyOrderable] string
+type eq[T comparable] string
 
 func (eq[T]) Equal(a, b T) bool { return a == b }
 
