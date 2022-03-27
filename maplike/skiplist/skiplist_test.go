@@ -10,9 +10,7 @@ package skiplist_test
 
 import (
 	"fmt"
-	"math/rand"
 	"testing"
-	"time"
 
 	"github.com/fogfish/golem/maplike"
 	"github.com/fogfish/golem/maplike/skiplist"
@@ -20,22 +18,37 @@ import (
 )
 
 func TestMapLikeOne(t *testing.T) {
-	list := skiplist.New[int, string](ord.Int)
+	// rnd := rand.New(rand.NewSource(time.Now().UnixNano()))
+	list := skiplist.New[int, int](ord.Int)
 
-	key1 := 1
-	val1 := "abc"
-	list.Put(&key1, &val1)
-
-	key2 := 2
-	val2 := "xxx"
-	list.Put(&key2, &val2)
-
-	key3 := 2
-	o := list.Get(&key3)
-
-	if o != nil {
-		fmt.Printf("--> %v\n", *o)
+	for i := 1; i < 10; i++ {
+		key := i //rnd.Intn(1000000)
+		list.Put(key, key)
 	}
+
+	fmt.Println(list)
+
+	// key1 := 1
+	// val1 := "111"
+
+	// key2 := 2
+	// val2 := "222"
+	// list.Put(&key2, &val2)
+	// fmt.Println(list)
+
+	// key3 := 3
+	// val3 := "333"
+	// list.Put(&key3, &val3)
+	// fmt.Println(list)
+
+	key4 := 9
+	o := list.Get(key4)
+	// if o != nil {
+	fmt.Printf("--> %v\n", o)
+	// }
+
+	// list.Remove(4)
+	// fmt.Println(list)
 
 	// 	key := golem.String("key")
 	// 	val := golem.String("val")
@@ -64,20 +77,24 @@ func TestMapLikeOne(t *testing.T) {
 var (
 	defCap      int                       = 1000000
 	defSkipList maplike.MapLike[int, int] = skiplist.New[int, int](ord.Int)
-	defShuffle  []*int                    = make([]*int, defCap)
+	// defShuffleList maplike.MapLike[int, int] = skiplist.New[int, int]()
+	defShuffle []int = make([]int, defCap)
 )
 
-func init() {
-	rnd := rand.New(rand.NewSource(time.Now().UnixNano()))
+// func init() {
+// 	rnd := rand.New(rand.NewSource(time.Now().UnixNano()))
 
-	for i := 0; i < defCap; i++ {
-		seqKey := i
-		defSkipList.Put(&seqKey, &seqKey)
+// 	for i := 0; i < defCap; i++ {
+// 		seqKey := i
+// 		defSkipList.Put(seqKey, seqKey)
 
-		rndKey := rnd.Intn(defCap)
-		defShuffle[i] = &rndKey
-	}
-}
+// 		rndKey := rnd.Intn(defCap)
+// 		defShuffle[i] = rndKey
+// 		defShuffleList.Put(rndKey, rndKey)
+// 	}
+
+// 	fmt.Println(defShuffleList)
+// }
 
 // func BenchmarkPutTail(b *testing.B) {
 // 	b.ReportAllocs()
@@ -102,13 +119,12 @@ func init() {
 // 	}
 // }
 
-// func BenchmarkSetRand(b *testing.B) {
+// func BenchmarkPutRand(b *testing.B) {
 // 	b.ReportAllocs()
-// 	list := skiplist.New()
-// 	data := golem.String("")
+// 	list := skiplist.New[int, int](ord.Int)
 
 // 	for i := 0; i < b.N; i++ {
-// 		list.Put(defShuffle[i%defCap], data)
+// 		list.Put(defShuffle[i%defCap], defShuffle[i%defCap])
 // 	}
 // }
 
@@ -134,7 +150,7 @@ func BenchmarkGetRand(b *testing.B) {
 
 	for i := 0; i < b.N; i++ {
 		o := defSkipList.Get(defShuffle[i%defCap])
-		if *o != *defShuffle[i%defCap] {
+		if o != defShuffle[i%defCap] {
 			panic("+++")
 		}
 	}
