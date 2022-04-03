@@ -57,9 +57,10 @@ Functional style programming can be achieved in any language, including Go. Gola
 
 ## Key features
 
+* [Type classes](doc/typeclass.md) and [higher-kinded polymorphism](doc/higher-kinded-polymorphism.md)
 * [Type combinators](doc/combinator.md) delivers powerful patterns for functional programming.
+
 <!--
-* Types and data structures using interfaces to define [**generic**](doc/generic.md) behavior traits.
 * [Monoid](doc/monoid.md) for structural transformation.
 * [Seq](https://godoc.org/github.com/fogfish/golem/seq) is a special case for slice that support convenient methods. 
 -->
