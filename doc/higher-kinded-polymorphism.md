@@ -156,11 +156,11 @@ With functor type, anyone can build a generic algorithm to convert flat sequence
 into a sequence of sequences.
 */
 func Unflattening[
-	A any,
-	FA SeqKind[A],
-	FB SeqKind[[]A],
+  A any,
+  FA SeqKind[A],
+  FB SeqKind[[]A],
 ](f Functor[A, FA, []A, FB], fa FA) FB {
-	return f.FMap(func(a A) []A { return []A{a} }, fa)
+  return f.FMap(func(a A) []A { return []A{a} }, fa)
 }
 
 /*
@@ -185,8 +185,8 @@ changing the phantom types F, A into type tags makes it possible for compiler
 to distinct HKT instances
 */
 type HKT[F, A any] interface {
-	HKT1(F)
-	HKT2(A)
+  HKT1(F)
+  HKT2(A)
 }
 
 // type instance just tags itself with corresponding parameters
@@ -209,15 +209,15 @@ The primary advantage it the ability to define a computation against higher-orde
 type Show[F_, A any] struct{ Seq[F_, A] }
 
 func (f Show[F_, A]) Print(fa F_) {
-	fmt.Printf("==>")
+  fmt.Printf("==>")
 
-	x := fa
-	for f.Seq.Length(x) != 0 {
-		fmt.Printf(" %v", f.Seq.Head(x))
-		x = f.Seq.Tail(x)
-	}
+  x := fa
+  for f.Seq.Length(x) != 0 {
+    fmt.Printf(" %v", f.Seq.Head(x))
+    x = f.Seq.Tail(x)
+  }
 
-	fmt.Println()
+  fmt.Println()
 }
 ```
 

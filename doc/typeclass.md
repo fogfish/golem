@@ -33,8 +33,8 @@ The defunctionalization transforms a computation with higher-kinded type express
 
 ```go
 type HKT[F, A any] interface {
-	HKT1(F)
-	HKT2(A)
+  HKT1(F)
+  HKT2(A)
 }
 ```
 
