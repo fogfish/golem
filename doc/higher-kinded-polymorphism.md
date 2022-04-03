@@ -223,6 +223,8 @@ func (f Show[F_, A]) Print(fa F_) {
 
 In the end, higher-kinded polymorphism is a fundamental pure functional concept, which allows anyone to represent advanced abstractions such as Functor, Applicative, Monad and many others.
 
+[Maybe functor](https://gist.github.com/fogfish/6df9d9e0b09c88efed27f05c0c84cf18) is a short example of `HKT`. The advanced example is available [here](../examples/hkt/hkt.go).
+
 ## References
 
 * [Why doesn't Go have variance in its type system?](https://blog.merovius.de/2018/06/03/why-doesnt-go-have-variance-in.html)
