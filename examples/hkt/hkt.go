@@ -195,7 +195,7 @@ func MkList[A any](seq ...A) *SeqList[A] {
 	return s
 }
 
-func main1() {
+func main() {
 	sInts := MkSlice(1, 2, 3, 4, 5)
 	lInts := MkList(1, 2, 3, 4, 5)
 
