@@ -16,10 +16,15 @@ import (
 	"github.com/fogfish/it"
 )
 
-func TestSeq[F_, A any](t *testing.T, seqT seq.Seq[F_, A], seed F_) {
+func TestSeq[F_ seq.Kind[A], A any](t *testing.T, seqT seq.Seq[F_, A], seed F_) {
 	nul := seqT.New()
 	one := seqT.New(*new(A))
 	few := seqT.New(*new(A), *new(A), *new(A))
+
+	t.Run("Seq.HKT", func(t *testing.T) {
+		seed.HKT1(seq.Type(nil))
+		seed.HKT2(*new(A))
+	})
 
 	t.Run("Seq.Length", func(t *testing.T) {
 		it.Ok(t).
