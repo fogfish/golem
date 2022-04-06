@@ -9,6 +9,7 @@
 package seq
 
 import (
+	"github.com/fogfish/golem/pure/foldable"
 	"github.com/fogfish/golem/pure/monoid"
 )
 
@@ -17,6 +18,8 @@ import (
 Foldable Sequence
 */
 type Foldable[F_, A any] struct{ Seq[F_, A] }
+
+var _ foldable.Foldable[any, any] = Foldable[any, any]{}
 
 /*
 

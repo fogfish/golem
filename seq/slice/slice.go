@@ -25,7 +25,7 @@ Trait ...
 */
 type Trait[A any] string
 
-var _ seq.Seq[Seq[int], int] = Trait[int]("seq.int")
+var _ seq.Seq[Seq[any], any] = Trait[any]("seq.any")
 
 func (Trait[A]) New(seq ...A) Seq[A] { return seq }
 
