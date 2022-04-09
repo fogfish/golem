@@ -1,8 +1,17 @@
-"[#] doc": 
- - any: [ 'doc/*', 'examples/**/*' ]
+"[#] doc":
+ - doc/*
+ - doc/**/*
+ - examples/**/*
 
 "[#] pure":
- - any: [ 'pure/**/*' ]
+ - pure/*
+ - pure/**/*
 
 "[#] maplike":
- - any: [ 'maplike/**/*' ]
+ - maplike/*
+ - maplike/**/*
+
+"[#] optics":
+ - optics/*
+ - optics/**/*
+
