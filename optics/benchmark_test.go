@@ -24,7 +24,7 @@ func BenchmarkLensForProduct1(mb *testing.B) {
 	mb.ResetTimer()
 
 	for i := 0; i < mb.N; i++ {
-		name.Put(&val, "name")
+		_ = name.Put(&val, "name")
 	}
 }
 
@@ -35,6 +35,6 @@ func BenchmarkMorphismForProduct1(mb *testing.B) {
 	mb.ResetTimer()
 
 	for i := 0; i < mb.N; i++ {
-		nameM.Put(&val)
+		_ = nameM.Put(&val)
 	}
 }

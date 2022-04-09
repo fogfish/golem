@@ -84,9 +84,9 @@ func TestMorphism(t *testing.T) {
 	}
 
 	x := T{}
-	m.Put(&x)
 
 	it.Ok(t).
+		If(m.Put(&x)).Equal(nil).
 		If(x.A).Equal("hello").
 		If(x.B).Equal(1234).
 		If(x.C).Equal(1234.0)
