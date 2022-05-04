@@ -12,7 +12,8 @@ import "github.com/fogfish/golem/seq"
 
 /*
 
-Seq type build over slice data structure
+Seq a type represents a finite sequence of values of type a, which is built
+using linked-list
 */
 type Seq[A any] struct {
 	len  int
