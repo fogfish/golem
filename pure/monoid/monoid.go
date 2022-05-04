@@ -21,13 +21,24 @@ type Monoid[T any] interface {
 
 /*
 
-From is a combinator that lifts T ⟼ T ⟼ T function to
+From is a combinator that lifts Semigroup to an instance of Monoid type trait
+*/
+func From[T any](empty T, combine semigroup.Semigroup[T]) Monoid[T] {
+	return monoid[T]{
+		Semigroup: combine,
+		empty:     empty,
+	}
+}
+
+/*
+
+FromOp is a combinator that lifts T ⟼ T ⟼ T function (binary operator) to
 an instance of Monoid type trait
 */
-func From[T any](empty T, combine func(T, T) T) Monoid[T] {
+func FromOp[T any](empty T, combine func(T, T) T) Monoid[T] {
 	return monoid[T]{
-		empty:   empty,
-		combine: combine,
+		Semigroup: semigroup.From[T](combine),
+		empty:     empty,
 	}
 }
 
@@ -36,9 +47,8 @@ func From[T any](empty T, combine func(T, T) T) Monoid[T] {
 Internal implementation of Monoid interface
 */
 type monoid[T any] struct {
-	empty   T
-	combine func(T, T) T
+	semigroup.Semigroup[T]
+	empty T
 }
 
-func (m monoid[T]) Empty() T         { return m.empty }
-func (m monoid[T]) Combine(a, b T) T { return m.combine(a, b) }
+func (m monoid[T]) Empty() T { return m.empty }

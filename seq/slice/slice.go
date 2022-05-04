@@ -12,7 +12,7 @@ import "github.com/fogfish/golem/seq"
 
 /*
 
-Slice ...
+Seq type build over slice data structure
 */
 type Seq[A any] []A
 
@@ -21,7 +21,7 @@ func (Seq[A]) HKT2(A)        {}
 
 /*
 
-Trait ...
+Trait implements seq.Seq type law for Seq type
 */
 type Trait[A any] string
 

@@ -69,10 +69,46 @@ func TestFoldable[F_ any](t *testing.T, seqT seq.Seq[F_, int]) {
 
 	t.Run("Foldable.Fold", func(t *testing.T) {
 		x := f.Fold(
-			monoid.From(0, func(a, b int) int { return a + b }),
+			monoid.FromOp(0, func(a, b int) int { return a + b }),
 			seqT.New(1, 2, 3, 4, 5),
 		)
 
 		it.Ok(t).If(x).Equal(15)
+	})
+}
+
+func Benchmark[F_ any](b *testing.B, seqT seq.Seq[F_, int], val F_) {
+	b.Run("Seq.Cons", func(b *testing.B) {
+		seq := seqT.New()
+
+		b.ReportAllocs()
+		b.ResetTimer()
+		for n := 0; n < b.N; n++ {
+			seq = seqT.Cons(n, seq)
+		}
+	})
+
+	b.Run("Seq.Tail", func(b *testing.B) {
+		seq := seqT.New()
+
+		b.ReportAllocs()
+		b.ResetTimer()
+		for n := 0; n < b.N; n++ {
+			if seqT.IsEmpty(seq) {
+				seq = val
+			}
+			seq = seqT.Tail(seq)
+		}
+	})
+
+	b.Run("Seq.Fold", func(b *testing.B) {
+		f := seq.Foldable[F_, int]{Seq: seqT}
+		m := monoid.FromOp(0, func(a, b int) int { return a + b })
+
+		b.ReportAllocs()
+		b.ResetTimer()
+		for n := 0; n < b.N; n++ {
+			f.Fold(m, val)
+		}
 	})
 }
