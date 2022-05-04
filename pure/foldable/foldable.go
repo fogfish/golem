@@ -12,7 +12,7 @@ import "github.com/fogfish/golem/pure/monoid"
 
 /*
 
-Foldable type trait
+Foldable type trait define rules of folding data structures to a summary value.
 */
 type Foldable[F_, A any] interface {
 	Fold(monoid.Monoid[A], F_) A

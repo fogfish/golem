@@ -92,14 +92,20 @@ See the [library documentation](http://godoc.org/github.com/fogfish/golem)
 ### Type traits
 
 * [pure/eq](pure/eq/eq.go) is `Eq` (equality) type trait
+* [pure/foldable](pure/foldable/foldable.go) is `Foldable` type trait define rules of folding data structures to a summary value.
+* [pure/monoid](pure/monoid/monoid.go) is `Monoid` type trait defined an algebraic structure consisting of Semigroup and Empty element. 
 * [pure/ord](pure/ord/ord.go) is `Ord` (ordering) type trait
-* [pure/semigroup](pure/semigroup/semigroup.go) is `Semigroup` type trait
+* [pure/semigroup](pure/semigroup/semigroup.go) is `Semigroup` type trait defined an associative binary operation for a set.
 * [maplike](maplike/types.go) is `MapLike` type trait
+* [seq](seq/types.go) is `Seq` type trait
 
 
 ### Data Structures
 
-* [maplike/skiplist](maplike/skiplist/skiplist.go) is mutable skip list.
+* [pure/hseq](pure/hseq/hseq.go) heterogenous Sequence
+* [maplike/skiplist](maplike/skiplist/skiplist.go) is mutable `MapLike` built with skip list.
+* [seq/list](seq/list/list.go) is immutable `Seq` built with linked list.
+* [seq/slice](seq/slice/slice.go) is mutable `Seq` built with slice.
 
 
 ## How To Contribute
