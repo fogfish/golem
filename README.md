@@ -87,7 +87,8 @@ import (
 
 ## Package
 
-See the [library documentation](http://godoc.org/github.com/fogfish/golem)
+See the [library documentation](https://pkg.go.dev/github.com/fogfish/golem)
+
 
 ### Type traits
 
@@ -96,6 +97,10 @@ See the [library documentation](http://godoc.org/github.com/fogfish/golem)
 * [pure/monoid](pure/monoid/monoid.go) is `Monoid` type trait defined an algebraic structure consisting of Semigroup and Empty element. 
 * [pure/ord](pure/ord/ord.go) is `Ord` (ordering) type trait
 * [pure/semigroup](pure/semigroup/semigroup.go) is `Semigroup` type trait defined an associative binary operation for a set.
+
+
+### Data Type traits
+
 * [maplike](maplike/types.go) is `MapLike` type trait
 * [seq](seq/types.go) is `Seq` type trait
 
