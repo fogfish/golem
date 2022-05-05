@@ -7,14 +7,9 @@ func New[T any](n int) (<-chan T, chan<- T) {
 	mq := newq[T]()
 
 	go func() {
-		var (
-			x  T
-			ok bool
-		)
-
 		for {
 			select {
-			case x, ok = <-in:
+			case x, ok := <-in:
 				if !ok {
 					return
 				}

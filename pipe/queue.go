@@ -23,7 +23,6 @@ func enq[A any](x *A, queue *queue[A]) {
 	val := queue.pool.Get().(*q[A])
 	val.value = x
 	val.next = nil
-	// val := &q[A]{value: x}
 
 	if queue.tail != nil {
 		queue.tail.next = val
