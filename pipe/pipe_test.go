@@ -1,7 +1,16 @@
+//
+// Copyright (C) 2022 Dmitry Kolesnikov
+//
+// This file may be modified and distributed under the terms
+// of the MIT license.  See the LICENSE file for details.
+// https://github.com/fogfish/golem
+//
+
 package pipe_test
 
 import (
 	"math/rand"
+	"strconv"
 	"testing"
 	"time"
 
@@ -9,7 +18,7 @@ import (
 	"github.com/fogfish/it"
 )
 
-func TestPipe(t *testing.T) {
+func TestPipeNew(t *testing.T) {
 	t.Run("Empty.Recv", func(t *testing.T) {
 		in, eg := pipe.New[int](0)
 		select {
@@ -61,6 +70,17 @@ func TestPipe(t *testing.T) {
 			eg <- i
 			time.Sleep(time.Duration(rand.Intn(9)) * time.Millisecond)
 		}
+		close(eg)
+	})
+}
+
+func TestPipeMap(t *testing.T) {
+	t.Run("Map", func(t *testing.T) {
+		eg := make(chan int, 0)
+		in := pipe.Map(eg, strconv.Itoa)
+
+		eg <- 100
+		it.Ok(t).If(<-in).Equal("100")
 		close(eg)
 	})
 }
