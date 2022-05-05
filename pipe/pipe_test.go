@@ -85,6 +85,18 @@ func TestPipeMap(t *testing.T) {
 	})
 }
 
+func TestPipeForEach(t *testing.T) {
+	t.Run("ForEach", func(t *testing.T) {
+		n := 0
+		eg := make(chan int, 0)
+		pipe.ForEach(eg, func(a int) { n = n + a })
+
+		eg <- 100
+		it.Ok(t).If(n).Equal(100)
+		close(eg)
+	})
+}
+
 func BenchmarkPipe(b *testing.B) {
 	in, eg := pipe.New[int](1)
 	b.ReportAllocs()

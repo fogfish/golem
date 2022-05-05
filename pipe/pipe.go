@@ -70,3 +70,26 @@ func Map[A, B any](in <-chan A, f func(A) B) <-chan B {
 
 	return eg
 }
+
+/*
+
+ForEach applies function for each message in the channel
+*/
+func ForEach[A any](in <-chan A, f func(A)) {
+	go func() {
+		var (
+			x  A
+			ok bool
+		)
+
+		for {
+			select {
+			case x, ok = <-in:
+				if !ok {
+					return
+				}
+				f(x)
+			}
+		}
+	}()
+}
