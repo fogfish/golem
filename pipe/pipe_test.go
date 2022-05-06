@@ -74,6 +74,22 @@ func TestPipeNew(t *testing.T) {
 	})
 }
 
+func TestPipeFrom(t *testing.T) {
+	t.Run("Generate", func(t *testing.T) {
+		eg := pipe.From(1, 10*time.Millisecond, func() int { return 10 })
+		it.Ok(t).If(<-eg).Equal(10)
+		it.Ok(t).If(<-eg).Equal(10)
+		it.Ok(t).If(<-eg).Equal(10)
+		close(eg)
+	})
+
+	t.Run("NoPanic", func(t *testing.T) {
+		eg := pipe.From(0, 10*time.Millisecond, func() int { return 10 })
+		time.Sleep(30 * time.Millisecond)
+		close(eg)
+	})
+}
+
 func TestPipeMap(t *testing.T) {
 	t.Run("Map", func(t *testing.T) {
 		eg := make(chan int, 0)
