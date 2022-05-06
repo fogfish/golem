@@ -8,6 +8,10 @@
 
 package pipe
 
+import (
+	"time"
+)
+
 /*
 
 New creates unbounded channel
@@ -44,13 +48,43 @@ func New[T any](n int) (<-chan T, chan<- T) {
 
 /*
 
+From creates a channel periodically generates values from the function
+*/
+func From[T any](n int, frequency time.Duration, f func() T) chan T {
+	eg := make(chan T, n)
+
+	go func() {
+		defer func() {
+			// Note: recover from panic on sending to closed channel
+			if recover() != nil {
+			}
+		}()
+
+		for {
+			select {
+			case <-time.After(frequency):
+				eg <- f()
+			}
+		}
+	}()
+
+	return eg
+}
+
+/*
+
 Map channel type
 */
-func Map[A, B any](in <-chan A, f func(A) B) <-chan B {
+func Map[A, B any](in <-chan A, f func(A) B) chan B {
 	eg := make(chan B, cap(in))
 
 	go func() {
 		defer close(eg)
+		defer func() {
+			// Note: recover from panic on sending to closed channel
+			if recover() != nil {
+			}
+		}()
 
 		var (
 			x  A
