@@ -50,7 +50,7 @@ func New[T any](n int) (<-chan T, chan<- T) {
 
 From creates a channel periodically generates values from the function
 */
-func From[T any](n int, frequency time.Duration, f func() T) chan T {
+func From[T any](n int, frequency time.Duration, f func() (T, error)) chan T {
 	eg := make(chan T, n)
 
 	go func() {
@@ -63,7 +63,9 @@ func From[T any](n int, frequency time.Duration, f func() T) chan T {
 		for {
 			select {
 			case <-time.After(frequency):
-				eg <- f()
+				if x, err := f(); err == nil {
+					eg <- x
+				}
 			}
 		}
 	}()
