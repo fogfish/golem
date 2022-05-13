@@ -99,6 +99,43 @@ func TestPipeMap(t *testing.T) {
 		it.Ok(t).If(<-in).Equal("100")
 		close(eg)
 	})
+
+	t.Run("Close", func(t *testing.T) {
+		eg := make(chan int, 0)
+		in := pipe.Map(eg, strconv.Itoa)
+
+		close(in)
+		close(eg)
+	})
+}
+
+func TestPipeMaybeMap(t *testing.T) {
+	t.Run("Map", func(t *testing.T) {
+		eg := make(chan string, 0)
+		in := pipe.MaybeMap(eg, strconv.Atoi)
+
+		eg <- "100"
+		it.Ok(t).If(<-in).Equal(100)
+		close(eg)
+	})
+
+	t.Run("Map.Fail", func(t *testing.T) {
+		eg := make(chan string, 0)
+		in := pipe.MaybeMap(eg, strconv.Atoi)
+
+		eg <- "test"
+		eg <- "100"
+		it.Ok(t).If(<-in).Equal(100)
+		close(eg)
+	})
+
+	t.Run("Close", func(t *testing.T) {
+		eg := make(chan string, 0)
+		in := pipe.MaybeMap(eg, strconv.Atoi)
+
+		close(in)
+		close(eg)
+	})
 }
 
 func TestPipeForEach(t *testing.T) {

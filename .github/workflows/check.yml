@@ -13,14 +13,15 @@ jobs:
 
       - uses: actions/setup-go@v2
         with:
-          go-version: '1.18'
+          go-version: 1.18
 
       - uses: actions/checkout@v3
 
-      - uses: golangci/golangci-lint-action@v3.1.0
-        with:
-          version: latest
-          args: --verbose
+      # disable linter due to linters crash
+      # - uses: golangci/golangci-lint-action@v3.1.0
+      #   with:
+      #     version: latest
+      #     args: --verbose
 
       - name: go vet
         run: |
@@ -33,7 +34,7 @@ jobs:
       - name: golang
         uses: actions/setup-go@v2
         with:
-          go-version: '1.18'
+          go-version: 1.18
 
       - name: checkout
         uses: actions/checkout@v2
