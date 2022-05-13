@@ -27,6 +27,11 @@ func New[T any](n int) (<-chan T, chan<- T) {
 	mq := newq[T]()
 
 	go func() {
+		defer func() {
+			// Note: recover from panic on sending to closed channel
+			if recover() != nil {
+			}
+		}()
 		defer close(eg)
 
 		for {
@@ -81,12 +86,12 @@ func Map[A, B any](in <-chan A, f func(A) B) chan B {
 	eg := make(chan B, cap(in))
 
 	go func() {
-		defer close(eg)
 		defer func() {
 			// Note: recover from panic on sending to closed channel
 			if recover() != nil {
 			}
 		}()
+		defer close(eg)
 
 		var (
 			x  A
@@ -100,6 +105,42 @@ func Map[A, B any](in <-chan A, f func(A) B) chan B {
 					return
 				}
 				eg <- f(x)
+			}
+		}
+	}()
+
+	return eg
+}
+
+/*
+
+MaybeMap channel type
+*/
+func MaybeMap[A, B any](in <-chan A, f func(A) (B, error)) chan B {
+	eg := make(chan B, cap(in))
+
+	go func() {
+		defer func() {
+			// Note: recover from panic on sending to closed channel
+			if recover() != nil {
+			}
+		}()
+		defer close(eg)
+
+		var (
+			x  A
+			ok bool
+		)
+
+		for {
+			select {
+			case x, ok = <-in:
+				if !ok {
+					return
+				}
+				if y, err := f(x); err == nil {
+					eg <- y
+				}
 			}
 		}
 	}()
