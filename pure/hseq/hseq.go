@@ -10,6 +10,7 @@ import (
 Type ...
 */
 type Type[T any] struct {
+	ID int
 	reflect.StructField
 }
 
@@ -46,7 +47,7 @@ func Generic[T any]() Seq[T] {
 	t := typeOf(*new(T))
 	seq := make(Seq[T], t.NumField())
 	for i := 0; i < t.NumField(); i++ {
-		seq[i] = Type[T]{t.Field(i)}
+		seq[i] = Type[T]{ID: i, StructField: t.Field(i)}
 	}
 	return seq
 }

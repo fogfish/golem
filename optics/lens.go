@@ -9,11 +9,22 @@ import (
 
 /*
 
-Lens ...
+Lens resembles concept of getters and setters, which you can compose
+using functional concepts. In other words, this is combinator data
+transformation for pure functional data structure.
 */
 type Lens[S, A any] interface {
 	Get(*S) A
 	Put(*S, A) error
+}
+
+/*
+
+Reflector is a Lens over reflect.Value
+*/
+type Reflector[A any] interface {
+	GetValue(reflect.Value) A
+	PutValue(reflect.Value, A) error
 }
 
 /*
@@ -48,9 +59,12 @@ func mkLensStructString[S any](t hseq.Type[S]) Lens[S, string] {
 }
 
 // Put string to struct
-func (lens lensStructString[S]) Put(s *S, a string) error {
-	g := reflect.ValueOf(s)
-	f := g.Elem().FieldByIndex(lens.Index)
+func (lens *lensStructString[S]) Put(s *S, a string) error {
+	return lens.PutValue(reflect.ValueOf(s), a)
+}
+
+func (lens *lensStructString[S]) PutValue(g reflect.Value, a string) error {
+	f := g.Elem().Field(lens.ID)
 
 	if f.Kind() == reflect.Ptr {
 		p := reflect.New(lens.Type.Type)
@@ -64,9 +78,12 @@ func (lens lensStructString[S]) Put(s *S, a string) error {
 }
 
 // Get string from struct
-func (lens lensStructString[S]) Get(s *S) string {
-	g := reflect.ValueOf(s)
-	f := g.Elem().FieldByIndex(lens.Index)
+func (lens *lensStructString[S]) Get(s *S) string {
+	return lens.GetValue(reflect.ValueOf(s))
+}
+
+func (lens *lensStructString[S]) GetValue(g reflect.Value) string {
+	f := g.Elem().Field(lens.ID)
 
 	if f.Kind() == reflect.Ptr {
 		return f.Elem().String()
@@ -86,9 +103,12 @@ func mkLensStructInt[S any](t hseq.Type[S]) Lens[S, int] {
 }
 
 // Put int to struct
-func (lens lensStructInt[S]) Put(s *S, a int) error {
-	g := reflect.ValueOf(s)
-	f := g.Elem().FieldByIndex(lens.Index)
+func (lens *lensStructInt[S]) Put(s *S, a int) error {
+	return lens.PutValue(reflect.ValueOf(s), a)
+}
+
+func (lens *lensStructInt[S]) PutValue(g reflect.Value, a int) error {
+	f := g.Elem().Field(lens.ID)
 
 	if f.Kind() == reflect.Ptr {
 		p := reflect.New(lens.Type.Type)
@@ -102,9 +122,12 @@ func (lens lensStructInt[S]) Put(s *S, a int) error {
 }
 
 // Get float64 from struct
-func (lens lensStructInt[S]) Get(s *S) int {
-	g := reflect.ValueOf(s)
-	f := g.Elem().FieldByIndex(lens.Index)
+func (lens *lensStructInt[S]) Get(s *S) int {
+	return lens.GetValue(reflect.ValueOf(s))
+}
+
+func (lens *lensStructInt[S]) GetValue(g reflect.Value) int {
+	f := g.Elem().Field(lens.ID)
 
 	if f.Kind() == reflect.Ptr {
 		return int(f.Elem().Int())
@@ -124,9 +147,12 @@ func mkLensStructFloat64[S any](t hseq.Type[S]) Lens[S, float64] {
 }
 
 // Put float64 to struct
-func (lens lensStructFloat64[S]) Put(s *S, a float64) error {
-	g := reflect.ValueOf(s)
-	f := g.Elem().FieldByIndex(lens.Index)
+func (lens *lensStructFloat64[S]) Put(s *S, a float64) error {
+	return lens.PutValue(reflect.ValueOf(s), a)
+}
+
+func (lens *lensStructFloat64[S]) PutValue(g reflect.Value, a float64) error {
+	f := g.Elem().Field(lens.ID)
 
 	if f.Kind() == reflect.Ptr {
 		p := reflect.New(lens.Type.Type)
@@ -140,9 +166,12 @@ func (lens lensStructFloat64[S]) Put(s *S, a float64) error {
 }
 
 // Get float64 from struct
-func (lens lensStructFloat64[S]) Get(s *S) float64 {
-	g := reflect.ValueOf(s)
-	f := g.Elem().FieldByIndex(lens.Index)
+func (lens *lensStructFloat64[S]) Get(s *S) float64 {
+	return lens.GetValue(reflect.ValueOf(s))
+}
+
+func (lens *lensStructFloat64[S]) GetValue(g reflect.Value) float64 {
+	f := g.Elem().Field(lens.ID)
 
 	if f.Kind() == reflect.Ptr {
 		return f.Elem().Float()
@@ -162,9 +191,11 @@ func mkLensStruct[S, A any](t hseq.Type[S]) Lens[S, A] {
 }
 
 // Put reflect.Value to struct
-func (lens lensStruct[S, A]) Put(s *S, a A) error {
-	g := reflect.ValueOf(s)
-	f := g.Elem().FieldByIndex(lens.Index)
+func (lens *lensStruct[S, A]) Put(s *S, a A) error {
+	return lens.PutValue(reflect.ValueOf(s), a)
+}
+func (lens *lensStruct[S, A]) PutValue(g reflect.Value, a A) error {
+	f := g.Elem().Field(lens.ID)
 
 	if f.Kind() == reflect.Ptr {
 		f.Set(reflect.ValueOf(a))
@@ -176,9 +207,12 @@ func (lens lensStruct[S, A]) Put(s *S, a A) error {
 }
 
 // Get reflect.Value from struct
-func (lens lensStruct[S, A]) Get(s *S) A {
-	g := reflect.ValueOf(s)
-	f := g.Elem().FieldByIndex(lens.Index)
+func (lens *lensStruct[S, A]) Get(s *S) A {
+	return lens.GetValue(reflect.ValueOf(s))
+}
+
+func (lens *lensStruct[S, A]) GetValue(g reflect.Value) A {
+	f := g.Elem().Field(lens.ID)
 
 	if f.Kind() == reflect.Ptr {
 		return f.Elem().Interface().(A)
@@ -186,51 +220,6 @@ func (lens lensStruct[S, A]) Get(s *S) A {
 
 	return f.Interface().(A)
 }
-
-/*
-newLensStruct creates lens
-*/
-// func newLensStruct[A string | int](id int, field reflect.StructField) Lens[reflect.Value, A] {
-// 	typeof := field.Type.Kind()
-// 	if typeof == reflect.Ptr {
-// 		typeof = field.Type.Elem().Kind()
-// 	}
-
-// 	switch typeof {
-// 	case reflect.String:
-// 		return (Lens[reflect.Value, string](&lensStructString{lensStruct{id, field.Type}})).(Lens[reflect.Value, A])
-// 	// case reflect.Int:
-// 	// 	return &lensStructInt{lensStruct{id, field.Type}}
-// 	// case reflect.Float64:
-// 	// 	return &lensStructFloat{lensStruct{id, field.Type}}
-// 	// case reflect.Struct:
-// 	// 	switch field.Tag.Get("content") {
-// 	// 	case "form":
-// 	// 		return &lensStructForm{lensStruct{id, field.Type}}
-// 	// 	case "application/x-www-form-urlencoded":
-// 	// 		return &lensStructForm{lensStruct{id, field.Type}}
-// 	// 	case "json":
-// 	// 		return &lensStructJSON{lensStruct{id, field.Type}}
-// 	// 	case "application/json":
-// 	// 		return &lensStructJSON{lensStruct{id, field.Type}}
-// 	// 	default:
-// 	// 		return &lensStructJSON{lensStruct{id, field.Type}}
-// 	// }
-// 	// case reflect.Slice:
-// 	// 	return &lensStructSeq{lensStruct{id, field.Type}}
-// 	default:
-// 		panic(fmt.Errorf("Unknown lens type %v", field.Type))
-// 	}
-// }
-
-// func typeOf(t interface{}) reflect.Type {
-// 	typeof := reflect.TypeOf(t)
-// 	if typeof.Kind() == reflect.Ptr {
-// 		typeof = typeof.Elem()
-// 	}
-
-// 	return typeof
-// }
 
 /*
 
