@@ -2,6 +2,7 @@ package optics_test
 
 import (
 	"encoding/json"
+	"reflect"
 	"testing"
 
 	"github.com/fogfish/golem/optics"
@@ -70,6 +71,22 @@ func TestLenses(t *testing.T) {
 }
 
 func TestMorphism(t *testing.T) {
+	type T struct{ A string }
+	a := optics.ForProduct1[T, string]()
+
+	m := optics.Morph(a, "hello")
+
+	x := T{}
+	y := T{}
+
+	it.Ok(t).
+		If(m.Put(&x)).Equal(nil).
+		If(x.A).Equal("hello").
+		If(m.PutValue(reflect.ValueOf(&y))).Equal(nil).
+		If(y.A).Equal("hello")
+}
+
+func TestMorphisms(t *testing.T) {
 	type T struct {
 		A string
 		B int
