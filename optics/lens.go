@@ -32,9 +32,7 @@ type Reflector[A any] interface {
 mkLens instantiates a typed Lens[S, A] for hseq.Type[S]
 */
 func mkLens[S, A any](t hseq.Type[S]) Lens[S, A] {
-	hseq.AssertType[S, A](t)
-
-	switch t.Type.Kind() {
+	switch hseq.AssertType[S, A](t, false) {
 	case reflect.String:
 		return mkLensStructString(t).(Lens[S, A])
 	case reflect.Int:
@@ -67,7 +65,7 @@ func (lens *lensStructString[S]) PutValue(g reflect.Value, a string) error {
 	f := g.Elem().Field(lens.ID)
 
 	if f.Kind() == reflect.Ptr {
-		p := reflect.New(lens.Type.Type)
+		p := reflect.New(lens.PureType)
 		p.Elem().SetString(a)
 		f.Set(p)
 		return nil
@@ -111,7 +109,7 @@ func (lens *lensStructInt[S]) PutValue(g reflect.Value, a int) error {
 	f := g.Elem().Field(lens.ID)
 
 	if f.Kind() == reflect.Ptr {
-		p := reflect.New(lens.Type.Type)
+		p := reflect.New(lens.PureType)
 		p.Elem().SetInt(int64(a))
 		f.Set(p)
 		return nil
@@ -155,7 +153,7 @@ func (lens *lensStructFloat64[S]) PutValue(g reflect.Value, a float64) error {
 	f := g.Elem().Field(lens.ID)
 
 	if f.Kind() == reflect.Ptr {
-		p := reflect.New(lens.Type.Type)
+		p := reflect.New(lens.PureType)
 		p.Elem().SetFloat(a)
 		f.Set(p)
 		return nil
@@ -198,7 +196,11 @@ func (lens *lensStruct[S, A]) PutValue(g reflect.Value, a A) error {
 	f := g.Elem().Field(lens.ID)
 
 	if f.Kind() == reflect.Ptr {
-		f.Set(reflect.ValueOf(a))
+		if lens.Type.Type.Kind() == reflect.Ptr {
+			f.Set(reflect.ValueOf(&a))
+		} else {
+			f.Set(reflect.ValueOf(a))
+		}
 		return nil
 	}
 

@@ -16,7 +16,7 @@ func (id Identity[S, A]) Value(s S) A {
 }
 
 func mkIdentity[S, A any](s hseq.Type[S]) Identity[S, A] {
-	hseq.AssertType[S, A](s)
+	hseq.AssertType[S, A](s, true)
 	return Identity[S, A]{s}
 }
 
