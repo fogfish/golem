@@ -70,6 +70,67 @@ func TestLenses(t *testing.T) {
 	})
 }
 
+func TestLensesPtr(t *testing.T) {
+	type Inner struct {
+		E, F, G string
+	}
+
+	type T struct {
+		A *string
+		B *int
+		C *float64
+		D *Inner
+	}
+
+	a, b, c, d := optics.ForProduct4[T, string, int, float64, Inner]()
+
+	t.Run("String", func(t *testing.T) {
+		x := T{}
+
+		it.Ok(t).
+			If(a.Put(&x, "A")).Equal(nil).
+			If(*x.A).Equal("A").
+			If(a.Get(&x)).Equal("A")
+	})
+
+	t.Run("Int", func(t *testing.T) {
+		x := T{}
+
+		it.Ok(t).
+			If(b.Put(&x, 1234)).Equal(nil).
+			If(*x.B).Equal(1234).
+			If(b.Get(&x)).Equal(1234)
+	})
+
+	t.Run("Float", func(t *testing.T) {
+		x := T{}
+
+		it.Ok(t).
+			If(c.Put(&x, 1234.0)).Equal(nil).
+			If(*x.C).Equal(1234.0).
+			If(c.Get(&x)).Equal(1234.0)
+	})
+
+	t.Run("Struct", func(t *testing.T) {
+		x := T{}
+
+		it.Ok(t).
+			If(d.Put(&x, Inner{"E", "F", "G"})).Equal(nil).
+			If(*x.D).Equal(Inner{"E", "F", "G"}).
+			If(d.Get(&x)).Equal(Inner{"E", "F", "G"})
+	})
+
+	t.Run("Struct.Codec", func(t *testing.T) {
+		x := T{}
+		l := newLensJSON(d)
+
+		it.Ok(t).
+			If(l.Put(&x, "{\"E\":\"E\",\"F\":\"F\",\"G\":\"G\"}")).Equal(nil).
+			If(*x.D).Equal(Inner{"E", "F", "G"}).
+			If(l.Get(&x)).Equal("{\"E\":\"E\",\"F\":\"F\",\"G\":\"G\"}")
+	})
+}
+
 func TestMorphism(t *testing.T) {
 	type T struct{ A string }
 	a := optics.ForProduct1[T, string]()

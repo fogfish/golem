@@ -10,8 +10,10 @@ import (
 Type ...
 */
 type Type[T any] struct {
-	ID int
 	reflect.StructField
+
+	ID       int
+	PureType reflect.Type
 }
 
 /*
@@ -20,16 +22,23 @@ Seq ...
 */
 type Seq[T any] []Type[T]
 
-func AssertType[T, A any](t Type[T]) {
+func AssertType[T, A any](t Type[T], strict bool) reflect.Kind {
 	a := reflect.TypeOf(*new(A))
-	if t.Type.Name() != a.Name() {
+	k := t.Type
+	if !strict && k.Kind() == reflect.Ptr {
+		k = k.Elem()
+	}
+
+	if k.Kind() != a.Kind() {
 		s := typeOf(*new(T))
 		panic(
 			fmt.Errorf("Type %s is not equal %s at %s.%s",
-				t.StructField.Type.Name(), a.Name(), s.Name(), t.StructField.Name,
+				t.Type.Kind(), a.Kind(), s.Name(), t.StructField.Name,
 			),
 		)
 	}
+
+	return a.Kind()
 }
 
 func AssertSeq[T any](list Seq[T], n int) {
@@ -47,7 +56,17 @@ func Generic[T any]() Seq[T] {
 	t := typeOf(*new(T))
 	seq := make(Seq[T], t.NumField())
 	for i := 0; i < t.NumField(); i++ {
-		seq[i] = Type[T]{ID: i, StructField: t.Field(i)}
+		fv := t.Field(i)
+		ft := t.Field(i).Type
+		if ft.Kind() == reflect.Ptr {
+			ft = ft.Elem()
+		}
+
+		seq[i] = Type[T]{
+			StructField: fv,
+			ID:          i,
+			PureType:    ft,
+		}
 	}
 	return seq
 }
