@@ -22,7 +22,7 @@ Seq ...
 */
 type Seq[T any] []Type[T]
 
-func AssertType[T, A any](t Type[T], strict bool) reflect.Kind {
+func AssertType[T, A any](t Type[T], strict bool) (string, reflect.Kind) {
 	a := reflect.TypeOf(*new(A))
 	k := t.Type
 	if !strict && k.Kind() == reflect.Ptr {
@@ -38,7 +38,7 @@ func AssertType[T, A any](t Type[T], strict bool) reflect.Kind {
 		)
 	}
 
-	return a.Kind()
+	return a.Name(), a.Kind()
 }
 
 func AssertSeq[T any](list Seq[T], n int) {

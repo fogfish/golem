@@ -32,13 +32,23 @@ type Reflector[A any] interface {
 mkLens instantiates a typed Lens[S, A] for hseq.Type[S]
 */
 func mkLens[S, A any](t hseq.Type[S]) Lens[S, A] {
-	switch hseq.AssertType[S, A](t, false) {
+	name, kind := hseq.AssertType[S, A](t, false)
+	switch kind {
 	case reflect.String:
-		return mkLensStructString(t).(Lens[S, A])
+		if name == "string" {
+			return mkLensStructString(t).(Lens[S, A])
+		}
+		return mkLensStruct[S, A](t)
 	case reflect.Int:
-		return mkLensStructInt(t).(Lens[S, A])
+		if name == "int" {
+			return mkLensStructInt(t).(Lens[S, A])
+		}
+		return mkLensStruct[S, A](t)
 	case reflect.Float64:
-		return mkLensStructFloat64(t).(Lens[S, A])
+		if name == "float64" {
+			return mkLensStructFloat64(t).(Lens[S, A])
+		}
+		return mkLensStruct[S, A](t)
 	case reflect.Struct:
 		return mkLensStruct[S, A](t)
 	default:
