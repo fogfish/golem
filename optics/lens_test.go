@@ -131,6 +131,47 @@ func TestLensesPtr(t *testing.T) {
 	})
 }
 
+func TestLensesCustomTypes(t *testing.T) {
+	type MyString string
+	type MyInt int
+	type MyFloat float64
+
+	type T struct {
+		A MyString
+		B MyInt
+		C MyFloat
+	}
+
+	a, b, c := optics.ForProduct3[T, MyString, MyInt, MyFloat]()
+
+	t.Run("String", func(t *testing.T) {
+		x := T{}
+
+		it.Ok(t).
+			If(a.Put(&x, "A")).Equal(nil).
+			If(x.A).Equal(MyString("A")).
+			If(a.Get(&x)).Equal(MyString("A"))
+	})
+
+	t.Run("Int", func(t *testing.T) {
+		x := T{}
+
+		it.Ok(t).
+			If(b.Put(&x, 1234)).Equal(nil).
+			If(x.B).Equal(MyInt(1234)).
+			If(b.Get(&x)).Equal(MyInt(1234))
+	})
+
+	t.Run("Float", func(t *testing.T) {
+		x := T{}
+
+		it.Ok(t).
+			If(c.Put(&x, 1234.0)).Equal(nil).
+			If(x.C).Equal(MyFloat(1234.0)).
+			If(c.Get(&x)).Equal(MyFloat(1234.0))
+	})
+}
+
 func TestMorphism(t *testing.T) {
 	type T struct{ A string }
 	a := optics.ForProduct1[T, string]()
