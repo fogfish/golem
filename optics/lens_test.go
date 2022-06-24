@@ -131,8 +131,6 @@ func TestLensesPtr(t *testing.T) {
 	})
 }
 
-func x[X ~string](x X) {}
-
 func TestLensesCustomTypes(t *testing.T) {
 	type MyString string
 	type MyInt int
