@@ -1,20 +1,24 @@
 "[#] doc":
- - doc/*
- - doc/**/*
- - examples/**/*
-
-"[#] pure":
- - pure/*
- - pure/**/*
+ - 'doc/*'
+ - 'doc/**/*'
+ - 'examples/**/*'
 
 "[#] maplike":
- - maplike/*
- - maplike/**/*
+ - 'maplike/*'
+ - 'maplike/**/*'
 
 "[#] optics":
- - optics/*
- - optics/**/*
+ - 'optics/*'
+ - 'optics/**/*'
+
+"[#] pipe":
+ - 'pipe/*'
+ - 'pipe/**/*'
+
+"[#] pure":
+ - 'pure/*'
+ - 'pure/**/*'
 
 "[#] seq":
- - seq/*
- - seq/**/*
+ - 'seq/*'
+ - 'seq/**/*'
