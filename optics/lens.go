@@ -36,23 +36,26 @@ func mkLens[S, A any](t hseq.Type[S]) Lens[S, A] {
 	switch kind {
 	case reflect.String:
 		if name == "string" {
+			//lint:ignore SA5010 linter wrong, string is subtype of any
 			return mkLensStructString(t).(Lens[S, A])
 		}
 		return mkLensStruct[S, A](t)
 	case reflect.Int:
 		if name == "int" {
+			//lint:ignore SA5010 linter wrong, int is subtype of any
 			return mkLensStructInt(t).(Lens[S, A])
 		}
 		return mkLensStruct[S, A](t)
 	case reflect.Float64:
 		if name == "float64" {
+			//lint:ignore SA5010 linter wrong, float is subtype of any
 			return mkLensStructFloat64(t).(Lens[S, A])
 		}
 		return mkLensStruct[S, A](t)
 	case reflect.Struct:
 		return mkLensStruct[S, A](t)
 	default:
-		panic(fmt.Errorf("Unknown lens type %v", t.Type.Name()))
+		panic(fmt.Errorf("unknown lens type %v", t.Type.Name()))
 	}
 }
 
