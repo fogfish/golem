@@ -166,6 +166,7 @@ Another example of Generic computation
 type ShowGen[T, F_, A any] struct{ HKT[T, A] }
 
 func (f ShowGen[T, F_, A]) Print(fa HKT[T, A]) {
+	//lint:ignore SA5010 force for example only
 	len := f.HKT.(Seq[F_, A]).Length(fa.(F_))
 	fmt.Printf("==> sequence of %v\n", len)
 }

@@ -28,8 +28,8 @@ type Ordering int
 // enum{ LT, EQ, GT }
 const (
 	LT Ordering = -1
-	EQ          = 0
-	GT          = 1
+	EQ Ordering = 0
+	GT Ordering = 1
 )
 
 type ordInt string
