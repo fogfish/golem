@@ -1,0 +1,161 @@
+##
+## Inspired by Same GitHub Labels
+##   https://medium.com/@dave_lunny/sane-github-labels-c5d2e6004b63
+## 
+## [T] - Type prefix
+## [P] - Priority prefix
+## [@] - State prefix
+## [A] - Automation prefix 
+## [#] - package / category prefix
+##
+## How To Use:
+##   https://github.com/Financial-Times/github-label-sync
+##
+##   npm install -g github-label-sync
+##   github-label-sync --access-token xxxxxx --labels .github/labels.yml fogfish/blueprint-serverless-golang
+##
+
+##
+## [T] Type labels
+- name: "[T] bug"
+  color: "ee0701"
+  aliases: []
+  description: the bug report
+
+- name: "[T] epic"
+  color: "fbca04"
+  aliases: []
+  description: the epic
+
+- name: "[T] feature"
+  color: "7057ff"
+  aliases: []
+  description: the feature, enabler epic or other tech activity
+
+- name: "[T] security"
+  color: "cc317c"
+  aliases: []
+  description: security issues or concerns within the software
+
+- name: "[T] resilience"
+  color: "660033"
+  aliases: []
+  description: resilience concerns within the software
+
+- name: "[T] user story"
+  color: "fef2c0"
+  aliases: []
+  description: user story
+
+- name: "[T] enabler"
+  color: "7c5d91"
+  aliases: []
+  description: enabler activities
+
+##
+## [P] Priority labels
+- name: "[P] critical"
+  color: "b30408"
+  aliases: []
+  description: critical issue, immediate fix is required 
+
+- name: "[P] high"
+  color: "f4AA3e"
+  aliases: []
+  description: high priority issue 
+
+- name: "[P] medium"
+  color: "31689e"
+  aliases: []
+  description: medium priority issue 
+
+- name: "[P] low"
+  color: "0a9203"
+  aliases: []
+  description: low priority issue 
+
+- name: "[P] release"
+  color: "ed7655"
+  aliases: []
+  description: required by upcoming release 
+
+##
+## [@] State labels
+- name: "[@] blocked"
+  color: "be1910"
+  aliases: []
+  description: progress is blocked by other issue
+
+- name: "[@] help wanted"
+  color: "128a0c"
+  aliases: []
+  description: team or community help is wanted on the issue
+
+- name: "[@] on hold"
+  color: "f9d0c4"
+  aliases: []
+  description: development is on hold until further notice
+
+- name: "[@] wontfix"
+  color: "e2e4e8"
+  aliases: []
+  description: the issue would not be resolved due to the reason
+
+- name: "[@] review"
+  color: "006666"
+  aliases: []
+  description: the issue is under the review
+
+- name: "[@] require feedback"
+  color: "333399"
+  aliases: []
+  description: the feedback from author is required
+
+##
+## [A] Automation labels
+- name: "[A] deploy"
+  color: "ffccf1"
+  aliases: []
+  description: request GitHub Action to deploy 
+
+##
+## [#] Package / Category labels
+- name: "[#] ci/cd"
+  color: "3978e1"
+  aliases: []
+  description: changes to CI/CD configuration 
+
+- name: "[#] deps"
+  color: "3978e1"
+  aliases: []
+  description: changes to package dependencies
+
+- name: "[#] doc"
+  color: "3978e1"
+  aliases: []
+  description: changes to documentation
+
+- name: "[#] maplike"
+  color: "3978e1"
+  aliases: []
+  description: map-like data structures
+
+- name: "[#] optics"
+  color: "3978e1"
+  aliases: []
+  description: optics module
+
+- name: "[#] pipe"
+  color: "3978e1"
+  aliases: []
+  description: pipe module
+
+- name: "[#] pure"
+  color: "3978e1"
+  aliases: []
+  description: pure functional types
+
+- name: "[#] seq"
+  color: "3978e1"
+  aliases: []
+  description: seq data structures
