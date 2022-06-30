@@ -31,7 +31,7 @@ func (node *tSkipNode[K, V]) String() string {
 		if x != nil {
 			fingers = fingers + fmt.Sprintf("%v ", x.key)
 		} else {
-			fingers = fingers + fmt.Sprintf("nil ")
+			fingers = fingers + "nil "
 		}
 	}
 

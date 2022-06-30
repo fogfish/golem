@@ -32,7 +32,7 @@ func AssertType[T, A any](t Type[T], strict bool) (string, reflect.Kind) {
 	if k.Kind() != a.Kind() {
 		s := typeOf(*new(T))
 		panic(
-			fmt.Errorf("Type %s is not equal %s at %s.%s",
+			fmt.Errorf("type %s is not equal %s at %s.%s",
 				t.Type.Kind(), a.Kind(), s.Name(), t.StructField.Name,
 			),
 		)
@@ -44,7 +44,7 @@ func AssertType[T, A any](t Type[T], strict bool) (string, reflect.Kind) {
 func AssertSeq[T any](list Seq[T], n int) {
 	if len(list) != n {
 		t := typeOf(*new(T))
-		panic(fmt.Errorf("Unable to map type |%s| = %d to hseq of %d", t.Name(), t.NumField(), n))
+		panic(fmt.Errorf("unable to map type |%s| = %d to hseq of %d", t.Name(), t.NumField(), n))
 	}
 }
 

@@ -92,7 +92,7 @@ func TestPipeFrom(t *testing.T) {
 
 func TestPipeMap(t *testing.T) {
 	t.Run("Map", func(t *testing.T) {
-		eg := make(chan int, 0)
+		eg := make(chan int)
 		in := pipe.Map(eg, strconv.Itoa)
 
 		eg <- 100
@@ -101,7 +101,7 @@ func TestPipeMap(t *testing.T) {
 	})
 
 	t.Run("Close", func(t *testing.T) {
-		eg := make(chan int, 0)
+		eg := make(chan int)
 		in := pipe.Map(eg, strconv.Itoa)
 
 		close(in)
@@ -111,7 +111,7 @@ func TestPipeMap(t *testing.T) {
 
 func TestPipeMaybeMap(t *testing.T) {
 	t.Run("Map", func(t *testing.T) {
-		eg := make(chan string, 0)
+		eg := make(chan string)
 		in := pipe.MaybeMap(eg, strconv.Atoi)
 
 		eg <- "100"
@@ -120,7 +120,7 @@ func TestPipeMaybeMap(t *testing.T) {
 	})
 
 	t.Run("Map.Fail", func(t *testing.T) {
-		eg := make(chan string, 0)
+		eg := make(chan string)
 		in := pipe.MaybeMap(eg, strconv.Atoi)
 
 		eg <- "test"
@@ -130,7 +130,7 @@ func TestPipeMaybeMap(t *testing.T) {
 	})
 
 	t.Run("Close", func(t *testing.T) {
-		eg := make(chan string, 0)
+		eg := make(chan string)
 		in := pipe.MaybeMap(eg, strconv.Atoi)
 
 		close(in)
@@ -141,7 +141,7 @@ func TestPipeMaybeMap(t *testing.T) {
 func TestPipeForEach(t *testing.T) {
 	t.Run("ForEach", func(t *testing.T) {
 		n := 0
-		eg := make(chan int, 0)
+		eg := make(chan int)
 		pipe.ForEach(eg, func(a int) { n = n + a })
 
 		eg <- 100

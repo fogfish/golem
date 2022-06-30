@@ -29,8 +29,7 @@ func New[T any](n int) (<-chan T, chan<- T) {
 	go func() {
 		defer func() {
 			// Note: recover from panic on sending to closed channel
-			if recover() != nil {
-			}
+			recover()
 		}()
 		defer close(eg)
 
@@ -61,16 +60,13 @@ func From[T any](n int, frequency time.Duration, f func() (T, error)) chan T {
 	go func() {
 		defer func() {
 			// Note: recover from panic on sending to closed channel
-			if recover() != nil {
-			}
+			recover()
 		}()
 
 		for {
-			select {
-			case <-time.After(frequency):
-				if x, err := f(); err == nil {
-					eg <- x
-				}
+			time.Sleep(frequency)
+			if x, err := f(); err == nil {
+				eg <- x
 			}
 		}
 	}()
@@ -88,24 +84,13 @@ func Map[A, B any](in <-chan A, f func(A) B) chan B {
 	go func() {
 		defer func() {
 			// Note: recover from panic on sending to closed channel
-			if recover() != nil {
-			}
+			recover()
 		}()
 		defer close(eg)
 
-		var (
-			x  A
-			ok bool
-		)
-
-		for {
-			select {
-			case x, ok = <-in:
-				if !ok {
-					return
-				}
-				eg <- f(x)
-			}
+		var x A
+		for x = range in {
+			eg <- f(x)
 		}
 	}()
 
@@ -122,25 +107,14 @@ func MaybeMap[A, B any](in <-chan A, f func(A) (B, error)) chan B {
 	go func() {
 		defer func() {
 			// Note: recover from panic on sending to closed channel
-			if recover() != nil {
-			}
+			recover()
 		}()
 		defer close(eg)
 
-		var (
-			x  A
-			ok bool
-		)
-
-		for {
-			select {
-			case x, ok = <-in:
-				if !ok {
-					return
-				}
-				if y, err := f(x); err == nil {
-					eg <- y
-				}
+		var x A
+		for x = range in {
+			if y, err := f(x); err == nil {
+				eg <- y
 			}
 		}
 	}()
@@ -154,19 +128,9 @@ ForEach applies function for each message in the channel
 */
 func ForEach[A any](in <-chan A, f func(A)) {
 	go func() {
-		var (
-			x  A
-			ok bool
-		)
-
-		for {
-			select {
-			case x, ok = <-in:
-				if !ok {
-					return
-				}
-				f(x)
-			}
+		var x A
+		for x = range in {
+			f(x)
 		}
 	}()
 }
