@@ -29,9 +29,9 @@ import (
 
 /*
 
-tSkipList implements MapLike with skip data structure
+Map implements skip-list data structure
 */
-type tSkipList[K, V any] struct {
+type Map[K, V any] struct {
 	ord.Ord[K]
 
 	//
@@ -60,20 +60,41 @@ type tSkipList[K, V any] struct {
 	path []*tSkipNode[K, V]
 }
 
-var (
-	_ maplike.MapLike[int, int] = &tSkipList[int, int]{Ord: ord.Int}
-	_ maplike.MapLike[int, int] = (*tSkipList[int, int])(nil)
-)
+func (Map[K, V]) HKT1(maplike.Type) {}
+func (Map[K, V]) HKT2(K, V)         {}
+
+// String converts table to string
+func (list *Map[K, V]) String() string {
+	var buffer bytes.Buffer
+	buffer.WriteString(fmt.Sprintf("--- SkipList %p ---\n", &list))
+
+	v := list.head
+	for v != nil {
+		buffer.WriteString(v.String())
+		buffer.WriteString("\n")
+		v = v.fingers[0]
+	}
+
+	return buffer.String()
+}
+
+/*
+
+Trait implements maplike.Map type law for Map type
+*/
+type Trait[K, V any] string
+
+var _ maplike.Map[*Map[any, any], any, any] = Trait[any, any]("map.any")
 
 /*
 
 New creates empty skiplist
 */
-func New[K, V any](compare ord.Ord[K]) maplike.MapLike[K, V] {
+func (Trait[K, V]) New(compare ord.Ord[K]) *Map[K, V] {
 	levels, ptable := probability(4294967296, 1/math.E)
 	random := rand.New(rand.NewSource(time.Now().UnixNano()))
 
-	return &tSkipList[K, V]{
+	return &Map[K, V]{
 		Ord:    compare,
 		head:   &tSkipNode[K, V]{fingers: make([]*tSkipNode[K, V], levels)},
 		levels: levels,
@@ -99,34 +120,19 @@ func probability(n int, p float64) (int, []float64) {
 	return level, table
 }
 
-// String converts table to string
-func (list *tSkipList[K, V]) String() string {
-	var buffer bytes.Buffer
-	buffer.WriteString(fmt.Sprintf("--- SkipList %p ---\n", &list))
-
-	v := list.head
-	for v != nil {
-		buffer.WriteString(v.String())
-		buffer.WriteString("\n")
-		v = v.fingers[0]
-	}
-
-	return buffer.String()
-}
-
 /*
 
 Put insters the element into the list
 */
-func (list *tSkipList[K, V]) Put(key K, val V) maplike.MapLike[K, V] {
-	v, path := list.skip(key)
+func (trait Trait[K, V]) Put(list *Map[K, V], key K, val V) *Map[K, V] {
+	v, path := trait.skip(list, key)
 
 	if v != nil && list.Ord.Compare(v.key, key) == ord.EQ {
 		v.val = val
 		return list
 	}
 
-	rank, node := list.mkNode(key, val)
+	rank, node := trait.mkNode(list, key, val)
 
 	// re-bind fingers to new node
 	for level := 0; level < rank; level++ {
@@ -145,7 +151,7 @@ skip maintain the vector path that contains a pointer to the rightmost node
 of level i or higher that is to the left of the location of the
 insertion/deletion.
 */
-func (list *tSkipList[K, V]) skip(key K) (*tSkipNode[K, V], []*tSkipNode[K, V]) {
+func (Trait[K, V]) skip(list *Map[K, V], key K) (*tSkipNode[K, V], []*tSkipNode[K, V]) {
 	path := list.path
 
 	node := list.head
@@ -165,7 +171,7 @@ func (list *tSkipList[K, V]) skip(key K) (*tSkipNode[K, V], []*tSkipNode[K, V]) 
 
 mkNode creates a new node, randomly defines empty fingers (level of the node)
 */
-func (list *tSkipList[K, V]) mkNode(key K, val V) (int, *tSkipNode[K, V]) {
+func (Trait[K, V]) mkNode(list *Map[K, V], key K, val V) (int, *tSkipNode[K, V]) {
 	// See: https://golang.org/src/math/rand/rand.go#L150
 	p := float64(list.random.Int63()) / (1 << 63)
 
@@ -187,8 +193,8 @@ func (list *tSkipList[K, V]) mkNode(key K, val V) (int, *tSkipNode[K, V]) {
 
 Get looks up the element in the list
 */
-func (list *tSkipList[K, V]) Get(key K) V {
-	node := list.search(key)
+func (trait Trait[K, V]) Get(list *Map[K, V], key K) V {
+	node := trait.search(list, key)
 
 	if node != nil && list.Ord.Compare(node.key, key) == ord.EQ {
 		return node.val
@@ -206,7 +212,7 @@ the search moves down to the next level. When we can make no more progress at
 level 0, we must be immediately in front of the node that contains
 the desired element (if it is in the list).
 */
-func (list *tSkipList[K, V]) search(key K) *tSkipNode[K, V] {
+func (Trait[K, V]) search(list *Map[K, V], key K) *tSkipNode[K, V] {
 	node := list.head
 	next := list.head.fingers
 	for level := list.levels - 1; level >= 0; level-- {
@@ -223,9 +229,9 @@ func (list *tSkipList[K, V]) search(key K) *tSkipNode[K, V] {
 
 Remove element from the list
 */
-func (list *tSkipList[K, V]) Remove(key K) V {
+func (trait Trait[K, V]) Remove(list *Map[K, V], key K) V {
 	rank := len(list.head.fingers)
-	v, path := list.skip(key)
+	v, path := trait.skip(list, key)
 
 	if v != nil && list.Ord.Compare(v.key, key) == ord.EQ {
 		for level := 0; level < rank; level++ {

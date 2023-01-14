@@ -33,3 +33,20 @@ type HKT[F, A any] interface {
 	Type[F]
 	HKT2(A)
 }
+
+/*
+
+HKT2[F, A, B] ∼ F[A, B]
+
+Transforms a computation with higher-kinded type expressions into a
+computation where all type expressions are of kind `*`. The abstract type
+constructor `HKT2` represent an idea of parametrized container type `F[A, B]`
+
+HKT `* ⟼ * ⟼ *` is binary type constructor
+
+See doc/typeclass.md for deatails about the usage of HKT.
+*/
+type HKT2[F, A, B any] interface {
+	Type[F]
+	HKT2(A, B)
+}

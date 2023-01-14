@@ -14,11 +14,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/fogfish/golem/maplike"
 	"github.com/fogfish/golem/maplike/skiplist"
 	"github.com/fogfish/golem/pure/ord"
 	"github.com/fogfish/it"
 )
+
+const mapT = skiplist.Trait[int, int]("map.skiplist")
 
 func TestSkipListGet(t *testing.T) {
 	size := 10
@@ -26,13 +27,13 @@ func TestSkipListGet(t *testing.T) {
 
 	t.Run("Get Success", func(t *testing.T) {
 		for i := 1; i < size; i++ {
-			it.Ok(t).If(list.Get(i)).Should().Equal(i)
+			it.Ok(t).If(mapT.Get(list, i)).Should().Equal(i)
 		}
 	})
 
 	t.Run("Get Not Found", func(t *testing.T) {
 		for i := 1; i < size; i++ {
-			it.Ok(t).If(list.Get(i * size * size)).Should().Equal(0)
+			it.Ok(t).If(mapT.Get(list, i*size*size)).Should().Equal(0)
 		}
 	})
 }
@@ -43,9 +44,9 @@ func TestSkipListPut(t *testing.T) {
 
 	t.Run("Put Success", func(t *testing.T) {
 		for i := 1; i < size; i++ {
-			list.Put(i*size*size, i)
+			mapT.Put(list, i*size*size, i)
 
-			it.Ok(t).If(list.Get(i * size * size)).Should().Equal(i)
+			it.Ok(t).If(mapT.Get(list, i*size*size)).Should().Equal(i)
 		}
 	})
 }
@@ -56,19 +57,19 @@ func TestSkipListRemove(t *testing.T) {
 
 	t.Run("Remove Success", func(t *testing.T) {
 		for i := 1; i < size; i++ {
-			list.Remove(i)
+			mapT.Remove(list, i)
 
-			it.Ok(t).If(list.Get(i)).Should().Equal(0)
+			it.Ok(t).If(mapT.Get(list, i)).Should().Equal(0)
 		}
 	})
 }
 
-func mkSkipList(n int) maplike.MapLike[int, int] {
-	list := skiplist.New[int, int](ord.Int)
+func mkSkipList(n int) *skiplist.Map[int, int] {
+	list := mapT.New(ord.Int)
 
 	for i := 1; i < n; i++ {
 		key := i
-		list.Put(key, key)
+		mapT.Put(list, key, key)
 	}
 
 	return list
@@ -93,10 +94,10 @@ func mkSkipList(n int) maplike.MapLike[int, int] {
 // go test -bench=. -benchtime=10s -cpu=1
 //
 var (
-	defCap      int                       = 1000000
-	defMapLike  map[int]int               = make(map[int]int)
-	defSkipList maplike.MapLike[int, int] = skiplist.New[int, int](ord.Int)
-	defShuffle  []int                     = make([]int, defCap)
+	defCap      int                     = 1000000
+	defMapLike  map[int]int             = make(map[int]int)
+	defSkipList *skiplist.Map[int, int] = mapT.New(ord.Int)
+	defShuffle  []int                   = make([]int, defCap)
 )
 
 func init() {
@@ -104,7 +105,7 @@ func init() {
 
 	for i := 0; i < defCap; i++ {
 		seqKey := i
-		defSkipList.Put(seqKey, seqKey)
+		mapT.Put(defSkipList, seqKey, seqKey)
 		defMapLike[seqKey] = seqKey
 
 		rndKey := rnd.Intn(defCap)
@@ -115,33 +116,33 @@ func init() {
 func BenchmarkSkipListPutTail(b *testing.B) {
 	b.ReportAllocs()
 
-	list := skiplist.New[int, int](ord.Int)
+	list := mapT.New(ord.Int)
 
 	for i := 0; i < b.N; i++ {
 		key := i
-		list.Put(key, key)
+		mapT.Put(list, key, key)
 	}
 }
 
 func BenchmarkSkipListPutHead(b *testing.B) {
 	b.ReportAllocs()
 
-	list := skiplist.New[int, int](ord.Int)
+	list := mapT.New(ord.Int)
 
 	for i := b.N; i > 0; i-- {
 		key := i
-		list.Put(key, key)
+		mapT.Put(list, key, key)
 	}
 }
 
 func BenchmarkSkipListPutRand(b *testing.B) {
 	b.ReportAllocs()
 
-	list := skiplist.New[int, int](ord.Int)
+	list := mapT.New(ord.Int)
 
 	for i := 0; i < b.N; i++ {
 		key := defShuffle[i%defCap]
-		list.Put(key, key)
+		mapT.Put(list, key, key)
 	}
 }
 
@@ -150,7 +151,7 @@ func BenchmarkSkipListGetTail(b *testing.B) {
 
 	for i := 0; i < b.N; i++ {
 		key := i % defCap
-		val := defSkipList.Get(key)
+		val := mapT.Get(defSkipList, key)
 		if val != key {
 			panic(fmt.Errorf("invalid state for key %v, unexpected %v", key, val))
 		}
@@ -162,7 +163,7 @@ func BenchmarkSkipListGetHead(b *testing.B) {
 
 	for i := b.N; i > 0; i-- {
 		key := i % defCap
-		val := defSkipList.Get(key)
+		val := mapT.Get(defSkipList, key)
 		if val != key {
 			panic(fmt.Errorf("invalid state for key %v, unexpected %v", key, val))
 		}
@@ -174,7 +175,7 @@ func BenchmarkSkipListGetRand(b *testing.B) {
 
 	for i := 0; i < b.N; i++ {
 		key := defShuffle[i%defCap]
-		val := defSkipList.Get(key)
+		val := mapT.Get(defSkipList, key)
 		if val != key {
 			panic(fmt.Errorf("invalid state for key %v, unexpected %v", key, val))
 		}
