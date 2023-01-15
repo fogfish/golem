@@ -5,24 +5,219 @@ import (
 	"reflect"
 )
 
-/*
-
-Type ...
-*/
+// Element of product type
 type Type[T any] struct {
 	reflect.StructField
-
-	ID       int
 	PureType reflect.Type
+
+	ID int // TODO: rename to Index
 }
 
-/*
-
-Seq ...
-*/
+// Heterogenous projection of product type
 type Seq[T any] []Type[T]
 
-func AssertType[T, A any](t Type[T], strict bool) (string, reflect.Kind) {
+// Unfold type T to heterogenous sequence
+func New[T any](names ...string) Seq[T] {
+	cat := typeOf(*new(T))
+	seq := make(Seq[T], 0)
+	seq = unfold(cat, seq)
+
+	if len(names) == 0 {
+		return seq
+	}
+
+	nseq := make(Seq[T], len(names))
+	for i, name := range names {
+		nseq[i] = ForName(seq, name)
+	}
+
+	return nseq
+}
+
+func unfold[T any](cat reflect.Type, seq Seq[T]) Seq[T] {
+	for i := 0; i < cat.NumField(); i++ {
+		fv := cat.Field(i)
+		ft := cat.Field(i).Type
+		if ft.Kind() == reflect.Ptr {
+			ft = ft.Elem()
+		}
+
+		if fv.Anonymous && ft.Kind() == reflect.Struct {
+			seq = unfold(ft, seq)
+		} else {
+			seq = append(seq, Type[T]{
+				StructField: fv,
+				PureType:    ft,
+				ID:          len(seq),
+			})
+		}
+	}
+
+	return seq
+}
+
+func typeOf[T any](t T) reflect.Type {
+	typeof := reflect.TypeOf(t)
+	if typeof.Kind() == reflect.Ptr {
+		typeof = typeof.Elem()
+	}
+
+	return typeof
+}
+
+// Unfold type T to heterogenous sequence
+func New1[T, A any]() Seq[T] {
+	seq := New[T]()
+	return Seq[T]{
+		ForType[A](seq),
+	}
+}
+
+// Unfold type T to heterogenous sequence
+func New2[T, A, B any]() Seq[T] {
+	seq := New[T]()
+	return Seq[T]{
+		ForType[A](seq),
+		ForType[B](seq),
+	}
+}
+
+// Unfold type T to heterogenous sequence
+func New3[T, A, B, C any]() Seq[T] {
+	seq := New[T]()
+	return Seq[T]{
+		ForType[A](seq),
+		ForType[B](seq),
+		ForType[C](seq),
+	}
+}
+
+// Unfold type T to heterogenous sequence
+func New4[T, A, B, C, D any]() Seq[T] {
+	seq := New[T]()
+	return Seq[T]{
+		ForType[A](seq),
+		ForType[B](seq),
+		ForType[C](seq),
+		ForType[D](seq),
+	}
+}
+
+// Unfold type T to heterogenous sequence
+func New5[T, A, B, C, D, E any]() Seq[T] {
+	seq := New[T]()
+	return Seq[T]{
+		ForType[A](seq),
+		ForType[B](seq),
+		ForType[C](seq),
+		ForType[D](seq),
+		ForType[E](seq),
+	}
+}
+
+// Unfold type T to heterogenous sequence
+func New6[T, A, B, C, D, E, F any]() Seq[T] {
+	seq := New[T]()
+	return Seq[T]{
+		ForType[A](seq),
+		ForType[B](seq),
+		ForType[C](seq),
+		ForType[D](seq),
+		ForType[E](seq),
+		ForType[F](seq),
+	}
+}
+
+// Unfold type T to heterogenous sequence
+func New7[T, A, B, C, D, E, F, G any]() Seq[T] {
+	seq := New[T]()
+	return Seq[T]{
+		ForType[A](seq),
+		ForType[B](seq),
+		ForType[C](seq),
+		ForType[D](seq),
+		ForType[E](seq),
+		ForType[F](seq),
+		ForType[G](seq),
+	}
+}
+
+// Unfold type T to heterogenous sequence
+func New8[T, A, B, C, D, E, F, G, H any]() Seq[T] {
+	seq := New[T]()
+	return Seq[T]{
+		ForType[A](seq),
+		ForType[B](seq),
+		ForType[C](seq),
+		ForType[D](seq),
+		ForType[E](seq),
+		ForType[F](seq),
+		ForType[G](seq),
+		ForType[H](seq),
+	}
+}
+
+// Unfold type T to heterogenous sequence
+func New9[T, A, B, C, D, E, F, G, H, I any]() Seq[T] {
+	seq := New[T]()
+	return Seq[T]{
+		ForType[A](seq),
+		ForType[B](seq),
+		ForType[C](seq),
+		ForType[D](seq),
+		ForType[E](seq),
+		ForType[F](seq),
+		ForType[G](seq),
+		ForType[H](seq),
+		ForType[I](seq),
+	}
+}
+
+// Lookup type heterogenous sequence by "witness" type
+func ForType[A, T any](seq Seq[T]) Type[T] {
+	val := typeOf(*new(A))
+	for _, f := range seq {
+		if f.Type.Name() == val.Name() {
+			return f
+		}
+	}
+
+	cat := typeOf(*new(T))
+	panic(fmt.Errorf("%s is not member of %s type", val.Name(), cat.Name()))
+}
+
+// Lookup type in heterogenous sequence by name of member
+func ForName[T any](seq Seq[T], field string) Type[T] {
+	for _, f := range seq {
+		if f.Name == field {
+			return f
+		}
+	}
+
+	cat := typeOf(*new(T))
+	panic(fmt.Errorf("%s is not member of %s type", field, cat.Name()))
+}
+
+// Transform heterogenous sequence to something else
+func FMap[T, A any](seq Seq[T], f func(Type[T]) A) []A {
+	val := make([]A, len(seq))
+	for i, x := range seq {
+		val[i] = f(x)
+	}
+	return val
+}
+
+// Assert equality of type
+func Assert[T, A any](t Type[T]) (string, reflect.Kind) {
+	return assertType[T, A](t, false)
+}
+
+// Assert strict equality of type
+func AssertStrict[T, A any](t Type[T]) (string, reflect.Kind) {
+	return assertType[T, A](t, true)
+}
+
+func assertType[T, A any](t Type[T], strict bool) (string, reflect.Kind) {
 	a := reflect.TypeOf(*new(A))
 	k := t.Type
 	if !strict && k.Kind() == reflect.Ptr {
@@ -41,62 +236,10 @@ func AssertType[T, A any](t Type[T], strict bool) (string, reflect.Kind) {
 	return a.Name(), a.Kind()
 }
 
-func AssertSeq[T any](list Seq[T], n int) {
-	if len(list) != n {
-		t := typeOf(*new(T))
-		panic(fmt.Errorf("unable to map type |%s| = %d to hseq of %d", t.Name(), t.NumField(), n))
-	}
-}
-
-/*
-
-Generic ...
-*/
-func Generic[T any]() Seq[T] {
-	t := typeOf(*new(T))
-	seq := make(Seq[T], t.NumField())
-	for i := 0; i < t.NumField(); i++ {
-		fv := t.Field(i)
-		ft := t.Field(i).Type
-		if ft.Kind() == reflect.Ptr {
-			ft = ft.Elem()
-		}
-
-		seq[i] = Type[T]{
-			StructField: fv,
-			ID:          i,
-			PureType:    ft,
-		}
-	}
-	return seq
-}
-
-func typeOf[T any](t T) reflect.Type {
-	typeof := reflect.TypeOf(t)
-	if typeof.Kind() == reflect.Ptr {
-		typeof = typeof.Elem()
-	}
-
-	return typeof
-}
-
-/*
-
-FMap ...
-*/
-func FMap[T, A any](list Seq[T], f func(Type[T]) A) []A {
-	seq := make([]A, len(list))
-	for i, x := range list {
-		seq[i] = f(x)
-	}
-	return seq
-}
-
 func FMap1[T, A any](
 	ts Seq[T],
 	fa func(Type[T]) A,
 ) A {
-	AssertSeq(ts, 1)
 	return fa(ts[0])
 }
 
@@ -105,7 +248,6 @@ func FMap2[T, A, B any](
 	fa func(Type[T]) A,
 	fb func(Type[T]) B,
 ) (A, B) {
-	AssertSeq(ts, 2)
 	return fa(ts[0]),
 		fb(ts[1])
 }
@@ -116,7 +258,6 @@ func FMap3[T, A, B, C any](
 	fb func(Type[T]) B,
 	fc func(Type[T]) C,
 ) (A, B, C) {
-	AssertSeq(ts, 3)
 	return fa(ts[0]),
 		fb(ts[1]),
 		fc(ts[2])
@@ -129,7 +270,6 @@ func FMap4[T, A, B, C, D any](
 	fc func(Type[T]) C,
 	fd func(Type[T]) D,
 ) (A, B, C, D) {
-	AssertSeq(ts, 4)
 	return fa(ts[0]),
 		fb(ts[1]),
 		fc(ts[2]),
@@ -144,7 +284,6 @@ func FMap5[T, A, B, C, D, E any](
 	fd func(Type[T]) D,
 	fe func(Type[T]) E,
 ) (A, B, C, D, E) {
-	AssertSeq(ts, 5)
 	return fa(ts[0]),
 		fb(ts[1]),
 		fc(ts[2]),
@@ -161,7 +300,6 @@ func FMap6[T, A, B, C, D, E, F any](
 	fe func(Type[T]) E,
 	ff func(Type[T]) F,
 ) (A, B, C, D, E, F) {
-	AssertSeq(ts, 6)
 	return fa(ts[0]),
 		fb(ts[1]),
 		fc(ts[2]),
@@ -180,7 +318,6 @@ func FMap7[T, A, B, C, D, E, F, G any](
 	ff func(Type[T]) F,
 	fg func(Type[T]) G,
 ) (A, B, C, D, E, F, G) {
-	AssertSeq(ts, 7)
 	return fa(ts[0]),
 		fb(ts[1]),
 		fc(ts[2]),
@@ -201,7 +338,6 @@ func FMap8[T, A, B, C, D, E, F, G, H any](
 	fg func(Type[T]) G,
 	fh func(Type[T]) H,
 ) (A, B, C, D, E, F, G, H) {
-	AssertSeq(ts, 8)
 	return fa(ts[0]),
 		fb(ts[1]),
 		fc(ts[2]),
@@ -224,7 +360,6 @@ func FMap9[T, A, B, C, D, E, F, G, H, I any](
 	fh func(Type[T]) H,
 	fi func(Type[T]) I,
 ) (A, B, C, D, E, F, G, H, I) {
-	AssertSeq(ts, 9)
 	return fa(ts[0]),
 		fb(ts[1]),
 		fc(ts[2]),
@@ -234,400 +369,4 @@ func FMap9[T, A, B, C, D, E, F, G, H, I any](
 		fg(ts[6]),
 		fh(ts[7]),
 		fi(ts[8])
-}
-
-func FMap10[T, A, B, C, D, E, F, G, H, I, J any](
-	ts Seq[T],
-	fa func(Type[T]) A,
-	fb func(Type[T]) B,
-	fc func(Type[T]) C,
-	fd func(Type[T]) D,
-	fe func(Type[T]) E,
-	ff func(Type[T]) F,
-	fg func(Type[T]) G,
-	fh func(Type[T]) H,
-	fi func(Type[T]) I,
-	fj func(Type[T]) J,
-) (A, B, C, D, E, F, G, H, I, J) {
-	AssertSeq(ts, 10)
-	return fa(ts[0]),
-		fb(ts[1]),
-		fc(ts[2]),
-		fd(ts[3]),
-		fe(ts[4]),
-		ff(ts[5]),
-		fg(ts[6]),
-		fh(ts[7]),
-		fi(ts[8]),
-		fj(ts[9])
-}
-
-func FMap11[T, A, B, C, D, E, F, G, H, I, J, K any](
-	ts Seq[T],
-	fa func(Type[T]) A,
-	fb func(Type[T]) B,
-	fc func(Type[T]) C,
-	fd func(Type[T]) D,
-	fe func(Type[T]) E,
-	ff func(Type[T]) F,
-	fg func(Type[T]) G,
-	fh func(Type[T]) H,
-	fi func(Type[T]) I,
-	fj func(Type[T]) J,
-	fk func(Type[T]) K,
-) (A, B, C, D, E, F, G, H, I, J, K) {
-	AssertSeq(ts, 11)
-	return fa(ts[0]),
-		fb(ts[1]),
-		fc(ts[2]),
-		fd(ts[3]),
-		fe(ts[4]),
-		ff(ts[5]),
-		fg(ts[6]),
-		fh(ts[7]),
-		fi(ts[8]),
-		fj(ts[9]),
-		fk(ts[10])
-}
-
-func FMap12[T, A, B, C, D, E, F, G, H, I, J, K, L any](
-	ts Seq[T],
-	fa func(Type[T]) A,
-	fb func(Type[T]) B,
-	fc func(Type[T]) C,
-	fd func(Type[T]) D,
-	fe func(Type[T]) E,
-	ff func(Type[T]) F,
-	fg func(Type[T]) G,
-	fh func(Type[T]) H,
-	fi func(Type[T]) I,
-	fj func(Type[T]) J,
-	fk func(Type[T]) K,
-	fl func(Type[T]) L,
-) (A, B, C, D, E, F, G, H, I, J, K, L) {
-	AssertSeq(ts, 12)
-	return fa(ts[0]),
-		fb(ts[1]),
-		fc(ts[2]),
-		fd(ts[3]),
-		fe(ts[4]),
-		ff(ts[5]),
-		fg(ts[6]),
-		fh(ts[7]),
-		fi(ts[8]),
-		fj(ts[9]),
-		fk(ts[10]),
-		fl(ts[11])
-}
-
-func FMap13[T, A, B, C, D, E, F, G, H, I, J, K, L, M any](
-	ts Seq[T],
-	fa func(Type[T]) A,
-	fb func(Type[T]) B,
-	fc func(Type[T]) C,
-	fd func(Type[T]) D,
-	fe func(Type[T]) E,
-	ff func(Type[T]) F,
-	fg func(Type[T]) G,
-	fh func(Type[T]) H,
-	fi func(Type[T]) I,
-	fj func(Type[T]) J,
-	fk func(Type[T]) K,
-	fl func(Type[T]) L,
-	fm func(Type[T]) M,
-) (A, B, C, D, E, F, G, H, I, J, K, L, M) {
-	AssertSeq(ts, 13)
-	return fa(ts[0]),
-		fb(ts[1]),
-		fc(ts[2]),
-		fd(ts[3]),
-		fe(ts[4]),
-		ff(ts[5]),
-		fg(ts[6]),
-		fh(ts[7]),
-		fi(ts[8]),
-		fj(ts[9]),
-		fk(ts[10]),
-		fl(ts[11]),
-		fm(ts[12])
-}
-
-func FMap14[T, A, B, C, D, E, F, G, H, I, J, K, L, M, N any](
-	ts Seq[T],
-	fa func(Type[T]) A,
-	fb func(Type[T]) B,
-	fc func(Type[T]) C,
-	fd func(Type[T]) D,
-	fe func(Type[T]) E,
-	ff func(Type[T]) F,
-	fg func(Type[T]) G,
-	fh func(Type[T]) H,
-	fi func(Type[T]) I,
-	fj func(Type[T]) J,
-	fk func(Type[T]) K,
-	fl func(Type[T]) L,
-	fm func(Type[T]) M,
-	fn func(Type[T]) N,
-) (A, B, C, D, E, F, G, H, I, J, K, L, M, N) {
-	AssertSeq(ts, 14)
-	return fa(ts[0]),
-		fb(ts[1]),
-		fc(ts[2]),
-		fd(ts[3]),
-		fe(ts[4]),
-		ff(ts[5]),
-		fg(ts[6]),
-		fh(ts[7]),
-		fi(ts[8]),
-		fj(ts[9]),
-		fk(ts[10]),
-		fl(ts[11]),
-		fm(ts[12]),
-		fn(ts[13])
-}
-
-func FMap15[T, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O any](
-	ts Seq[T],
-	fa func(Type[T]) A,
-	fb func(Type[T]) B,
-	fc func(Type[T]) C,
-	fd func(Type[T]) D,
-	fe func(Type[T]) E,
-	ff func(Type[T]) F,
-	fg func(Type[T]) G,
-	fh func(Type[T]) H,
-	fi func(Type[T]) I,
-	fj func(Type[T]) J,
-	fk func(Type[T]) K,
-	fl func(Type[T]) L,
-	fm func(Type[T]) M,
-	fn func(Type[T]) N,
-	fo func(Type[T]) O,
-) (A, B, C, D, E, F, G, H, I, J, K, L, M, N, O) {
-	AssertSeq(ts, 15)
-	return fa(ts[0]),
-		fb(ts[1]),
-		fc(ts[2]),
-		fd(ts[3]),
-		fe(ts[4]),
-		ff(ts[5]),
-		fg(ts[6]),
-		fh(ts[7]),
-		fi(ts[8]),
-		fj(ts[9]),
-		fk(ts[10]),
-		fl(ts[11]),
-		fm(ts[12]),
-		fn(ts[13]),
-		fo(ts[14])
-}
-
-func FMap16[T, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P any](
-	ts Seq[T],
-	fa func(Type[T]) A,
-	fb func(Type[T]) B,
-	fc func(Type[T]) C,
-	fd func(Type[T]) D,
-	fe func(Type[T]) E,
-	ff func(Type[T]) F,
-	fg func(Type[T]) G,
-	fh func(Type[T]) H,
-	fi func(Type[T]) I,
-	fj func(Type[T]) J,
-	fk func(Type[T]) K,
-	fl func(Type[T]) L,
-	fm func(Type[T]) M,
-	fn func(Type[T]) N,
-	fo func(Type[T]) O,
-	fp func(Type[T]) P,
-) (A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P) {
-	AssertSeq(ts, 16)
-	return fa(ts[0]),
-		fb(ts[1]),
-		fc(ts[2]),
-		fd(ts[3]),
-		fe(ts[4]),
-		ff(ts[5]),
-		fg(ts[6]),
-		fh(ts[7]),
-		fi(ts[8]),
-		fj(ts[9]),
-		fk(ts[10]),
-		fl(ts[11]),
-		fm(ts[12]),
-		fn(ts[13]),
-		fo(ts[14]),
-		fp(ts[15])
-}
-
-func FMap17[T, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q any](
-	ts Seq[T],
-	fa func(Type[T]) A,
-	fb func(Type[T]) B,
-	fc func(Type[T]) C,
-	fd func(Type[T]) D,
-	fe func(Type[T]) E,
-	ff func(Type[T]) F,
-	fg func(Type[T]) G,
-	fh func(Type[T]) H,
-	fi func(Type[T]) I,
-	fj func(Type[T]) J,
-	fk func(Type[T]) K,
-	fl func(Type[T]) L,
-	fm func(Type[T]) M,
-	fn func(Type[T]) N,
-	fo func(Type[T]) O,
-	fp func(Type[T]) P,
-	fq func(Type[T]) Q,
-) (A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q) {
-	AssertSeq(ts, 17)
-	return fa(ts[0]),
-		fb(ts[1]),
-		fc(ts[2]),
-		fd(ts[3]),
-		fe(ts[4]),
-		ff(ts[5]),
-		fg(ts[6]),
-		fh(ts[7]),
-		fi(ts[8]),
-		fj(ts[9]),
-		fk(ts[10]),
-		fl(ts[11]),
-		fm(ts[12]),
-		fn(ts[13]),
-		fo(ts[14]),
-		fp(ts[15]),
-		fq(ts[16])
-}
-
-func FMap18[T, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R any](
-	ts Seq[T],
-	fa func(Type[T]) A,
-	fb func(Type[T]) B,
-	fc func(Type[T]) C,
-	fd func(Type[T]) D,
-	fe func(Type[T]) E,
-	ff func(Type[T]) F,
-	fg func(Type[T]) G,
-	fh func(Type[T]) H,
-	fi func(Type[T]) I,
-	fj func(Type[T]) J,
-	fk func(Type[T]) K,
-	fl func(Type[T]) L,
-	fm func(Type[T]) M,
-	fn func(Type[T]) N,
-	fo func(Type[T]) O,
-	fp func(Type[T]) P,
-	fq func(Type[T]) Q,
-	fr func(Type[T]) R,
-) (A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R) {
-	AssertSeq(ts, 18)
-	return fa(ts[0]),
-		fb(ts[1]),
-		fc(ts[2]),
-		fd(ts[3]),
-		fe(ts[4]),
-		ff(ts[5]),
-		fg(ts[6]),
-		fh(ts[7]),
-		fi(ts[8]),
-		fj(ts[9]),
-		fk(ts[10]),
-		fl(ts[11]),
-		fm(ts[12]),
-		fn(ts[13]),
-		fo(ts[14]),
-		fp(ts[15]),
-		fq(ts[16]),
-		fr(ts[17])
-}
-
-func FMap19[T, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S any](
-	ts Seq[T],
-	fa func(Type[T]) A,
-	fb func(Type[T]) B,
-	fc func(Type[T]) C,
-	fd func(Type[T]) D,
-	fe func(Type[T]) E,
-	ff func(Type[T]) F,
-	fg func(Type[T]) G,
-	fh func(Type[T]) H,
-	fi func(Type[T]) I,
-	fj func(Type[T]) J,
-	fk func(Type[T]) K,
-	fl func(Type[T]) L,
-	fm func(Type[T]) M,
-	fn func(Type[T]) N,
-	fo func(Type[T]) O,
-	fp func(Type[T]) P,
-	fq func(Type[T]) Q,
-	fr func(Type[T]) R,
-	fs func(Type[T]) S,
-) (A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S) {
-	AssertSeq(ts, 19)
-	return fa(ts[0]),
-		fb(ts[1]),
-		fc(ts[2]),
-		fd(ts[3]),
-		fe(ts[4]),
-		ff(ts[5]),
-		fg(ts[6]),
-		fh(ts[7]),
-		fi(ts[8]),
-		fj(ts[9]),
-		fk(ts[10]),
-		fl(ts[11]),
-		fm(ts[12]),
-		fn(ts[13]),
-		fo(ts[14]),
-		fp(ts[15]),
-		fq(ts[16]),
-		fr(ts[17]),
-		fs(ts[18])
-}
-
-func FMap20[T, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, U any](
-	ts Seq[T],
-	fa func(Type[T]) A,
-	fb func(Type[T]) B,
-	fc func(Type[T]) C,
-	fd func(Type[T]) D,
-	fe func(Type[T]) E,
-	ff func(Type[T]) F,
-	fg func(Type[T]) G,
-	fh func(Type[T]) H,
-	fi func(Type[T]) I,
-	fj func(Type[T]) J,
-	fk func(Type[T]) K,
-	fl func(Type[T]) L,
-	fm func(Type[T]) M,
-	fn func(Type[T]) N,
-	fo func(Type[T]) O,
-	fp func(Type[T]) P,
-	fq func(Type[T]) Q,
-	fr func(Type[T]) R,
-	fs func(Type[T]) S,
-	fu func(Type[T]) U,
-) (A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, U) {
-	AssertSeq(ts, 20)
-	return fa(ts[0]),
-		fb(ts[1]),
-		fc(ts[2]),
-		fd(ts[3]),
-		fe(ts[4]),
-		ff(ts[5]),
-		fg(ts[6]),
-		fh(ts[7]),
-		fi(ts[8]),
-		fj(ts[9]),
-		fk(ts[10]),
-		fl(ts[11]),
-		fm(ts[12]),
-		fn(ts[13]),
-		fo(ts[14]),
-		fp(ts[15]),
-		fq(ts[16]),
-		fr(ts[17]),
-		fs(ts[18]),
-		fu(ts[19])
 }
