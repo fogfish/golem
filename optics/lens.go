@@ -8,7 +8,6 @@ import (
 )
 
 /*
-
 Lens resembles concept of getters and setters, which you can compose
 using functional concepts. In other words, this is combinator data
 transformation for pure functional data structure.
@@ -19,7 +18,6 @@ type Lens[S, A any] interface {
 }
 
 /*
-
 Reflector is a Lens over reflect.Value
 */
 type Reflector[A any] interface {
@@ -28,11 +26,10 @@ type Reflector[A any] interface {
 }
 
 /*
-
 mkLens instantiates a typed Lens[S, A] for hseq.Type[S]
 */
 func mkLens[S, A any](t hseq.Type[S]) Lens[S, A] {
-	name, kind := hseq.AssertType[S, A](t, false)
+	name, kind := hseq.Assert[S, A](t)
 	switch kind {
 	case reflect.String:
 		if name == "string" {
@@ -60,7 +57,6 @@ func mkLens[S, A any](t hseq.Type[S]) Lens[S, A] {
 }
 
 /*
-
 lensStructString implements lens for string type
 */
 type lensStructString[S any] struct{ hseq.Type[S] }
@@ -104,7 +100,6 @@ func (lens *lensStructString[S]) GetValue(g reflect.Value) string {
 }
 
 /*
-
 lensStructFloat64 implements lens for float type
 */
 type lensStructInt[S any] struct{ hseq.Type[S] }
@@ -148,7 +143,6 @@ func (lens *lensStructInt[S]) GetValue(g reflect.Value) int {
 }
 
 /*
-
 lensStructFloat64 implements lens for float type
 */
 type lensStructFloat64[S any] struct{ hseq.Type[S] }
@@ -192,7 +186,6 @@ func (lens *lensStructFloat64[S]) GetValue(g reflect.Value) float64 {
 }
 
 /*
-
 lensStructFloat64 implements lens for float type
 */
 type lensStruct[S, A any] struct{ hseq.Type[S] }
@@ -237,12 +230,11 @@ func (lens *lensStruct[S, A]) GetValue(g reflect.Value) A {
 }
 
 /*
-
 ForProduct1 split structure with 1 field to set of lenses
 */
 func ForProduct1[T, A any]() Lens[T, A] {
 	return hseq.FMap1(
-		hseq.Generic[T](),
+		hseq.New[T](),
 		mkLens[T, A],
 	)
 }
@@ -252,7 +244,7 @@ func ForProduct2[T, A, B any]() (
 	Lens[T, B],
 ) {
 	return hseq.FMap2(
-		hseq.Generic[T](),
+		hseq.New[T](),
 		mkLens[T, A],
 		mkLens[T, B],
 	)
@@ -264,7 +256,7 @@ func ForProduct3[T, A, B, C any]() (
 	Lens[T, C],
 ) {
 	return hseq.FMap3(
-		hseq.Generic[T](),
+		hseq.New[T](),
 		mkLens[T, A],
 		mkLens[T, B],
 		mkLens[T, C],
@@ -278,7 +270,7 @@ func ForProduct4[T, A, B, C, D any]() (
 	Lens[T, D],
 ) {
 	return hseq.FMap4(
-		hseq.Generic[T](),
+		hseq.New[T](),
 		mkLens[T, A],
 		mkLens[T, B],
 		mkLens[T, C],
@@ -294,7 +286,7 @@ func ForProduct5[T, A, B, C, D, E any]() (
 	Lens[T, E],
 ) {
 	return hseq.FMap5(
-		hseq.Generic[T](),
+		hseq.New[T](),
 		mkLens[T, A],
 		mkLens[T, B],
 		mkLens[T, C],
@@ -312,7 +304,7 @@ func ForProduct6[T, A, B, C, D, E, F any]() (
 	Lens[T, F],
 ) {
 	return hseq.FMap6(
-		hseq.Generic[T](),
+		hseq.New[T](),
 		mkLens[T, A],
 		mkLens[T, B],
 		mkLens[T, C],
@@ -332,7 +324,7 @@ func ForProduct7[T, A, B, C, D, E, F, G any]() (
 	Lens[T, G],
 ) {
 	return hseq.FMap7(
-		hseq.Generic[T](),
+		hseq.New[T](),
 		mkLens[T, A],
 		mkLens[T, B],
 		mkLens[T, C],
@@ -354,7 +346,7 @@ func ForProduct8[T, A, B, C, D, E, F, G, H any]() (
 	Lens[T, H],
 ) {
 	return hseq.FMap8(
-		hseq.Generic[T](),
+		hseq.New[T](),
 		mkLens[T, A],
 		mkLens[T, B],
 		mkLens[T, C],
@@ -378,7 +370,7 @@ func ForProduct9[T, A, B, C, D, E, F, G, H, I any]() (
 	Lens[T, I],
 ) {
 	return hseq.FMap9(
-		hseq.Generic[T](),
+		hseq.New[T](),
 		mkLens[T, A],
 		mkLens[T, B],
 		mkLens[T, C],
@@ -388,412 +380,5 @@ func ForProduct9[T, A, B, C, D, E, F, G, H, I any]() (
 		mkLens[T, G],
 		mkLens[T, H],
 		mkLens[T, I],
-	)
-}
-
-func ForProduct10[T, A, B, C, D, E, F, G, H, I, J any]() (
-	Lens[T, A],
-	Lens[T, B],
-	Lens[T, C],
-	Lens[T, D],
-	Lens[T, E],
-	Lens[T, F],
-	Lens[T, G],
-	Lens[T, H],
-	Lens[T, I],
-	Lens[T, J],
-) {
-	return hseq.FMap10(
-		hseq.Generic[T](),
-		mkLens[T, A],
-		mkLens[T, B],
-		mkLens[T, C],
-		mkLens[T, D],
-		mkLens[T, E],
-		mkLens[T, F],
-		mkLens[T, G],
-		mkLens[T, H],
-		mkLens[T, I],
-		mkLens[T, J],
-	)
-}
-
-func ForProduct11[T, A, B, C, D, E, F, G, H, I, J, K any]() (
-	Lens[T, A],
-	Lens[T, B],
-	Lens[T, C],
-	Lens[T, D],
-	Lens[T, E],
-	Lens[T, F],
-	Lens[T, G],
-	Lens[T, H],
-	Lens[T, I],
-	Lens[T, J],
-	Lens[T, K],
-) {
-	return hseq.FMap11(
-		hseq.Generic[T](),
-		mkLens[T, A],
-		mkLens[T, B],
-		mkLens[T, C],
-		mkLens[T, D],
-		mkLens[T, E],
-		mkLens[T, F],
-		mkLens[T, G],
-		mkLens[T, H],
-		mkLens[T, I],
-		mkLens[T, J],
-		mkLens[T, K],
-	)
-}
-
-func ForProduct12[T, A, B, C, D, E, F, G, H, I, J, K, L any]() (
-	Lens[T, A],
-	Lens[T, B],
-	Lens[T, C],
-	Lens[T, D],
-	Lens[T, E],
-	Lens[T, F],
-	Lens[T, G],
-	Lens[T, H],
-	Lens[T, I],
-	Lens[T, J],
-	Lens[T, K],
-	Lens[T, L],
-) {
-	return hseq.FMap12(
-		hseq.Generic[T](),
-		mkLens[T, A],
-		mkLens[T, B],
-		mkLens[T, C],
-		mkLens[T, D],
-		mkLens[T, E],
-		mkLens[T, F],
-		mkLens[T, G],
-		mkLens[T, H],
-		mkLens[T, I],
-		mkLens[T, J],
-		mkLens[T, K],
-		mkLens[T, L],
-	)
-}
-
-func ForProduct13[T, A, B, C, D, E, F, G, H, I, J, K, L, M any]() (
-	Lens[T, A],
-	Lens[T, B],
-	Lens[T, C],
-	Lens[T, D],
-	Lens[T, E],
-	Lens[T, F],
-	Lens[T, G],
-	Lens[T, H],
-	Lens[T, I],
-	Lens[T, J],
-	Lens[T, K],
-	Lens[T, L],
-	Lens[T, M],
-) {
-	return hseq.FMap13(
-		hseq.Generic[T](),
-		mkLens[T, A],
-		mkLens[T, B],
-		mkLens[T, C],
-		mkLens[T, D],
-		mkLens[T, E],
-		mkLens[T, F],
-		mkLens[T, G],
-		mkLens[T, H],
-		mkLens[T, I],
-		mkLens[T, J],
-		mkLens[T, K],
-		mkLens[T, L],
-		mkLens[T, M],
-	)
-}
-
-func ForProduct14[T, A, B, C, D, E, F, G, H, I, J, K, L, M, N any]() (
-	Lens[T, A],
-	Lens[T, B],
-	Lens[T, C],
-	Lens[T, D],
-	Lens[T, E],
-	Lens[T, F],
-	Lens[T, G],
-	Lens[T, H],
-	Lens[T, I],
-	Lens[T, J],
-	Lens[T, K],
-	Lens[T, L],
-	Lens[T, M],
-	Lens[T, N],
-) {
-	return hseq.FMap14(
-		hseq.Generic[T](),
-		mkLens[T, A],
-		mkLens[T, B],
-		mkLens[T, C],
-		mkLens[T, D],
-		mkLens[T, E],
-		mkLens[T, F],
-		mkLens[T, G],
-		mkLens[T, H],
-		mkLens[T, I],
-		mkLens[T, J],
-		mkLens[T, K],
-		mkLens[T, L],
-		mkLens[T, M],
-		mkLens[T, N],
-	)
-}
-
-func ForProduct15[T, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O any]() (
-	Lens[T, A],
-	Lens[T, B],
-	Lens[T, C],
-	Lens[T, D],
-	Lens[T, E],
-	Lens[T, F],
-	Lens[T, G],
-	Lens[T, H],
-	Lens[T, I],
-	Lens[T, J],
-	Lens[T, K],
-	Lens[T, L],
-	Lens[T, M],
-	Lens[T, N],
-	Lens[T, O],
-) {
-	return hseq.FMap15(
-		hseq.Generic[T](),
-		mkLens[T, A],
-		mkLens[T, B],
-		mkLens[T, C],
-		mkLens[T, D],
-		mkLens[T, E],
-		mkLens[T, F],
-		mkLens[T, G],
-		mkLens[T, H],
-		mkLens[T, I],
-		mkLens[T, J],
-		mkLens[T, K],
-		mkLens[T, L],
-		mkLens[T, M],
-		mkLens[T, N],
-		mkLens[T, O],
-	)
-}
-
-func ForProduct16[T, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P any]() (
-	Lens[T, A],
-	Lens[T, B],
-	Lens[T, C],
-	Lens[T, D],
-	Lens[T, E],
-	Lens[T, F],
-	Lens[T, G],
-	Lens[T, H],
-	Lens[T, I],
-	Lens[T, J],
-	Lens[T, K],
-	Lens[T, L],
-	Lens[T, M],
-	Lens[T, N],
-	Lens[T, O],
-	Lens[T, P],
-) {
-	return hseq.FMap16(
-		hseq.Generic[T](),
-		mkLens[T, A],
-		mkLens[T, B],
-		mkLens[T, C],
-		mkLens[T, D],
-		mkLens[T, E],
-		mkLens[T, F],
-		mkLens[T, G],
-		mkLens[T, H],
-		mkLens[T, I],
-		mkLens[T, J],
-		mkLens[T, K],
-		mkLens[T, L],
-		mkLens[T, M],
-		mkLens[T, N],
-		mkLens[T, O],
-		mkLens[T, P],
-	)
-}
-
-func ForProduct17[T, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q any]() (
-	Lens[T, A],
-	Lens[T, B],
-	Lens[T, C],
-	Lens[T, D],
-	Lens[T, E],
-	Lens[T, F],
-	Lens[T, G],
-	Lens[T, H],
-	Lens[T, I],
-	Lens[T, J],
-	Lens[T, K],
-	Lens[T, L],
-	Lens[T, M],
-	Lens[T, N],
-	Lens[T, O],
-	Lens[T, P],
-	Lens[T, Q],
-) {
-	return hseq.FMap17(
-		hseq.Generic[T](),
-		mkLens[T, A],
-		mkLens[T, B],
-		mkLens[T, C],
-		mkLens[T, D],
-		mkLens[T, E],
-		mkLens[T, F],
-		mkLens[T, G],
-		mkLens[T, H],
-		mkLens[T, I],
-		mkLens[T, J],
-		mkLens[T, K],
-		mkLens[T, L],
-		mkLens[T, M],
-		mkLens[T, N],
-		mkLens[T, O],
-		mkLens[T, P],
-		mkLens[T, Q],
-	)
-}
-
-func ForProduct18[T, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R any]() (
-	Lens[T, A],
-	Lens[T, B],
-	Lens[T, C],
-	Lens[T, D],
-	Lens[T, E],
-	Lens[T, F],
-	Lens[T, G],
-	Lens[T, H],
-	Lens[T, I],
-	Lens[T, J],
-	Lens[T, K],
-	Lens[T, L],
-	Lens[T, M],
-	Lens[T, N],
-	Lens[T, O],
-	Lens[T, P],
-	Lens[T, Q],
-	Lens[T, R],
-) {
-	return hseq.FMap18(
-		hseq.Generic[T](),
-		mkLens[T, A],
-		mkLens[T, B],
-		mkLens[T, C],
-		mkLens[T, D],
-		mkLens[T, E],
-		mkLens[T, F],
-		mkLens[T, G],
-		mkLens[T, H],
-		mkLens[T, I],
-		mkLens[T, J],
-		mkLens[T, K],
-		mkLens[T, L],
-		mkLens[T, M],
-		mkLens[T, N],
-		mkLens[T, O],
-		mkLens[T, P],
-		mkLens[T, Q],
-		mkLens[T, R],
-	)
-}
-
-func ForProduct19[T, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S any]() (
-	Lens[T, A],
-	Lens[T, B],
-	Lens[T, C],
-	Lens[T, D],
-	Lens[T, E],
-	Lens[T, F],
-	Lens[T, G],
-	Lens[T, H],
-	Lens[T, I],
-	Lens[T, J],
-	Lens[T, K],
-	Lens[T, L],
-	Lens[T, M],
-	Lens[T, N],
-	Lens[T, O],
-	Lens[T, P],
-	Lens[T, Q],
-	Lens[T, R],
-	Lens[T, S],
-) {
-	return hseq.FMap19(
-		hseq.Generic[T](),
-		mkLens[T, A],
-		mkLens[T, B],
-		mkLens[T, C],
-		mkLens[T, D],
-		mkLens[T, E],
-		mkLens[T, F],
-		mkLens[T, G],
-		mkLens[T, H],
-		mkLens[T, I],
-		mkLens[T, J],
-		mkLens[T, K],
-		mkLens[T, L],
-		mkLens[T, M],
-		mkLens[T, N],
-		mkLens[T, O],
-		mkLens[T, P],
-		mkLens[T, Q],
-		mkLens[T, R],
-		mkLens[T, S],
-	)
-}
-
-func ForProduct20[T, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, U any]() (
-	Lens[T, A],
-	Lens[T, B],
-	Lens[T, C],
-	Lens[T, D],
-	Lens[T, E],
-	Lens[T, F],
-	Lens[T, G],
-	Lens[T, H],
-	Lens[T, I],
-	Lens[T, J],
-	Lens[T, K],
-	Lens[T, L],
-	Lens[T, M],
-	Lens[T, N],
-	Lens[T, O],
-	Lens[T, P],
-	Lens[T, Q],
-	Lens[T, R],
-	Lens[T, S],
-	Lens[T, U],
-) {
-	return hseq.FMap20(
-		hseq.Generic[T](),
-		mkLens[T, A],
-		mkLens[T, B],
-		mkLens[T, C],
-		mkLens[T, D],
-		mkLens[T, E],
-		mkLens[T, F],
-		mkLens[T, G],
-		mkLens[T, H],
-		mkLens[T, I],
-		mkLens[T, J],
-		mkLens[T, K],
-		mkLens[T, L],
-		mkLens[T, M],
-		mkLens[T, N],
-		mkLens[T, O],
-		mkLens[T, P],
-		mkLens[T, Q],
-		mkLens[T, R],
-		mkLens[T, S],
-		mkLens[T, U],
 	)
 }
