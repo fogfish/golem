@@ -244,7 +244,7 @@ func Test1(t *testing.T) {
 	a := optics.ForProduct1[
 		T,
 		string,
-	]()
+	]("A")
 
 	for expect, f := range map[string]optics.Lens[T, string]{
 		"A": a,
