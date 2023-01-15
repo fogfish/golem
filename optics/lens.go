@@ -25,32 +25,30 @@ type Reflector[A any] interface {
 	PutValue(reflect.Value, A) error
 }
 
-/*
-mkLens instantiates a typed Lens[S, A] for hseq.Type[S]
-*/
-func mkLens[S, A any](t hseq.Type[S]) Lens[S, A] {
+// NewLens instantiates a typed Lens[S, A] for hseq.Type[S]
+func NewLens[S, A any](t hseq.Type[S]) Lens[S, A] {
 	name, kind := hseq.Assert[S, A](t)
 	switch kind {
 	case reflect.String:
 		if name == "string" {
 			//lint:ignore SA5010 linter wrong, string is subtype of any
-			return mkLensStructString(t).(Lens[S, A])
+			return NewLensStructString(t).(Lens[S, A])
 		}
-		return mkLensStruct[S, A](t)
+		return NewLensStruct[S, A](t)
 	case reflect.Int:
 		if name == "int" {
 			//lint:ignore SA5010 linter wrong, int is subtype of any
-			return mkLensStructInt(t).(Lens[S, A])
+			return NewLensStructInt(t).(Lens[S, A])
 		}
-		return mkLensStruct[S, A](t)
+		return NewLensStruct[S, A](t)
 	case reflect.Float64:
 		if name == "float64" {
 			//lint:ignore SA5010 linter wrong, float is subtype of any
-			return mkLensStructFloat64(t).(Lens[S, A])
+			return NewLensStructFloat64(t).(Lens[S, A])
 		}
-		return mkLensStruct[S, A](t)
+		return NewLensStruct[S, A](t)
 	case reflect.Struct:
-		return mkLensStruct[S, A](t)
+		return NewLensStruct[S, A](t)
 	default:
 		panic(fmt.Errorf("unknown lens type %v", t.Type.Name()))
 	}
@@ -61,7 +59,7 @@ lensStructString implements lens for string type
 */
 type lensStructString[S any] struct{ hseq.Type[S] }
 
-func mkLensStructString[S any](t hseq.Type[S]) Lens[S, string] {
+func NewLensStructString[S any](t hseq.Type[S]) Lens[S, string] {
 	return &lensStructString[S]{t}
 }
 
@@ -104,7 +102,7 @@ lensStructFloat64 implements lens for float type
 */
 type lensStructInt[S any] struct{ hseq.Type[S] }
 
-func mkLensStructInt[S any](t hseq.Type[S]) Lens[S, int] {
+func NewLensStructInt[S any](t hseq.Type[S]) Lens[S, int] {
 	return &lensStructInt[S]{t}
 }
 
@@ -147,7 +145,7 @@ lensStructFloat64 implements lens for float type
 */
 type lensStructFloat64[S any] struct{ hseq.Type[S] }
 
-func mkLensStructFloat64[S any](t hseq.Type[S]) Lens[S, float64] {
+func NewLensStructFloat64[S any](t hseq.Type[S]) Lens[S, float64] {
 	return &lensStructFloat64[S]{t}
 }
 
@@ -190,7 +188,7 @@ lensStructFloat64 implements lens for float type
 */
 type lensStruct[S, A any] struct{ hseq.Type[S] }
 
-func mkLensStruct[S, A any](t hseq.Type[S]) Lens[S, A] {
+func NewLensStruct[S, A any](t hseq.Type[S]) Lens[S, A] {
 	return &lensStruct[S, A]{t}
 }
 
@@ -240,7 +238,7 @@ func ForProduct1[T, A any](attr ...string) Lens[T, A] {
 	}
 
 	return hseq.FMap1(seq,
-		mkLens[T, A],
+		NewLens[T, A],
 	)
 }
 
@@ -258,8 +256,8 @@ func ForProduct2[T, A, B any](attr ...string) (
 	}
 
 	return hseq.FMap2(seq,
-		mkLens[T, A],
-		mkLens[T, B],
+		NewLens[T, A],
+		NewLens[T, B],
 	)
 }
 
@@ -277,9 +275,9 @@ func ForProduct3[T, A, B, C any](attr ...string) (
 	}
 
 	return hseq.FMap3(seq,
-		mkLens[T, A],
-		mkLens[T, B],
-		mkLens[T, C],
+		NewLens[T, A],
+		NewLens[T, B],
+		NewLens[T, C],
 	)
 }
 
@@ -298,10 +296,10 @@ func ForProduct4[T, A, B, C, D any](attr ...string) (
 	}
 
 	return hseq.FMap4(seq,
-		mkLens[T, A],
-		mkLens[T, B],
-		mkLens[T, C],
-		mkLens[T, D],
+		NewLens[T, A],
+		NewLens[T, B],
+		NewLens[T, C],
+		NewLens[T, D],
 	)
 }
 
@@ -321,11 +319,11 @@ func ForProduct5[T, A, B, C, D, E any](attr ...string) (
 	}
 
 	return hseq.FMap5(seq,
-		mkLens[T, A],
-		mkLens[T, B],
-		mkLens[T, C],
-		mkLens[T, D],
-		mkLens[T, E],
+		NewLens[T, A],
+		NewLens[T, B],
+		NewLens[T, C],
+		NewLens[T, D],
+		NewLens[T, E],
 	)
 }
 
@@ -346,12 +344,12 @@ func ForProduct6[T, A, B, C, D, E, F any](attr ...string) (
 	}
 
 	return hseq.FMap6(seq,
-		mkLens[T, A],
-		mkLens[T, B],
-		mkLens[T, C],
-		mkLens[T, D],
-		mkLens[T, E],
-		mkLens[T, F],
+		NewLens[T, A],
+		NewLens[T, B],
+		NewLens[T, C],
+		NewLens[T, D],
+		NewLens[T, E],
+		NewLens[T, F],
 	)
 }
 
@@ -373,13 +371,13 @@ func ForProduct7[T, A, B, C, D, E, F, G any](attr ...string) (
 	}
 
 	return hseq.FMap7(seq,
-		mkLens[T, A],
-		mkLens[T, B],
-		mkLens[T, C],
-		mkLens[T, D],
-		mkLens[T, E],
-		mkLens[T, F],
-		mkLens[T, G],
+		NewLens[T, A],
+		NewLens[T, B],
+		NewLens[T, C],
+		NewLens[T, D],
+		NewLens[T, E],
+		NewLens[T, F],
+		NewLens[T, G],
 	)
 }
 
@@ -402,14 +400,14 @@ func ForProduct8[T, A, B, C, D, E, F, G, H any](attr ...string) (
 	}
 
 	return hseq.FMap8(seq,
-		mkLens[T, A],
-		mkLens[T, B],
-		mkLens[T, C],
-		mkLens[T, D],
-		mkLens[T, E],
-		mkLens[T, F],
-		mkLens[T, G],
-		mkLens[T, H],
+		NewLens[T, A],
+		NewLens[T, B],
+		NewLens[T, C],
+		NewLens[T, D],
+		NewLens[T, E],
+		NewLens[T, F],
+		NewLens[T, G],
+		NewLens[T, H],
 	)
 }
 
@@ -433,14 +431,14 @@ func ForProduct9[T, A, B, C, D, E, F, G, H, I any](attr ...string) (
 	}
 
 	return hseq.FMap9(seq,
-		mkLens[T, A],
-		mkLens[T, B],
-		mkLens[T, C],
-		mkLens[T, D],
-		mkLens[T, E],
-		mkLens[T, F],
-		mkLens[T, G],
-		mkLens[T, H],
-		mkLens[T, I],
+		NewLens[T, A],
+		NewLens[T, B],
+		NewLens[T, C],
+		NewLens[T, D],
+		NewLens[T, E],
+		NewLens[T, F],
+		NewLens[T, G],
+		NewLens[T, H],
+		NewLens[T, I],
 	)
 }
