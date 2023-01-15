@@ -9,7 +9,7 @@ import (
 	"github.com/fogfish/it"
 )
 
-func TestLenses(t *testing.T) {
+func TestLensesByType(t *testing.T) {
 	type Inner struct {
 		E, F, G string
 	}
@@ -70,7 +70,7 @@ func TestLenses(t *testing.T) {
 	})
 }
 
-func TestLensesPtr(t *testing.T) {
+func TestLensesByName(t *testing.T) {
 	type Inner struct {
 		E, F, G string
 	}
@@ -82,7 +82,7 @@ func TestLensesPtr(t *testing.T) {
 		D *Inner
 	}
 
-	a, b, c, d := optics.ForProduct4[T, string, int, float64, Inner]()
+	a, b, c, d := optics.ForProduct4[T, string, int, float64, Inner]("A", "B", "C", "D")
 
 	t.Run("String", func(t *testing.T) {
 		x := T{}
@@ -244,7 +244,7 @@ func Test1(t *testing.T) {
 	a := optics.ForProduct1[
 		T,
 		string,
-	]()
+	]("A")
 
 	for expect, f := range map[string]optics.Lens[T, string]{
 		"A": a,
@@ -264,7 +264,7 @@ func Test2(t *testing.T) {
 		T,
 		string,
 		string,
-	]()
+	]("A", "B")
 
 	for expect, f := range map[string]optics.Lens[T, string]{
 		"A": a, "B": b,
@@ -285,7 +285,7 @@ func Test3(t *testing.T) {
 		string,
 		string,
 		string,
-	]()
+	]("A", "B", "C")
 
 	for expect, f := range map[string]optics.Lens[T, string]{
 		"A": a, "B": b, "C": c,
@@ -307,7 +307,7 @@ func Test4(t *testing.T) {
 		string,
 		string,
 		string,
-	]()
+	]("A", "B", "C", "D")
 
 	for expect, f := range map[string]optics.Lens[T, string]{
 		"A": a, "B": b, "C": c, "D": d,
@@ -330,7 +330,7 @@ func Test5(t *testing.T) {
 		string,
 		string,
 		string,
-	]()
+	]("A", "B", "C", "D", "E")
 
 	for expect, f := range map[string]optics.Lens[T, string]{
 		"A": a, "B": b, "C": c, "D": d, "E": e,
@@ -354,7 +354,7 @@ func Test6(t *testing.T) {
 		string,
 		string,
 		string,
-	]()
+	]("A", "B", "C", "D", "E", "F")
 
 	for expect, f := range map[string]optics.Lens[T, string]{
 		"A": a, "B": b, "C": c, "D": d, "E": e, "F": f,
@@ -379,7 +379,7 @@ func Test7(t *testing.T) {
 		string,
 		string,
 		string,
-	]()
+	]("A", "B", "C", "D", "E", "F", "G")
 
 	for expect, f := range map[string]optics.Lens[T, string]{
 		"A": a, "B": b, "C": c, "D": d, "E": e, "F": f, "G": g,
@@ -405,7 +405,7 @@ func Test8(t *testing.T) {
 		string,
 		string,
 		string,
-	]()
+	]("A", "B", "C", "D", "E", "F", "G", "H")
 
 	for expect, f := range map[string]optics.Lens[T, string]{
 		"A": a, "B": b, "C": c, "D": d, "E": e, "F": f, "G": g, "H": h,
@@ -432,7 +432,7 @@ func Test9(t *testing.T) {
 		string,
 		string,
 		string,
-	]()
+	]("A", "B", "C", "D", "E", "F", "G", "H", "I")
 
 	for expect, f := range map[string]optics.Lens[T, string]{
 		"A": a, "B": b, "C": c, "D": d, "E": e, "F": f, "G": g, "H": h, "I": i,
