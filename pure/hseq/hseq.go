@@ -176,8 +176,14 @@ func New9[T, A, B, C, D, E, F, G, H, I any]() Seq[T] {
 // Lookup type heterogenous sequence by "witness" type
 func ForType[A, T any](seq Seq[T]) Type[T] {
 	val := typeOf(*new(A))
+
 	for _, f := range seq {
-		if f.Type.Name() == val.Name() {
+		ft := f.Type
+		if ft.Kind() == reflect.Pointer {
+			ft = ft.Elem()
+		}
+
+		if ft.String() == val.String() && ft.AssignableTo(val) {
 			return f
 		}
 	}
