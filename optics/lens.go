@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/fogfish/golem/pure/hseq"
+	"github.com/fogfish/golem/hseq"
 )
 
 /*

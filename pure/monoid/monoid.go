@@ -10,19 +10,13 @@ package monoid
 
 import "github.com/fogfish/golem/pure/semigroup"
 
-/*
-
-Monoid is an algebraic structure consisting of Semigroup and Empty element
-*/
+// Monoid is an algebraic structure consisting of Semigroup and Empty element
 type Monoid[T any] interface {
 	semigroup.Semigroup[T]
 	Empty() T
 }
 
-/*
-
-From is a combinator that lifts Semigroup to an instance of Monoid type trait
-*/
+// From is a combinator that lifts Semigroup to an instance of Monoid type trait
 func From[T any](empty T, combine semigroup.Semigroup[T]) Monoid[T] {
 	return monoid[T]{
 		Semigroup: combine,
@@ -30,11 +24,8 @@ func From[T any](empty T, combine semigroup.Semigroup[T]) Monoid[T] {
 	}
 }
 
-/*
-
-FromOp is a combinator that lifts T ⟼ T ⟼ T function (binary operator) to
-an instance of Monoid type trait
-*/
+// FromOp is a combinator that lifts T ⟼ T ⟼ T function (binary operator) to
+// an instance of Monoid type trait
 func FromOp[T any](empty T, combine func(T, T) T) Monoid[T] {
 	return monoid[T]{
 		Semigroup: semigroup.From[T](combine),
@@ -42,10 +33,7 @@ func FromOp[T any](empty T, combine func(T, T) T) Monoid[T] {
 	}
 }
 
-/*
-
-Internal implementation of Monoid interface
-*/
+// Internal implementation of Monoid interface
 type monoid[T any] struct {
 	semigroup.Semigroup[T]
 	empty T

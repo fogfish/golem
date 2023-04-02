@@ -12,17 +12,19 @@ import (
 	"testing"
 
 	"github.com/fogfish/golem/pure/eq"
-	"github.com/fogfish/it"
+	"github.com/fogfish/it/v2"
 )
 
 var bbEq bool
 
 func TestEqual(t *testing.T) {
-	it.Ok(t).
-		IfTrue(eq.Int.Equal(1, 1)).
-		IfFalse(eq.Int.Equal(1, 2)).
-		IfTrue(eq.String.Equal("abcd", "abcd")).
-		IfFalse(eq.String.Equal("abcd", "xxxx"))
+	it.Then(t).Should(
+		it.True(eq.Int.Equal(1, 1)),
+		it.True(eq.String.Equal("abcd", "abcd")),
+	).ShouldNot(
+		it.True(eq.Int.Equal(1, 2)),
+		it.True(eq.String.Equal("abcd", "xxxx")),
+	)
 }
 
 func BenchmarkEqInt(b *testing.B) {
@@ -47,9 +49,11 @@ func TestContraMap(t *testing.T) {
 	a := A{1, "a"}
 	b := A{2, "a"}
 
-	it.Ok(t).
-		IfTrue(eqByID.Equal(a, a)).
-		IfFalse(eqByID.Equal(a, b))
+	it.Then(t).Should(
+		it.True(eqByID.Equal(a, a)),
+	).ShouldNot(
+		it.True(eqByID.Equal(a, b)),
+	)
 }
 
 func BenchmarkContraMap(b *testing.B) {
