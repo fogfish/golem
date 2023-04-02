@@ -135,10 +135,10 @@
   aliases: []
   description: changes to documentation
 
-- name: "[#] maplike"
+- name: "[#] hseq"
   color: "3978e1"
   aliases: []
-  description: map-like data structures
+  description: hseq module
 
 - name: "[#] optics"
   color: "3978e1"
@@ -153,9 +153,4 @@
 - name: "[#] pure"
   color: "3978e1"
   aliases: []
-  description: pure functional types
-
-- name: "[#] seq"
-  color: "3978e1"
-  aliases: []
-  description: seq data structures
+  description: pure module

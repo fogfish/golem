@@ -2,19 +2,15 @@
  - '.github/*'
  - '.github/**/*'
 
-"[#] deps":
- - 'go.mod'
- - 'go.sum'
-
 "[#] doc":
  - '*.md'
  - 'doc/*'
  - 'doc/**/*'
  - 'examples/**/*'
 
-"[#] maplike":
- - 'maplike/*'
- - 'maplike/**/*'
+"[#] hseq":
+ - 'hseq/*'
+ - 'hseq/**/*'
 
 "[#] optics":
  - 'optics/*'
@@ -27,7 +23,3 @@
 "[#] pure":
  - 'pure/*'
  - 'pure/**/*'
-
-"[#] seq":
- - 'seq/*'
- - 'seq/**/*'
