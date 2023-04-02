@@ -1,10 +1,18 @@
+//
+// Copyright (C) 2022 - 2023 Dmitry Kolesnikov
+//
+// This file may be modified and distributed under the terms
+// of the MIT license.  See the LICENSE file for details.
+// https://github.com/fogfish/golem
+//
+
 package hseq_test
 
 import (
 	"reflect"
 	"testing"
 
-	"github.com/fogfish/golem/pure/hseq"
+	"github.com/fogfish/golem/hseq"
 	"github.com/fogfish/it/v2"
 )
 

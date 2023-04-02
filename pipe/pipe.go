@@ -12,14 +12,11 @@ import (
 	"time"
 )
 
-/*
-
-New creates unbounded channel
-
-  in, eg := pipe.New()
-  ...
-  close(eg)
-*/
+// New creates unbounded channel
+//
+//	in, eg := pipe.New()
+//	...
+//	close(eg)
 func New[T any](n int) (<-chan T, chan<- T) {
 	in := make(chan T, n)
 	eg := make(chan T, n)
@@ -50,10 +47,7 @@ func New[T any](n int) (<-chan T, chan<- T) {
 	return eg, in
 }
 
-/*
-
-From creates a channel periodically generates values from the function
-*/
+// From creates a channel periodically generates values from the function
 func From[T any](n int, frequency time.Duration, f func() (T, error)) chan T {
 	eg := make(chan T, n)
 
@@ -74,10 +68,7 @@ func From[T any](n int, frequency time.Duration, f func() (T, error)) chan T {
 	return eg
 }
 
-/*
-
-Map channel type
-*/
+// Map applies function over channel messages, emits result to new channel
 func Map[A, B any](in <-chan A, f func(A) B) chan B {
 	eg := make(chan B, cap(in))
 
@@ -97,10 +88,8 @@ func Map[A, B any](in <-chan A, f func(A) B) chan B {
 	return eg
 }
 
-/*
-
-MaybeMap channel type
-*/
+// MaybeMap applies function over channel messages, emits result to new channel
+// if function return no error
 func MaybeMap[A, B any](in <-chan A, f func(A) (B, error)) chan B {
 	eg := make(chan B, cap(in))
 
@@ -122,10 +111,7 @@ func MaybeMap[A, B any](in <-chan A, f func(A) (B, error)) chan B {
 	return eg
 }
 
-/*
-
-ForEach applies function for each message in the channel
-*/
+// ForEach applies function for each message in the channel
 func ForEach[A any](in <-chan A, f func(A)) {
 	go func() {
 		var x A

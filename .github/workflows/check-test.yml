@@ -21,20 +21,17 @@ jobs:
 
       - uses: actions/setup-go@v2
         with:
-          go-version: 1.18
+          go-version: "1.20"
 
       - uses: actions/checkout@v2
      
       - name: go build
         run: |
-          go build ./...
+          find . -name go.mod -execdir go build ./... \;
     
       - name: go test
         run: |
-          go test -v -coverprofile=profile.cov $(go list ./... | grep -v /examples/)
-        env:
-          ## GOPATH required to build serverless app inside unittest 
-          GOPATH: /home/runner/work/${{ github.event.repository.name }}/go
+          find . -name go.mod -execdir go test -coverprofile=profile.cov ./... \;
 
       - uses: shogo82148/actions-goveralls@v1
         continue-on-error: true

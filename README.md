@@ -69,48 +69,30 @@ Functional style programming can be achieved in any language, including Go. Gola
 
 The library requires **Go 1.18** or  later due to usage of [generics](https://go.dev/blog/intro-generics).
 
-The latest version of the library is available at `main` branch. All development, including new features and bug fixes, take place on the `main` branch using forking and pull requests as described in contribution guidelines. The stable version is available via Golang modules.
+The latest version of the library is available at `main` branch. All development, including new features and bug fixes, take place on the `main` branch using forking and pull requests as described in contribution guidelines. The stable version is available via Golang modulesy 
 
 1. Use `go get` to retrieve the library and add it as dependency to your application.
 
 ```bash
-go get -u github.com/fogfish/golem
+go get -u github.com/fogfish/golem/{submodule}
 ```
 
 2. Import required package in your code
 
 ```go
 import (
-  "github.com/fogfish/golem/..." // <-- path-to-package
+  "github.com/fogfish/golem/{submodule}"
 )
 ```
 
-## Package
+## Submodules
 
 See the [library documentation](https://pkg.go.dev/github.com/fogfish/golem)
 
-
-### Type traits
-
-* [pure/eq](pure/eq/eq.go) is `Eq` (equality) type trait
-* [pure/foldable](pure/foldable/foldable.go) is `Foldable` type trait define rules of folding data structures to a summary value.
-* [pure/monoid](pure/monoid/monoid.go) is `Monoid` type trait defined an algebraic structure consisting of Semigroup and Empty element. 
-* [pure/ord](pure/ord/ord.go) is `Ord` (ordering) type trait
-* [pure/semigroup](pure/semigroup/semigroup.go) is `Semigroup` type trait defined an associative binary operation for a set.
-
-
-### Data Type traits
-
-* [maplike](maplike/types.go) is `MapLike` type trait
-* [seq](seq/types.go) is `Seq` type trait
-
-
-### Data Structures
-
-* [pure/hseq](pure/hseq/hseq.go) heterogenous Sequence
-* [maplike/skiplist](maplike/skiplist/skiplist.go) is mutable `MapLike` built with skip list.
-* [seq/list](seq/list/list.go) is immutable `Seq` built with linked list.
-* [seq/slice](seq/slice/slice.go) is mutable `Seq` built with slice.
+* [hseq](hseq/README.md) Heterogenous Sequence
+* [optics](optics/README.md) Optics for Golang
+* [pipe](pipe/README.md) Type Safe Channels
+* [pure](pure/README.md) Pure Functional Abstractions
 
 
 ## How To Contribute

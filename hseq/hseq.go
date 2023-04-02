@@ -1,3 +1,11 @@
+//
+// Copyright (C) 2022 - 2023 Dmitry Kolesnikov
+//
+// This file may be modified and distributed under the terms
+// of the MIT license.  See the LICENSE file for details.
+// https://github.com/fogfish/golem
+//
+
 package hseq
 
 import (
@@ -5,7 +13,7 @@ import (
 	"reflect"
 )
 
-// Element of product type
+// Type element of product type, a type safe wrapper of reflect.StructField
 type Type[T any] struct {
 	reflect.StructField
 	PureType reflect.Type
