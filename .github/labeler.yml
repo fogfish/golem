@@ -23,3 +23,7 @@
 "[#] pure":
  - 'pure/*'
  - 'pure/**/*'
+
+"[#] trait":
+ - 'trait/*'
+ - 'trait/**/*'

@@ -154,3 +154,8 @@
   color: "3978e1"
   aliases: []
   description: pure module
+
+- name: "[#] trait"
+  color: "3978e1"
+  aliases: []
+  description: trait module
