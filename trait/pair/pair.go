@@ -228,3 +228,87 @@ func (join *join[K1, K2, V1, V2]) Next() bool {
 
 	return true
 }
+
+// Left join sequence of pairs to sequence of values
+func ToSeq[K1, V1, V2 any](lhs Seq[K1, V1], rhs func(K1, V1) seq.Seq[V2]) seq.Seq[V2] {
+	if lhs == nil {
+		return nil
+	}
+
+	join := &toSeq[K1, V1, V2]{lhs: lhs, rhs: rhs}
+	for {
+		join.Seq = join.rhs(join.lhs.Key(), join.lhs.Value())
+		if join.Seq != nil {
+			return join
+		}
+
+		if !join.lhs.Next() {
+			return nil
+		}
+	}
+}
+
+type toSeq[K1, V1, V2 any] struct {
+	seq.Seq[V2]
+	lhs Seq[K1, V1]
+	rhs func(K1, V1) seq.Seq[V2]
+}
+
+func (join *toSeq[K1, V1, V2]) Next() bool {
+	if !join.Seq.Next() {
+		for {
+			if !join.lhs.Next() {
+				return false
+			}
+
+			join.Seq = join.rhs(join.lhs.Key(), join.lhs.Value())
+			if join.Seq != nil {
+				return true
+			}
+		}
+	}
+
+	return true
+}
+
+// Left join sequence of elements  to sequence of pairs
+func FromSeq[K1, K2, V2 any](lhs seq.Seq[K1], rhs func(K1) Seq[K2, V2]) Seq[K2, V2] {
+	if lhs == nil {
+		return nil
+	}
+
+	join := &fromSeq[K1, K2, V2]{lhs: lhs, rhs: rhs}
+	for {
+		join.Seq = join.rhs(join.lhs.Value())
+		if join.Seq != nil {
+			return join
+		}
+
+		if !join.lhs.Next() {
+			return nil
+		}
+	}
+}
+
+type fromSeq[K1, K2, V2 any] struct {
+	Seq[K2, V2]
+	lhs seq.Seq[K1]
+	rhs func(K1) Seq[K2, V2]
+}
+
+func (join *fromSeq[K1, K2, V2]) Next() bool {
+	if !join.Seq.Next() {
+		for {
+			if !join.lhs.Next() {
+				return false
+			}
+
+			join.Seq = join.rhs(join.lhs.Value())
+			if join.Seq != nil {
+				return true
+			}
+		}
+	}
+
+	return true
+}

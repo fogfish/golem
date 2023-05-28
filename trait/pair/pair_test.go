@@ -214,3 +214,46 @@ func TestJoinNil(t *testing.T) {
 	)
 	it.Then(t).Should(it.Nil(e))
 }
+
+func TestToSeq(t *testing.T) {
+	for input, expect := range map[*[]int][]string{
+		{1, 2, 3}: {"1", "2", "3"},
+		{2, 4}:    {"2", "4"},
+		{2}:       {"2"},
+		{}:        {},
+	} {
+		e := pair.ToSeq(newSeqOf(*input),
+			func(k, v int) seq.Seq[string] {
+				return seq.From(strconv.Itoa(v))
+			},
+		)
+
+		r := make([]string, 0)
+		for has := e != nil; has; has = e.Next() {
+			r = append(r, e.Value())
+		}
+
+		it.Then(t).Should(
+			it.Seq(r).Equal(expect...),
+		)
+	}
+}
+
+func TestFromSeq(t *testing.T) {
+	for input, expect := range map[*[]int][]int{
+		{1, 2, 3}: {1, 2, 3},
+		{2, 4}:    {2, 4},
+		{2}:       {2},
+		{}:        {},
+	} {
+		e := pair.FromSeq(seq.From(*input),
+			func(v []int) pair.Seq[int, int] {
+				return newSeqOf(v)
+			},
+		)
+
+		it.Then(t).Should(
+			it.Seq(toSlice(e)).Equal(expect...),
+		)
+	}
+}
