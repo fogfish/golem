@@ -20,6 +20,7 @@ type T1 string
 type T2 string
 type Foo struct{ T1 }
 type Poo struct{ T2 }
+type Boo interface{ Boo() }
 type Bar struct {
 	Foo
 	*Poo
@@ -32,9 +33,10 @@ type Bar struct {
 	F7 int
 	F8 float32
 	F9 float64
+	FA Boo
 }
 
-var FIELDS = []string{"T1", "T2", "F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9"}
+var FIELDS = []string{"T1", "T2", "F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "FA"}
 
 func TestNew(t *testing.T) {
 
@@ -157,6 +159,16 @@ func TestNew(t *testing.T) {
 			it.Seq(seq).Equal("F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9"),
 		)
 	})
+
+	t.Run("New1/Interface", func(t *testing.T) {
+		seq := hseq.FMap(
+			hseq.New1[Bar, Boo](),
+			func(t hseq.Type[Bar]) string { return t.Name },
+		)
+		it.Then(t).Should(
+			it.Seq(seq).Equal("FA"),
+		)
+	})
 }
 
 type Getter[S, A any] struct{ hseq.Type[S] }
@@ -176,6 +188,13 @@ func TestFMap(t *testing.T) {
 		hseq.FMap1(
 			hseq.New[Bar]("F1"),
 			newGetter[Bar, string],
+		)
+	})
+
+	t.Run("FMap1/Interface", func(t *testing.T) {
+		hseq.FMap1(
+			hseq.New[Bar]("FA"),
+			newGetter[Bar, Boo],
 		)
 	})
 

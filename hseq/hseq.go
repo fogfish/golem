@@ -66,7 +66,7 @@ func unfold[T any](cat reflect.Type, seq Seq[T]) Seq[T] {
 
 func typeOf[T any](t T) reflect.Type {
 	typeof := reflect.TypeOf(t)
-	if typeof.Kind() == reflect.Ptr {
+	if /*typeof != nil &&*/ typeof.Kind() == reflect.Ptr {
 		typeof = typeof.Elem()
 	}
 
@@ -232,10 +232,14 @@ func AssertStrict[T, A any](t Type[T]) (string, reflect.Kind) {
 }
 
 func assertType[T, A any](t Type[T], strict bool) (string, reflect.Kind) {
-	a := reflect.TypeOf(*new(A))
 	k := t.Type
 	if !strict && k.Kind() == reflect.Ptr {
 		k = k.Elem()
+	}
+
+	a := reflect.TypeOf(new(A))
+	if a.Kind() != reflect.Interface {
+		a = a.Elem()
 	}
 
 	if k.Kind() != a.Kind() {
