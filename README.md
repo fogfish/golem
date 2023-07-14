@@ -14,7 +14,7 @@
     </a>
     <!-- Build Status  -->
     <a href="https://github.com/fogfish/golem/actions/">
-      <img src="https://github.com/fogfish/golem/workflows/build/badge.svg" />
+      <img src="https://github.com/fogfish/golem/workflows/test/badge.svg" />
     </a>
     <!-- GitHub -->
     <a href="http://github.com/fogfish/golem">
