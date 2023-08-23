@@ -42,36 +42,33 @@
 > You could do this with a macro, but...
 > the best macro is a macro you don't maintain
 
-**golem** is a pure functional and generic programming for Go. It had its origins in [Purely Functional Data Structures](https://www.cs.cmu.edu/~rwh/theses/okasaki.pdf) by Chris Okasaki, on implementing a various higher rank functional abstractions and patterns, on dealing with [scrap your boilerplate](https://www.microsoft.com/en-us/research/publication/scrap-your-boilerplate-with-class/) and gaining experience from other functional languages primary Scala, Haskell and heavily inspired by Erlang twin library [datum](https://github.com/fogfish/datum). Golem is testing the limits of functional abstractions in Go.
+**Golem** is a purely functional and generic programming library for Go. It has its origins in [Purely Functional Data Structures](okasaki.pdf) by Chris Okasaki, and implements various functional abstractions and patterns, deals with [scrap your boilerplate](https://www.microsoft.com/en-us/research/publication/scrap-your-boilerplate-with-class/) and benefits from the experience of other functional languages, primary Scala, Haskell and also heavily inspired by the Erlang library [datum](https://github.com/fogfish/datum). Golem is testing the limits of functional abstractions in Go.
 
 
 ## Inspiration
 
-[Functional Programming](https://en.wikipedia.org/wiki/Functional_programming) is a declarative style of development that uses side-effect free functions to express solution of the problem domain. The [core concepts](http://www.se-radio.net/2007/07/episode-62-martin-odersky-on-scala/) of functional programming are elaborated by Martin Odersky - First class and high-order **functions** and **immutability**. Another  key feature in functional programming is the **composition** - a style of development to build a new things from small reusable elements. Functional code looks great only if functions clearly describe your problem. Usually lines of code per function is only a single metric that reflects [quality of the code](https://blog.usejournal.com/solving-embarrassingly-obvious-problems-in-erlang-e3f21a6203cc)
+[Functional Programming](https://en.wikipedia.org/wiki/Functional_programming) is a declarative style of development that uses side effect free functions to express the solution of the problem domain. The [core concepts](http://www.se-radio.net/2007/07/episode-62-martin-odersky-on-scala/) of functional programming are elaborated by Martin Odersky - First class and high-order **functions** and **immutability**. Another  key feature in functional programming is the **composition** - a style of development to build new things from small reusable elements. Functional code looks great only if functions clearly describe your problem. Usually, lines of code per function is only a single metric that reflects the [quality of the code](https://blog.usejournal.com/solving-embarrassingly-obvious-problems-in-erlang-e3f21a6203cc)
 
 > If your functions have more than a few lines of code (a maximum of four to five lines per function is a good benchmark), you need to look more closely — chances are you have an opportunity to factor them into smaller, more tightly focused functions
 
-This is because functions describe the solution to your problem. If your code contains many lines then highly likely you are solving few problems without articulating them. A critical thinking is the process of software development - [Write small blocks of code](https://blog.ploeh.dk/2019/11/04/the-80-24-rule/).
+This is because functions describe the solution to your problem. If your code contains many lines, then it is highly likely, that you are solving few problems without explicitly articulating them. And critical thinking is the process of software development - [Write small blocks of code](https://blog.ploeh.dk/2019/11/04/the-80-24-rule/).
 
-Functional style programming can be achieved in any language, including Go. Golang's [structural type system](https://en.wikipedia.org/wiki/Structural_type_system) helps to reject invalid programs at compilation time. One of the challenge here, Go's structures, arrays, slices and maps embrace mutability rather than restricting it. Scala is a good example of the language that uses imperative runtime but provide data structure implementations that internally prevent mutation. This is a perfect approach to achieve immutability and performance through well-defined scopes. All-in-all, Go is a general purpose language with simple building blocks. This library uses these blocks to implement a functional style of development with the goal of simplicity in mind.
+Functional style programming can be achieved in any language, including Go. Golang's [structural type system](https://en.wikipedia.org/wiki/Structural_type_system) helps to reject invalid programs at compilation time. One of the challenge here is, that Go's structures, arrays, slices and maps embrace mutability rather than restricting it. Scala is a good example of the language that uses an imperative runtime but provides data structure implementations that inherently avoid mutation. This is a perfect approach to achieve immutability and performance through well-defined scopes. All-in-all, Go is a general purpose language with simple building blocks. This library uses these blocks to implement a functional style of development with the goal of simplicity in mind.
 
 ## Key features
 
 * [Type classes](doc/typeclass.md) and [higher-kinded polymorphism](doc/higher-kinded-polymorphism.md)
-* [Type combinators](doc/combinator.md) delivers powerful patterns for functional programming.
-
-<!--
+* [Type combinators](doc/combinator.md) deliver powerful patterns for functional programming.
 * [Monoid](doc/monoid.md) for structural transformation.
-* [Seq](https://godoc.org/github.com/fogfish/golem/seq) is a special case for slice that support convenient methods. 
--->
+* [Seq](https://godoc.org/github.com/fogfish/golem/hseq) is a special case for slice that support convenient methods. 
 
 ## Getting started
 
 The library requires **Go 1.18** or  later due to usage of [generics](https://go.dev/blog/intro-generics).
 
-The latest version of the library is available at `main` branch. All development, including new features and bug fixes, take place on the `main` branch using forking and pull requests as described in contribution guidelines. The stable version is available via Golang modulesy 
+The latest version of the library is available at `main` branch. All development, including new features and bug fixes, take place on the `main` branch using forking and pull requests as described in contribution guidelines. The stable version is available via Golang modules. 
 
-1. Use `go get` to retrieve the library and add it as dependency to your application.
+1. Use `go get` to retrieve the library and add it as a dependency to your application.
 
 ```bash
 go get -u github.com/fogfish/golem/{submodule}
@@ -89,10 +86,10 @@ import (
 
 See the [library documentation](https://pkg.go.dev/github.com/fogfish/golem)
 
-* [hseq](hseq/README.md) Heterogenous Sequence
+* [hseq](hseq/README.md) Heterogeneous sequence
 * [optics](optics/README.md) Optics for Golang
-* [pipe](pipe/README.md) Type Safe Channels
-* [pure](pure/README.md) Pure Functional Abstractions
+* [pipe](pipe/README.md) Type safe channels
+* [pure](pure/README.md) Purely functional abstractions
 
 
 ## How To Contribute
@@ -133,20 +130,20 @@ https://www.cs.cmu.edu/~ckingsf/bioinfo-lectures/skiplists.pdf
 https://github.com/avelino/awesome-go#networking
 
 
-Research on the interface of golang
+Research on the interface of Golang
 https://laptrinhx.com/research-on-the-interface-of-golang-4184713904/
 
 
 Category Theory 10.1: Monads
 https://www.youtube.com/watch?v=gHiyzctYqZ0&list=PLbgaMIhjbmEnaH_LTkxLI7FMa2HsnawM_&index=21&t=4s
 
-TypeScript on Steroids
+TypeScript on steroids
 https://dev.to/gcanti/getting-started-with-fp-ts-setoid-39f3
 https://dev.to/gcanti/functional-design-combinators-14pn
 https://dev.to/gcanti/getting-started-with-fp-ts-setoid-39f3
 https://dev.to/gcanti/functional-design-combinators-14pn
 
-Scala Cats Monoid
+Scala Cats
 https://typelevel.org/cats/typeclasses.html
 https://typelevel.org/cats/typeclasses/monoid.html
 https://typelevel.org/cats/typeclasses/semigroup.html
