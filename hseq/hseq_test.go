@@ -16,6 +16,170 @@ import (
 	"github.com/fogfish/it/v2"
 )
 
+//
+// ForType[A, T] selector
+//
+
+func forType[A any]() func(t *testing.T) {
+	type T struct {
+		F1 A
+		F2 *A
+		F3 []A
+		F4 *[]A
+	}
+	seq := hseq.New[T]()
+
+	return func(t *testing.T) {
+		for expect, tt := range map[string]hseq.Type[T]{
+			"F1": hseq.ForType[A, T](seq),
+			"F2": hseq.ForType[*A, T](seq),
+			"F3": hseq.ForType[[]A, T](seq),
+			"F4": hseq.ForType[*[]A, T](seq),
+		} {
+			it.Then(t).Should(
+				it.Equal(tt.Name, expect),
+			)
+		}
+	}
+}
+
+func TestForType(t *testing.T) {
+	type S string
+	t.Run("String", forType[string]())
+	t.Run("StringAlias", forType[S]())
+	t.Run("Bool", forType[bool]())
+	t.Run("Int8", forType[int8]())
+	t.Run("UInt8", forType[uint8]())
+	t.Run("Byte", forType[byte]())
+	t.Run("Int16", forType[int16]())
+	t.Run("UInt16", forType[uint16]())
+	t.Run("Int32", forType[int32]())
+	t.Run("Rune", forType[rune]())
+	t.Run("UInt32", forType[uint32]())
+	t.Run("Int64", forType[int64]())
+	t.Run("UInt64", forType[uint64]())
+	t.Run("Int", forType[int]())
+	t.Run("UInt", forType[uint]())
+	t.Run("UIntPtr", forType[uintptr]())
+	t.Run("Float32", forType[float32]())
+	t.Run("Float64", forType[float64]())
+	t.Run("Complex64", forType[complex64]())
+	t.Run("Complex128", forType[complex128]())
+
+	type Struct struct{ A string }
+	t.Run("StructNoName", forType[struct{ A string }]())
+	t.Run("Struct", forType[Struct]())
+
+	type Interface interface{ A() string }
+	t.Run("InterfaceNoName", forType[interface{ A() string }]())
+	t.Run("Interface", forType[Interface]())
+
+	t.Run("Embedded", func(t *testing.T) {
+		type S string
+		type I int
+		type A struct{ S }
+		type B struct{ I }
+		type T struct {
+			A
+			*B
+		}
+
+		seq := hseq.New[T]()
+
+		for expect, tt := range map[string]hseq.Type[T]{
+			"S": hseq.ForType[S, T](seq),
+			"I": hseq.ForType[I, T](seq),
+		} {
+			it.Then(t).Should(
+				it.Equal(tt.Name, expect),
+			)
+		}
+	})
+}
+
+//
+// ForName[T] selector
+//
+
+func forName[A any]() func(t *testing.T) {
+	type T struct {
+		F1 A
+		F2 *A
+		F3 []A
+		F4 *[]A
+	}
+	seq := hseq.New[T]()
+
+	return func(t *testing.T) {
+		for field, kind := range map[string]reflect.Type{
+			"F1": reflect.TypeOf(new(A)).Elem(),
+			"F2": reflect.TypeOf(new(*A)).Elem(),
+			"F3": reflect.TypeOf(new([]A)).Elem(),
+			"F4": reflect.TypeOf(new(*[]A)).Elem(),
+		} {
+			tt := hseq.ForName[T](seq, field)
+
+			it.Then(t).Should(
+				it.Equal(tt.Name, field),
+				it.Equal(tt.Type, kind),
+			)
+		}
+	}
+}
+
+func TestForName(t *testing.T) {
+	type S string
+	t.Run("String", forName[string]())
+	t.Run("StringAlias", forName[S]())
+	t.Run("Bool", forName[bool]())
+	t.Run("Int8", forName[int8]())
+	t.Run("UInt8", forName[uint8]())
+	t.Run("Byte", forName[byte]())
+	t.Run("Int16", forName[int16]())
+	t.Run("UInt16", forName[uint16]())
+	t.Run("Int32", forName[int32]())
+	t.Run("Rune", forName[rune]())
+	t.Run("UInt32", forName[uint32]())
+	t.Run("Int64", forName[int64]())
+	t.Run("UInt64", forName[uint64]())
+	t.Run("Int", forName[int]())
+	t.Run("UInt", forName[uint]())
+	t.Run("UIntPtr", forName[uintptr]())
+	t.Run("Float32", forName[float32]())
+	t.Run("Float64", forName[float64]())
+	t.Run("Complex64", forName[complex64]())
+	t.Run("Complex128", forName[complex128]())
+
+	type Struct struct{ A string }
+	t.Run("StructNoName", forName[struct{ A string }]())
+	t.Run("Struct", forName[Struct]())
+
+	type Interface interface{ A() string }
+	t.Run("InterfaceNoName", forName[interface{ A() string }]())
+	t.Run("Interface", forName[Interface]())
+
+	t.Run("Embedded", func(t *testing.T) {
+		type S string
+		type I int
+		type A struct{ S }
+		type B struct{ I }
+		type T struct {
+			A
+			*B
+		}
+
+		seq := hseq.New[T]()
+		it.Then(t).Should(
+			it.Equal(hseq.ForName[T](seq, "S").Name, "S"),
+			it.Equal(hseq.ForName[T](seq, "I").Name, "I"),
+		)
+	})
+}
+
+//
+// New
+//
+
 type T1 string
 type T2 string
 type Foo struct{ T1 }
