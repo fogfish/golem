@@ -18,7 +18,7 @@ type B struct { string }
 The module is an enabler for building generic algorithms over equivalent types avoiding repetition. For example,
 * Building an optics abstraction requires definition of `Lens[T, A]`. The `hseq` module simplifies the type safe implementation allowing to lift any type `A` from the product `T`.
 * Building Domain Specific Language might require exposure of type safe utilities over subset of product attributes.
-* Implement genetic and type safe witness of type `T` (e.g. pair T, A). 
+* Implement generic and type safe witness of type `T` (e.g. pair T, A). 
 
 ## Getting Started
 
@@ -43,7 +43,7 @@ var (
   // lookup sequence using type hint A
   a = hseq.ForType[T, A](seq)
   // lookup sequence using name hint "B"
-  b = hseq.ForName[T, B](seq, "B")
+  b = hseq.ForName[T](seq, "B")
 )
 ```
 

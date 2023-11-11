@@ -14,19 +14,20 @@ import (
 )
 
 // Type element of product type, a type safe wrapper of reflect.StructField
+// Type safe wrapper prevents reflect.StructField to be used outside of original type T context.
 type Type[T any] struct {
 	reflect.StructField
-	PureType reflect.Type
 
-	ID int // TODO: rename to Index
+	PureType reflect.Type
+	ID       int
 }
 
 // Heterogenous projection of product type
 type Seq[T any] []Type[T]
 
-// Unfold type T to heterogenous sequence
+// Unfold type T to heterogenous sequence using field names
 func New[T any](names ...string) Seq[T] {
-	cat := typeOf(*new(T))
+	cat := reflect.TypeOf(new(T)).Elem()
 	seq := make(Seq[T], 0)
 	seq = unfold(cat, seq)
 
@@ -62,15 +63,6 @@ func unfold[T any](cat reflect.Type, seq Seq[T]) Seq[T] {
 	}
 
 	return seq
-}
-
-func typeOf[T any](t T) reflect.Type {
-	typeof := reflect.TypeOf(t)
-	if /*typeof != nil &&*/ typeof.Kind() == reflect.Ptr {
-		typeof = typeof.Elem()
-	}
-
-	return typeof
 }
 
 // Unfold type T to heterogenous sequence
@@ -183,20 +175,17 @@ func New9[T, A, B, C, D, E, F, G, H, I any]() Seq[T] {
 
 // Lookup type heterogenous sequence by "witness" type
 func ForType[A, T any](seq Seq[T]) Type[T] {
-	val := typeOf(new(A))
+	// Note: new(A) always create pointer to A (*A)
+	val := reflect.TypeOf(new(A)).Elem()
 
 	for _, f := range seq {
 		ft := f.Type
-		if ft.Kind() == reflect.Pointer {
-			ft = ft.Elem()
-		}
-
 		if ft.String() == val.String() && ft.AssignableTo(val) {
 			return f
 		}
 	}
 
-	cat := typeOf(*new(T))
+	cat := reflect.TypeOf(new(T)).Elem()
 	panic(fmt.Errorf("%s is not member of %s type", val.Name(), cat.Name()))
 }
 
@@ -208,7 +197,7 @@ func ForName[T any](seq Seq[T], field string) Type[T] {
 		}
 	}
 
-	cat := typeOf(*new(T))
+	cat := reflect.TypeOf(new(T)).Elem()
 	panic(fmt.Errorf("%s is not member of %s type", field, cat.Name()))
 }
 
@@ -243,7 +232,7 @@ func assertType[T, A any](t Type[T], strict bool) (string, reflect.Kind) {
 	}
 
 	if k.Kind() != a.Kind() {
-		s := typeOf(*new(T))
+		s := reflect.TypeOf(new(T)).Elem()
 		panic(
 			fmt.Errorf("type %s is not equal %s at %s.%s",
 				t.Type.Kind(), a.Kind(), s.Name(), t.StructField.Name,
