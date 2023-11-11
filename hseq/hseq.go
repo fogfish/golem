@@ -18,6 +18,7 @@ import (
 type Type[T any] struct {
 	reflect.StructField
 
+	RootOffs uintptr
 	PureType reflect.Type
 	ID       int
 }
@@ -29,7 +30,7 @@ type Seq[T any] []Type[T]
 func New[T any](names ...string) Seq[T] {
 	cat := reflect.TypeOf(new(T)).Elem()
 	seq := make(Seq[T], 0)
-	seq = unfold(cat, seq)
+	seq = unfold(cat, seq, 0)
 
 	if len(names) == 0 {
 		return seq
@@ -43,7 +44,7 @@ func New[T any](names ...string) Seq[T] {
 	return nseq
 }
 
-func unfold[T any](cat reflect.Type, seq Seq[T]) Seq[T] {
+func unfold[T any](cat reflect.Type, seq Seq[T], offset uintptr) Seq[T] {
 	for i := 0; i < cat.NumField(); i++ {
 		fv := cat.Field(i)
 		ft := cat.Field(i).Type
@@ -52,10 +53,11 @@ func unfold[T any](cat reflect.Type, seq Seq[T]) Seq[T] {
 		}
 
 		if fv.Anonymous && ft.Kind() == reflect.Struct {
-			seq = unfold(ft, seq)
+			seq = unfold(ft, seq, offset+fv.Offset)
 		} else {
 			seq = append(seq, Type[T]{
 				StructField: fv,
+				RootOffs:    offset,
 				PureType:    ft,
 				ID:          len(seq),
 			})
