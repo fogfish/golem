@@ -1,3 +1,11 @@
+//
+// Copyright (C) 2022 - 2023 Dmitry Kolesnikov
+//
+// This file may be modified and distributed under the terms
+// of the MIT license.  See the LICENSE file for details.
+// https://github.com/fogfish/golem
+//
+
 package optics_test
 
 import (
@@ -6,65 +14,77 @@ import (
 	"github.com/fogfish/golem/optics"
 )
 
-type MyT1 struct{ Name string }
+type S1 string
+type S2 string
+type S3 string
+type S4 string
+type S5 string
 
-type MyT5 struct{ A, B, C, D, E string }
+type BT1 struct {
+	S1
+}
+
+type BT5 struct {
+	S1
+	S2
+	S3
+	S4
+	S5
+}
 
 var (
-	name      = optics.ForProduct1[MyT1, string]()
-	morphMyT1 = optics.Morphisms[MyT1]{
-		optics.Morph(name, "hello"),
-	}
-	a, b, c, d, e = optics.ForProduct5[MyT5, string, string, string, string, string]()
-	morphMyT5     = optics.Morphisms[MyT5]{
-		optics.Morph(a, "a"),
-		optics.Morph(b, "b"),
-		optics.Morph(c, "c"),
-		optics.Morph(d, "d"),
-		optics.Morph(e, "e"),
-	}
+	bt1 = optics.ForProduct1[BT1, S1]()
+	bt5 = optics.ForShape5[BT5, S1, S2, S3, S4, S5]()
 )
 
 func BenchmarkLensPutForProduct1(mb *testing.B) {
-	var val MyT1
+	var val BT1
+
+	bt1.Put(&val, "string")
+	if val.S1 != "string" {
+		panic("lens failed")
+	}
 
 	mb.ReportAllocs()
 	mb.ResetTimer()
 
 	for i := 0; i < mb.N; i++ {
-		_ = name.Put(&val, "name")
+		bt1.Put(&val, "string")
 	}
 }
 
 func BenchmarkLensGetForProduct1(mb *testing.B) {
-	val := MyT1{Name: "name"}
+	val := BT1{S1: "string"}
 
+	if bt1.Get(&val) != "string" {
+		panic("lens failed")
+	}
 	mb.ReportAllocs()
 	mb.ResetTimer()
 
 	for i := 0; i < mb.N; i++ {
-		_ = name.Get(&val)
+		val.S1 = bt1.Get(&val)
 	}
 }
 
-func BenchmarkMorphismForProduct1(mb *testing.B) {
-	var val MyT1
+func BenchmarkShapePutForProduct1(mb *testing.B) {
+	var val BT5
 
 	mb.ReportAllocs()
 	mb.ResetTimer()
 
 	for i := 0; i < mb.N; i++ {
-		_ = morphMyT1.Put(&val)
+		bt5.Put(&val, "string1", "string2", "string3", "string4", "string5")
 	}
 }
 
-func BenchmarkMorphismForProduct5(mb *testing.B) {
-	var val MyT5
+func BenchmarkShapeGetForProduct5(mb *testing.B) {
+	var val = BT5{S1: "string1", S2: "string2", S3: "string3", S4: "string4", S5: "string5"}
 
 	mb.ReportAllocs()
 	mb.ResetTimer()
 
 	for i := 0; i < mb.N; i++ {
-		_ = morphMyT5.Put(&val)
+		val.S1, val.S2, val.S3, val.S4, val.S5 = bt5.Get(&val)
 	}
 }

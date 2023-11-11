@@ -1,230 +1,56 @@
+//
+// Copyright (C) 2022 - 2023 Dmitry Kolesnikov
+//
+// This file may be modified and distributed under the terms
+// of the MIT license.  See the LICENSE file for details.
+// https://github.com/fogfish/golem
+//
+
 package optics
 
 import (
 	"fmt"
 	"reflect"
+	"unsafe"
 
 	"github.com/fogfish/golem/hseq"
 )
 
-/*
-Lens resembles concept of getters and setters, which you can compose
-using functional concepts. In other words, this is combinator data
-transformation for pure functional data structure.
-*/
+// Lens resembles concept of getters and setters, which you can compose
+// using functional concepts. In other words, this is combinator data
+// transformation for pure functional data structure.
+//
+// Lens allows to abstract a "shape" of the structure rather than type itself.
 type Lens[S, A any] interface {
 	Get(*S) A
-	Put(*S, A) error
+	Put(*S, A) *S
 }
 
-/*
-Reflector is a Lens over reflect.Value
-*/
-type Reflector[A any] interface {
-	GetValue(reflect.Value) A
-	PutValue(reflect.Value, A) error
-}
+type lens[S, A any] struct{ hseq.Type[S] }
 
 // NewLens instantiates a typed Lens[S, A] for hseq.Type[S]
 func NewLens[S, A any](t hseq.Type[S]) Lens[S, A] {
-	name, kind := hseq.Assert[S, A](t)
-	switch kind {
-	case reflect.String:
-		if name == "string" {
-			return NewLensStructString(t).(Lens[S, A])
-		}
-		return NewLensStruct[S, A](t)
-	case reflect.Int:
-		if name == "int" {
-			return NewLensStructInt(t).(Lens[S, A])
-		}
-		return NewLensStruct[S, A](t)
-	case reflect.Float64:
-		if name == "float64" {
-			return NewLensStructFloat64(t).(Lens[S, A])
-		}
-		return NewLensStruct[S, A](t)
-	case reflect.Struct:
-		return NewLensStruct[S, A](t)
-	default:
-		panic(fmt.Errorf("unknown lens type %v", t.Type.Name()))
-	}
-}
+	ft := t.Type
+	fv := reflect.TypeOf(new(A)).Elem()
 
-/*
-lensStructString implements lens for string type
-*/
-type lensStructString[S any] struct{ hseq.Type[S] }
-
-func NewLensStructString[S any](t hseq.Type[S]) Lens[S, string] {
-	return &lensStructString[S]{t}
-}
-
-// Put string to struct
-func (lens *lensStructString[S]) Put(s *S, a string) error {
-	return lens.PutValue(reflect.ValueOf(s), a)
-}
-
-func (lens *lensStructString[S]) PutValue(g reflect.Value, a string) error {
-	f := g.Elem().Field(lens.ID)
-
-	if f.Kind() == reflect.Ptr {
-		p := reflect.New(lens.PureType)
-		p.Elem().SetString(a)
-		f.Set(p)
-		return nil
+	if ft.String() == fv.String() && ft.AssignableTo(fv) {
+		return &lens[S, A]{t}
 	}
 
-	f.SetString(a)
-	return nil
+	cat := reflect.TypeOf(new(S)).Elem()
+	panic(fmt.Errorf("invalid type: Lens[%s, %s] not compatible with %s", cat.Name(), ft.Name(), fv.Name()))
 }
 
-// Get string from struct
-func (lens *lensStructString[S]) Get(s *S) string {
-	return lens.GetValue(reflect.ValueOf(s))
+func (lens *lens[S, A]) Put(s *S, a A) *S {
+	*(*A)(unsafe.Pointer(uintptr(unsafe.Pointer(s)) + lens.Offset + lens.RootOffs)) = a
+	return s
 }
 
-func (lens *lensStructString[S]) GetValue(g reflect.Value) string {
-	f := g.Elem().Field(lens.ID)
-
-	if f.Kind() == reflect.Ptr {
-		return f.Elem().String()
-	}
-
-	return f.String()
+func (lens *lens[S, A]) Get(s *S) A {
+	return *(*A)(unsafe.Pointer(uintptr(unsafe.Pointer(s)) + lens.Offset + lens.RootOffs))
 }
 
-/*
-lensStructFloat64 implements lens for float type
-*/
-type lensStructInt[S any] struct{ hseq.Type[S] }
-
-func NewLensStructInt[S any](t hseq.Type[S]) Lens[S, int] {
-	return &lensStructInt[S]{t}
-}
-
-// Put int to struct
-func (lens *lensStructInt[S]) Put(s *S, a int) error {
-	return lens.PutValue(reflect.ValueOf(s), a)
-}
-
-func (lens *lensStructInt[S]) PutValue(g reflect.Value, a int) error {
-	f := g.Elem().Field(lens.ID)
-
-	if f.Kind() == reflect.Ptr {
-		p := reflect.New(lens.PureType)
-		p.Elem().SetInt(int64(a))
-		f.Set(p)
-		return nil
-	}
-
-	f.SetInt(int64(a))
-	return nil
-}
-
-// Get float64 from struct
-func (lens *lensStructInt[S]) Get(s *S) int {
-	return lens.GetValue(reflect.ValueOf(s))
-}
-
-func (lens *lensStructInt[S]) GetValue(g reflect.Value) int {
-	f := g.Elem().Field(lens.ID)
-
-	if f.Kind() == reflect.Ptr {
-		return int(f.Elem().Int())
-	}
-
-	return int(f.Int())
-}
-
-/*
-lensStructFloat64 implements lens for float type
-*/
-type lensStructFloat64[S any] struct{ hseq.Type[S] }
-
-func NewLensStructFloat64[S any](t hseq.Type[S]) Lens[S, float64] {
-	return &lensStructFloat64[S]{t}
-}
-
-// Put float64 to struct
-func (lens *lensStructFloat64[S]) Put(s *S, a float64) error {
-	return lens.PutValue(reflect.ValueOf(s), a)
-}
-
-func (lens *lensStructFloat64[S]) PutValue(g reflect.Value, a float64) error {
-	f := g.Elem().Field(lens.ID)
-
-	if f.Kind() == reflect.Ptr {
-		p := reflect.New(lens.PureType)
-		p.Elem().SetFloat(a)
-		f.Set(p)
-		return nil
-	}
-
-	f.SetFloat(a)
-	return nil
-}
-
-// Get float64 from struct
-func (lens *lensStructFloat64[S]) Get(s *S) float64 {
-	return lens.GetValue(reflect.ValueOf(s))
-}
-
-func (lens *lensStructFloat64[S]) GetValue(g reflect.Value) float64 {
-	f := g.Elem().Field(lens.ID)
-
-	if f.Kind() == reflect.Ptr {
-		return f.Elem().Float()
-	}
-
-	return f.Float()
-}
-
-/*
-lensStructFloat64 implements lens for float type
-*/
-type lensStruct[S, A any] struct{ hseq.Type[S] }
-
-func NewLensStruct[S, A any](t hseq.Type[S]) Lens[S, A] {
-	return &lensStruct[S, A]{t}
-}
-
-// Put reflect.Value to struct
-func (lens *lensStruct[S, A]) Put(s *S, a A) error {
-	return lens.PutValue(reflect.ValueOf(s), a)
-}
-func (lens *lensStruct[S, A]) PutValue(g reflect.Value, a A) error {
-	f := g.Elem().Field(lens.ID)
-
-	if f.Kind() == reflect.Ptr {
-		if lens.Type.Type.Kind() == reflect.Ptr {
-			f.Set(reflect.ValueOf(&a))
-		} else {
-			f.Set(reflect.ValueOf(a))
-		}
-		return nil
-	}
-
-	f.Set(reflect.ValueOf(a))
-	return nil
-}
-
-// Get reflect.Value from struct
-func (lens *lensStruct[S, A]) Get(s *S) A {
-	return lens.GetValue(reflect.ValueOf(s))
-}
-
-func (lens *lensStruct[S, A]) GetValue(g reflect.Value) A {
-	f := g.Elem().Field(lens.ID)
-
-	if f.Kind() == reflect.Ptr {
-		return f.Elem().Interface().(A)
-	}
-
-	return f.Interface().(A)
-}
-
-// ForProduct1 unfold 1 attribute of type
+// ForProduct1 unfold 1 attribute of type T
 func ForProduct1[T, A any](attr ...string) Lens[T, A] {
 	var seq hseq.Seq[T]
 
@@ -239,7 +65,7 @@ func ForProduct1[T, A any](attr ...string) Lens[T, A] {
 	)
 }
 
-// ForProduct2 unfold 2 attribute of type
+// ForProduct2 unfold 2 attribute of type T
 func ForProduct2[T, A, B any](attr ...string) (
 	Lens[T, A],
 	Lens[T, B],
@@ -258,6 +84,7 @@ func ForProduct2[T, A, B any](attr ...string) (
 	)
 }
 
+// ForProduct3 unfold 3 attribute of type T
 func ForProduct3[T, A, B, C any](attr ...string) (
 	Lens[T, A],
 	Lens[T, B],
@@ -278,6 +105,7 @@ func ForProduct3[T, A, B, C any](attr ...string) (
 	)
 }
 
+// ForProduct4 unfold 4 attribute of type T
 func ForProduct4[T, A, B, C, D any](attr ...string) (
 	Lens[T, A],
 	Lens[T, B],
@@ -300,6 +128,7 @@ func ForProduct4[T, A, B, C, D any](attr ...string) (
 	)
 }
 
+// ForProduct5 unfold 5 attribute of type T
 func ForProduct5[T, A, B, C, D, E any](attr ...string) (
 	Lens[T, A],
 	Lens[T, B],
@@ -324,6 +153,7 @@ func ForProduct5[T, A, B, C, D, E any](attr ...string) (
 	)
 }
 
+// ForProduct6 unfold 6 attribute of type T
 func ForProduct6[T, A, B, C, D, E, F any](attr ...string) (
 	Lens[T, A],
 	Lens[T, B],
@@ -350,6 +180,7 @@ func ForProduct6[T, A, B, C, D, E, F any](attr ...string) (
 	)
 }
 
+// ForProduct7 unfold 7 attribute of type T
 func ForProduct7[T, A, B, C, D, E, F, G any](attr ...string) (
 	Lens[T, A],
 	Lens[T, B],
@@ -378,6 +209,7 @@ func ForProduct7[T, A, B, C, D, E, F, G any](attr ...string) (
 	)
 }
 
+// ForProduct8 unfold 8 attribute of type T
 func ForProduct8[T, A, B, C, D, E, F, G, H any](attr ...string) (
 	Lens[T, A],
 	Lens[T, B],
@@ -408,6 +240,7 @@ func ForProduct8[T, A, B, C, D, E, F, G, H any](attr ...string) (
 	)
 }
 
+// ForProduct9 unfold 9 attribute of type T
 func ForProduct9[T, A, B, C, D, E, F, G, H, I any](attr ...string) (
 	Lens[T, A],
 	Lens[T, B],
