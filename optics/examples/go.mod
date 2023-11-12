@@ -1,6 +1,6 @@
 module github.com/fogfish/golem/optics/examples
 
-go 1.21.3
+go 1.21
 
 require (
 	github.com/fogfish/golem/optics v0.11.0

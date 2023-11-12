@@ -99,7 +99,13 @@ func main() {
 
 See runnable examples to play with the library
 * [basic lense usage](./examples/lenses/main.go)
-* [abstract shape of type](./examples/shapes/main.go), see problem statement [Abstract over Golang structure fields using optics](../doc/abstract-over-struct-fields-using-optics.md) for details.
+* [abstract shape of types](./examples/shapes/main.go), see problem statement [Abstract over Golang structure fields using optics](../doc/abstract-over-struct-fields-using-optics.md) for details.
+* [abstract shape of types (advanced)](./examples/emitter/main.go)
+
+## Changelog
+
+* optics/v0.10 and earlier uses `reflect` 
+* optics/v0.11 and later uses `unsafe` pointers
 
 ## References
 
