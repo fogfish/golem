@@ -1,230 +1,173 @@
+//
+// Copyright (C) 2022 - 2023 Dmitry Kolesnikov
+//
+// This file may be modified and distributed under the terms
+// of the MIT license.  See the LICENSE file for details.
+// https://github.com/fogfish/golem
+//
+
 package optics_test
 
 import (
+	"bytes"
 	"encoding/json"
-	"reflect"
+	"io"
 	"testing"
 
 	"github.com/fogfish/golem/optics"
-	"github.com/fogfish/it"
+	"github.com/fogfish/it/v2"
 )
 
-func TestLensesByType(t *testing.T) {
-	type Inner struct {
-		E, F, G string
-	}
+func lensLaws[A any](t *testing.T, some A) {
+	t.Helper()
 
-	type T struct {
-		A string
-		B int
-		C float64
-		D Inner
-	}
+	type T struct{ A A }
+	la := optics.ForProduct1[T, A]()
 
-	a, b, c, d := optics.ForProduct4[T, string, int, float64, Inner]()
+	// Law `GetPut`:
+	//  If we get focused element `A` from `S` and
+	//  immediately put `A` with no modifications back into `S`,
+	//  we must get back exactly `S`.
+	t.Run("GetPut", func(t *testing.T) {
+		tt := T{A: some}
+		la.Put(&tt, la.Get(&tt))
 
-	t.Run("String", func(t *testing.T) {
-		x := T{}
-
-		it.Ok(t).
-			If(a.Put(&x, "A")).Equal(nil).
-			If(x.A).Equal("A").
-			If(a.Get(&x)).Equal("A")
+		it.Then(t).Should(
+			it.Equiv(tt, T{A: some}),
+		)
 	})
 
-	t.Run("Int", func(t *testing.T) {
-		x := T{}
+	// Law `PutGet`:
+	//  If putting `A` inside `S` yields a new `S`,
+	//  then the `A` obtained from `S` is exactly `A`.
+	t.Run("PutGet", func(t *testing.T) {
+		tt := T{}
+		vv := la.Get(la.Put(&tt, some))
 
-		it.Ok(t).
-			If(b.Put(&x, 1234)).Equal(nil).
-			If(x.B).Equal(1234).
-			If(b.Get(&x)).Equal(1234)
+		it.Then(t).Should(
+			it.Equiv(vv, some),
+			it.Equiv(tt, T{A: some}),
+		)
 	})
 
-	t.Run("Float", func(t *testing.T) {
-		x := T{}
+	// Law `PutPut`:
+	//  A sequence of two puts is just the effect of the second,
+	//  the first is completely overwritten. This law is applicable
+	//  to every well behaving lenses.
+	t.Run("PutPut", func(t *testing.T) {
+		tt := T{}
+		la.Put(la.Put(&tt, *new(A)), some)
 
-		it.Ok(t).
-			If(c.Put(&x, 1234.0)).Equal(nil).
-			If(x.C).Equal(1234.0).
-			If(c.Get(&x)).Equal(1234.0)
-	})
-
-	t.Run("Struct", func(t *testing.T) {
-		x := T{}
-
-		it.Ok(t).
-			If(d.Put(&x, Inner{"E", "F", "G"})).Equal(nil).
-			If(x.D).Equal(Inner{"E", "F", "G"}).
-			If(d.Get(&x)).Equal(Inner{"E", "F", "G"})
-	})
-
-	t.Run("Struct.Codec", func(t *testing.T) {
-		x := T{}
-		l := newLensJSON(d)
-
-		it.Ok(t).
-			If(l.Put(&x, "{\"E\":\"E\",\"F\":\"F\",\"G\":\"G\"}")).Equal(nil).
-			If(x.D).Equal(Inner{"E", "F", "G"}).
-			If(l.Get(&x)).Equal("{\"E\":\"E\",\"F\":\"F\",\"G\":\"G\"}")
+		it.Then(t).Should(
+			it.Equiv(tt, T{A: some}),
+		)
 	})
 }
 
-func TestLensesByName(t *testing.T) {
-	type Inner struct {
-		E, F, G string
+func testLaws[A any](v A) func(t *testing.T) {
+	return func(t *testing.T) {
+		lensLaws[A](t, v)
+		lensLaws[*A](t, &v)
+		lensLaws[[]A](t, []A{v})
+		lensLaws[*[]A](t, &[]A{v})
 	}
+}
 
-	type T struct {
-		A *string
-		B *int
-		C *float64
-		D *Inner
-	}
+func TestLaws(t *testing.T) {
+	type String string
 
-	a, b, c, d := optics.ForProduct4[T, string, int, float64, Inner]("A", "B", "C", "D")
+	t.Run("String", testLaws[string]("string"))
+	t.Run("String", testLaws[String]("string"))
+	t.Run("Bool", testLaws[bool](true))
+	t.Run("Int8", testLaws[int8](10))
+	t.Run("UInt8", testLaws[uint8](10))
+	t.Run("Byte", testLaws[byte](10))
+	t.Run("Int16", testLaws[int16](10))
+	t.Run("UInt16", testLaws[uint16](10))
+	t.Run("Int32", testLaws[int32](10))
+	t.Run("Rune", testLaws[rune]('\u1234'))
+	t.Run("UInt32", testLaws[uint32](10))
+	t.Run("Int64", testLaws[int64](10))
+	t.Run("UInt64", testLaws[uint64](10))
+	type Int int
+	t.Run("Int", testLaws[int](10))
+	t.Run("Int", testLaws[Int](10))
+	t.Run("UInt", testLaws[uint](10))
+	t.Run("UIntPtr", testLaws[uintptr](10))
+	t.Run("Float32", testLaws[float32](10.0))
+	t.Run("Float64", testLaws[float64](10.0))
+	t.Run("Complex64", testLaws[complex64](10.0+11.0i))
+	t.Run("Complex128", testLaws[complex128](10.0+11.0i))
 
-	t.Run("String", func(t *testing.T) {
-		x := T{}
+	type Struct struct{ A string }
+	t.Run("StructNoName", testLaws[struct{ A string }](struct{ A string }{A: "string"}))
+	t.Run("Struct", testLaws[Struct](Struct{A: "string"}))
 
-		it.Ok(t).
-			If(a.Put(&x, "A")).Equal(nil).
-			If(*x.A).Equal("A").
-			If(a.Get(&x)).Equal("A")
-	})
+	t.Run("Interface", testLaws[io.Reader](&bytes.Buffer{}))
 
-	t.Run("Int", func(t *testing.T) {
-		x := T{}
+	t.Run("Embedded", func(t *testing.T) {
+		type S string
+		type I int
+		type A struct{ S }
+		type B struct{ I }
+		type T struct {
+			A
+			B
+			// Note: lens package does not support embedded pointers
+		}
 
-		it.Ok(t).
-			If(b.Put(&x, 1234)).Equal(nil).
-			If(*x.B).Equal(1234).
-			If(b.Get(&x)).Equal(1234)
-	})
+		la := optics.ForProduct1[T, S]()
+		lb := optics.ForProduct1[T, I]("I")
 
-	t.Run("Float", func(t *testing.T) {
-		x := T{}
+		t.Run("GetPut", func(t *testing.T) {
+			tt := T{A: A{"string"}, B: B{10}}
+			la.Put(&tt, la.Get(&tt))
+			lb.Put(&tt, lb.Get(&tt))
 
-		it.Ok(t).
-			If(c.Put(&x, 1234.0)).Equal(nil).
-			If(*x.C).Equal(1234.0).
-			If(c.Get(&x)).Equal(1234.0)
-	})
+			it.Then(t).Should(
+				it.Equiv(tt, T{A: A{"string"}, B: B{10}}),
+			)
+		})
 
-	t.Run("Struct", func(t *testing.T) {
-		x := T{}
+		t.Run("PutGet", func(t *testing.T) {
+			tt := T{}
+			va := la.Get(la.Put(&tt, "string"))
+			vb := lb.Get(lb.Put(&tt, 10))
 
-		it.Ok(t).
-			If(d.Put(&x, Inner{"E", "F", "G"})).Equal(nil).
-			If(*x.D).Equal(Inner{"E", "F", "G"}).
-			If(d.Get(&x)).Equal(Inner{"E", "F", "G"})
-	})
+			it.Then(t).Should(
+				it.Equal(va, "string"),
+				it.Equal(vb, 10),
+				it.Equiv(tt, T{A: A{"string"}, B: B{10}}),
+			)
+		})
 
-	t.Run("Struct.Codec", func(t *testing.T) {
-		x := T{}
-		l := newLensJSON(d)
+		t.Run("PutPut", func(t *testing.T) {
+			tt := T{}
+			la.Put(la.Put(&tt, "foobar"), "string")
+			lb.Put(lb.Put(&tt, 11), 10)
 
-		it.Ok(t).
-			If(l.Put(&x, "{\"E\":\"E\",\"F\":\"F\",\"G\":\"G\"}")).Equal(nil).
-			If(*x.D).Equal(Inner{"E", "F", "G"}).
-			If(l.Get(&x)).Equal("{\"E\":\"E\",\"F\":\"F\",\"G\":\"G\"}")
+			it.Then(t).Should(
+				it.Equiv(tt, T{A: A{"string"}, B: B{10}}),
+			)
+		})
 	})
 }
 
-func TestLensesCustomTypes(t *testing.T) {
-	type MyString string
-	type MyInt int
-	type MyFloat float64
+//
+//
+//
 
-	type T struct {
-		A MyString
-		B MyInt
-		C MyFloat
-	}
-
-	a, b, c := optics.ForProduct3[T, MyString, MyInt, MyFloat]()
-
-	t.Run("String", func(t *testing.T) {
-		x := T{}
-
-		it.Ok(t).
-			If(a.Put(&x, "A")).Equal(nil).
-			If(x.A).Equal(MyString("A")).
-			If(a.Get(&x)).Equal(MyString("A"))
-	})
-
-	t.Run("Int", func(t *testing.T) {
-		x := T{}
-
-		it.Ok(t).
-			If(b.Put(&x, 1234)).Equal(nil).
-			If(x.B).Equal(MyInt(1234)).
-			If(b.Get(&x)).Equal(MyInt(1234))
-	})
-
-	t.Run("Float", func(t *testing.T) {
-		x := T{}
-
-		it.Ok(t).
-			If(c.Put(&x, 1234.0)).Equal(nil).
-			If(x.C).Equal(MyFloat(1234.0)).
-			If(c.Get(&x)).Equal(MyFloat(1234.0))
-	})
-}
-
-func TestMorphism(t *testing.T) {
-	type T struct{ A string }
-	a := optics.ForProduct1[T, string]()
-
-	m := optics.Morph(a, "hello")
-
-	x := T{}
-	y := T{}
-
-	it.Ok(t).
-		If(m.Put(&x)).Equal(nil).
-		If(x.A).Equal("hello").
-		If(m.PutValue(reflect.ValueOf(&y))).Equal(nil).
-		If(y.A).Equal("hello")
-}
-
-func TestMorphisms(t *testing.T) {
-	type T struct {
-		A string
-		B int
-		C float64
-	}
-	a, b, c := optics.ForProduct3[T, string, int, float64]()
-
-	m := optics.Morphisms[T]{
-		optics.Morph(a, "hello"),
-		optics.Morph(b, 1234),
-		optics.Morph(c, 1234.0),
-	}
-
-	x := T{}
-
-	it.Ok(t).
-		If(m.Put(&x)).Equal(nil).
-		If(x.A).Equal("hello").
-		If(x.B).Equal(1234).
-		If(x.C).Equal(1234.0)
-}
-
-/*
-Custom Lens to parse JSON
-*/
 type lensStructJSON[S, A any] struct{ optics.Lens[S, A] }
 
 func newLensJSON[S, A any](l optics.Lens[S, A]) optics.Lens[S, string] {
 	return &lensStructJSON[S, A]{l}
 }
 
-func (l lensStructJSON[S, A]) Put(s *S, a string) error {
+func (l lensStructJSON[S, A]) Put(s *S, a string) *S {
 	var o A
 
 	if err := json.Unmarshal([]byte(a), &o); err != nil {
-		return err
+		panic(err)
 	}
 	return l.Lens.Put(s, o)
 }
@@ -238,209 +181,158 @@ func (l lensStructJSON[S, A]) Get(s *S) string {
 	return string(v)
 }
 
-func Test1(t *testing.T) {
-	type T struct{ A string }
-
-	a := optics.ForProduct1[
-		T,
-		string,
-	]("A")
-
-	for expect, f := range map[string]optics.Lens[T, string]{
-		"A": a,
-	} {
-		x := T{}
-
-		it.Ok(t).
-			If(f.Put(&x, expect)).Equal(nil).
-			If(f.Get(&x)).Equal(expect)
+func TestLensCompose(t *testing.T) {
+	type Inner struct {
+		E, F, G string
 	}
+
+	type T struct {
+		D *Inner
+	}
+
+	ld := newLensJSON(optics.ForProduct1[T, *Inner]())
+
+	t.Run("GetPut", func(t *testing.T) {
+		tt := T{D: &Inner{E: "E", F: "F", G: "G"}}
+		ld.Put(&tt, ld.Get(&tt))
+
+		it.Then(t).Should(
+			it.Equiv(tt, T{D: &Inner{E: "E", F: "F", G: "G"}}),
+		)
+	})
+
+	t.Run("PutGet", func(t *testing.T) {
+		tt := T{}
+		vv := ld.Get(ld.Put(&tt, "{\"E\":\"E\",\"F\":\"F\",\"G\":\"G\"}"))
+
+		it.Then(t).Should(
+			it.Equal(vv, "{\"E\":\"E\",\"F\":\"F\",\"G\":\"G\"}"),
+			it.Equiv(tt, T{D: &Inner{E: "E", F: "F", G: "G"}}),
+		)
+	})
+
+	t.Run("PutPut", func(t *testing.T) {
+		tt := T{}
+		ld.Put(ld.Put(&tt, "{\"E\":\"e\",\"F\":\"f\",\"G\":\"g\"}"), "{\"E\":\"E\",\"F\":\"F\",\"G\":\"G\"}")
+
+		it.Then(t).Should(
+			it.Equiv(tt, T{D: &Inner{E: "E", F: "F", G: "G"}}),
+		)
+	})
 }
 
-func Test2(t *testing.T) {
-	type T struct{ A, B string }
+func TestShape(t *testing.T) {
+	type T struct{ F1, F2, F3, F4, F5, F6, F7, F8, F9 int }
 
-	a, b := optics.ForProduct2[
-		T,
-		string,
-		string,
-	]("A", "B")
+	t.Run("Shape2", func(t *testing.T) {
+		ln := optics.ForShape2[T, int, int]("F1", "F2")
 
-	for expect, f := range map[string]optics.Lens[T, string]{
-		"A": a, "B": b,
-	} {
-		x := T{}
+		tt := T{}
+		a, b := ln.Get(
+			ln.Put(&tt, 1, 2),
+		)
 
-		it.Ok(t).
-			If(f.Put(&x, expect)).Equal(nil).
-			If(f.Get(&x)).Equal(expect)
-	}
-}
+		it.Then(t).Should(
+			it.Equiv(tt, T{1, 2, 0, 0, 0, 0, 0, 0, 0}),
+			it.Seq([]int{a, b}).Equal(1, 2),
+		)
+	})
 
-func Test3(t *testing.T) {
-	type T struct{ A, B, C string }
+	t.Run("Shape3", func(t *testing.T) {
+		ln := optics.ForShape3[T, int, int, int]("F1", "F2", "F3")
 
-	a, b, c := optics.ForProduct3[
-		T,
-		string,
-		string,
-		string,
-	]("A", "B", "C")
+		tt := T{}
+		a, b, c := ln.Get(
+			ln.Put(&tt, 1, 2, 3),
+		)
 
-	for expect, f := range map[string]optics.Lens[T, string]{
-		"A": a, "B": b, "C": c,
-	} {
-		x := T{}
+		it.Then(t).Should(
+			it.Equiv(tt, T{1, 2, 3, 0, 0, 0, 0, 0, 0}),
+			it.Seq([]int{a, b, c}).Equal(1, 2, 3),
+		)
+	})
 
-		it.Ok(t).
-			If(f.Put(&x, expect)).Equal(nil).
-			If(f.Get(&x)).Equal(expect)
-	}
-}
+	t.Run("Shape4", func(t *testing.T) {
+		ln := optics.ForShape4[T, int, int, int, int]("F1", "F2", "F3", "F4")
 
-func Test4(t *testing.T) {
-	type T struct{ A, B, C, D string }
+		tt := T{}
+		a, b, c, d := ln.Get(
+			ln.Put(&tt, 1, 2, 3, 4),
+		)
 
-	a, b, c, d := optics.ForProduct4[
-		T,
-		string,
-		string,
-		string,
-		string,
-	]("A", "B", "C", "D")
+		it.Then(t).Should(
+			it.Equiv(tt, T{1, 2, 3, 4, 0, 0, 0, 0, 0}),
+			it.Seq([]int{a, b, c, d}).Equal(1, 2, 3, 4),
+		)
+	})
 
-	for expect, f := range map[string]optics.Lens[T, string]{
-		"A": a, "B": b, "C": c, "D": d,
-	} {
-		x := T{}
+	t.Run("Shape5", func(t *testing.T) {
+		ln := optics.ForShape5[T, int, int, int, int, int]("F1", "F2", "F3", "F4", "F5")
 
-		it.Ok(t).
-			If(f.Put(&x, expect)).Equal(nil).
-			If(f.Get(&x)).Equal(expect)
-	}
-}
+		tt := T{}
+		a, b, c, d, e := ln.Get(
+			ln.Put(&tt, 1, 2, 3, 4, 5),
+		)
 
-func Test5(t *testing.T) {
-	type T struct{ A, B, C, D, E string }
+		it.Then(t).Should(
+			it.Equiv(tt, T{1, 2, 3, 4, 5, 0, 0, 0, 0}),
+			it.Seq([]int{a, b, c, d, e}).Equal(1, 2, 3, 4, 5),
+		)
+	})
 
-	a, b, c, d, e := optics.ForProduct5[
-		T,
-		string,
-		string,
-		string,
-		string,
-		string,
-	]("A", "B", "C", "D", "E")
+	t.Run("Shape6", func(t *testing.T) {
+		ln := optics.ForShape6[T, int, int, int, int, int, int]("F1", "F2", "F3", "F4", "F5", "F6")
 
-	for expect, f := range map[string]optics.Lens[T, string]{
-		"A": a, "B": b, "C": c, "D": d, "E": e,
-	} {
-		x := T{}
+		tt := T{}
+		a, b, c, d, e, f := ln.Get(
+			ln.Put(&tt, 1, 2, 3, 4, 5, 6),
+		)
 
-		it.Ok(t).
-			If(f.Put(&x, expect)).Equal(nil).
-			If(f.Get(&x)).Equal(expect)
-	}
-}
+		it.Then(t).Should(
+			it.Equiv(tt, T{1, 2, 3, 4, 5, 6, 0, 0, 0}),
+			it.Seq([]int{a, b, c, d, e, f}).Equal(1, 2, 3, 4, 5, 6),
+		)
+	})
 
-func Test6(t *testing.T) {
-	type T struct{ A, B, C, D, E, F string }
+	t.Run("Shape7", func(t *testing.T) {
+		ln := optics.ForShape7[T, int, int, int, int, int, int, int]("F1", "F2", "F3", "F4", "F5", "F6", "F7")
 
-	a, b, c, d, e, f := optics.ForProduct6[
-		T,
-		string,
-		string,
-		string,
-		string,
-		string,
-		string,
-	]("A", "B", "C", "D", "E", "F")
+		tt := T{}
+		a, b, c, d, e, f, g := ln.Get(
+			ln.Put(&tt, 1, 2, 3, 4, 5, 6, 7),
+		)
 
-	for expect, f := range map[string]optics.Lens[T, string]{
-		"A": a, "B": b, "C": c, "D": d, "E": e, "F": f,
-	} {
-		x := T{}
+		it.Then(t).Should(
+			it.Equiv(tt, T{1, 2, 3, 4, 5, 6, 7, 0, 0}),
+			it.Seq([]int{a, b, c, d, e, f, g}).Equal(1, 2, 3, 4, 5, 6, 7),
+		)
+	})
 
-		it.Ok(t).
-			If(f.Put(&x, expect)).Equal(nil).
-			If(f.Get(&x)).Equal(expect)
-	}
-}
+	t.Run("Shape8", func(t *testing.T) {
+		ln := optics.ForShape8[T, int, int, int, int, int, int, int, int]("F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8")
 
-func Test7(t *testing.T) {
-	type T struct{ A, B, C, D, E, F, G string }
+		tt := T{}
+		a, b, c, d, e, f, g, h := ln.Get(
+			ln.Put(&tt, 1, 2, 3, 4, 5, 6, 7, 8),
+		)
 
-	a, b, c, d, e, f, g := optics.ForProduct7[
-		T,
-		string,
-		string,
-		string,
-		string,
-		string,
-		string,
-		string,
-	]("A", "B", "C", "D", "E", "F", "G")
+		it.Then(t).Should(
+			it.Equiv(tt, T{1, 2, 3, 4, 5, 6, 7, 8, 0}),
+			it.Seq([]int{a, b, c, d, e, f, g, h}).Equal(1, 2, 3, 4, 5, 6, 7, 8),
+		)
+	})
 
-	for expect, f := range map[string]optics.Lens[T, string]{
-		"A": a, "B": b, "C": c, "D": d, "E": e, "F": f, "G": g,
-	} {
-		x := T{}
+	t.Run("Shape9", func(t *testing.T) {
+		ln := optics.ForShape9[T, int, int, int, int, int, int, int, int, int]("F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9")
 
-		it.Ok(t).
-			If(f.Put(&x, expect)).Equal(nil).
-			If(f.Get(&x)).Equal(expect)
-	}
-}
+		tt := T{}
+		a, b, c, d, e, f, g, h, i := ln.Get(
+			ln.Put(&tt, 1, 2, 3, 4, 5, 6, 7, 8, 9),
+		)
 
-func Test8(t *testing.T) {
-	type T struct{ A, B, C, D, E, F, G, H string }
-
-	a, b, c, d, e, f, g, h := optics.ForProduct8[
-		T,
-		string,
-		string,
-		string,
-		string,
-		string,
-		string,
-		string,
-		string,
-	]("A", "B", "C", "D", "E", "F", "G", "H")
-
-	for expect, f := range map[string]optics.Lens[T, string]{
-		"A": a, "B": b, "C": c, "D": d, "E": e, "F": f, "G": g, "H": h,
-	} {
-		x := T{}
-
-		it.Ok(t).
-			If(f.Put(&x, expect)).Equal(nil).
-			If(f.Get(&x)).Equal(expect)
-	}
-}
-
-func Test9(t *testing.T) {
-	type T struct{ A, B, C, D, E, F, G, H, I string }
-
-	a, b, c, d, e, f, g, h, i := optics.ForProduct9[
-		T,
-		string,
-		string,
-		string,
-		string,
-		string,
-		string,
-		string,
-		string,
-		string,
-	]("A", "B", "C", "D", "E", "F", "G", "H", "I")
-
-	for expect, f := range map[string]optics.Lens[T, string]{
-		"A": a, "B": b, "C": c, "D": d, "E": e, "F": f, "G": g, "H": h, "I": i,
-	} {
-		x := T{}
-
-		it.Ok(t).
-			If(f.Put(&x, expect)).Equal(nil).
-			If(f.Get(&x)).Equal(expect)
-	}
+		it.Then(t).Should(
+			it.Equiv(tt, T{1, 2, 3, 4, 5, 6, 7, 8, 9}),
+			it.Seq([]int{a, b, c, d, e, f, g, h, i}).Equal(1, 2, 3, 4, 5, 6, 7, 8, 9),
+		)
+	})
 }
