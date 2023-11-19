@@ -29,6 +29,10 @@ type Seq[T any] []Type[T]
 // Unfold type T to heterogenous sequence using field names
 func New[T any](names ...string) Seq[T] {
 	cat := reflect.TypeOf(new(T)).Elem()
+	if cat.Kind() == reflect.Pointer {
+		cat = cat.Elem()
+	}
+
 	seq := make(Seq[T], 0)
 	seq = unfold(cat, seq, 0)
 

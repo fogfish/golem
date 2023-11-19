@@ -204,10 +204,20 @@ var FIELDS = []string{"T1", "T2", "F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8"
 
 func TestNew(t *testing.T) {
 
-	t.Run("New()", func(t *testing.T) {
+	t.Run("New[T]()", func(t *testing.T) {
 		seq := hseq.FMap(
 			hseq.New[Bar](),
 			func(t hseq.Type[Bar]) string { return t.Name },
+		)
+		it.Then(t).Should(
+			it.Seq(seq).Equal(FIELDS...),
+		)
+	})
+
+	t.Run("New[*T]()", func(t *testing.T) {
+		seq := hseq.FMap(
+			hseq.New[*Bar](),
+			func(t hseq.Type[*Bar]) string { return t.Name },
 		)
 		it.Then(t).Should(
 			it.Seq(seq).Equal(FIELDS...),
