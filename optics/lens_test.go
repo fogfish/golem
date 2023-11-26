@@ -64,7 +64,7 @@ func lensLaws[A any](t *testing.T, some A) {
 	})
 }
 
-func testLaws[A any](v A) func(t *testing.T) {
+func testLensLaws[A any](v A) func(t *testing.T) {
 	return func(t *testing.T) {
 		lensLaws[A](t, v)
 		lensLaws[*A](t, &v)
@@ -73,37 +73,37 @@ func testLaws[A any](v A) func(t *testing.T) {
 	}
 }
 
-func TestLaws(t *testing.T) {
+func TestLensLaws(t *testing.T) {
 	type String string
 
-	t.Run("String", testLaws[string]("string"))
-	t.Run("String", testLaws[String]("string"))
-	t.Run("Bool", testLaws[bool](true))
-	t.Run("Int8", testLaws[int8](10))
-	t.Run("UInt8", testLaws[uint8](10))
-	t.Run("Byte", testLaws[byte](10))
-	t.Run("Int16", testLaws[int16](10))
-	t.Run("UInt16", testLaws[uint16](10))
-	t.Run("Int32", testLaws[int32](10))
-	t.Run("Rune", testLaws[rune]('\u1234'))
-	t.Run("UInt32", testLaws[uint32](10))
-	t.Run("Int64", testLaws[int64](10))
-	t.Run("UInt64", testLaws[uint64](10))
+	t.Run("String", testLensLaws[string]("string"))
+	t.Run("String", testLensLaws[String]("string"))
+	t.Run("Bool", testLensLaws[bool](true))
+	t.Run("Int8", testLensLaws[int8](10))
+	t.Run("UInt8", testLensLaws[uint8](10))
+	t.Run("Byte", testLensLaws[byte](10))
+	t.Run("Int16", testLensLaws[int16](10))
+	t.Run("UInt16", testLensLaws[uint16](10))
+	t.Run("Int32", testLensLaws[int32](10))
+	t.Run("Rune", testLensLaws[rune]('\u1234'))
+	t.Run("UInt32", testLensLaws[uint32](10))
+	t.Run("Int64", testLensLaws[int64](10))
+	t.Run("UInt64", testLensLaws[uint64](10))
 	type Int int
-	t.Run("Int", testLaws[int](10))
-	t.Run("Int", testLaws[Int](10))
-	t.Run("UInt", testLaws[uint](10))
-	t.Run("UIntPtr", testLaws[uintptr](10))
-	t.Run("Float32", testLaws[float32](10.0))
-	t.Run("Float64", testLaws[float64](10.0))
-	t.Run("Complex64", testLaws[complex64](10.0+11.0i))
-	t.Run("Complex128", testLaws[complex128](10.0+11.0i))
+	t.Run("Int", testLensLaws[int](10))
+	t.Run("Int", testLensLaws[Int](10))
+	t.Run("UInt", testLensLaws[uint](10))
+	t.Run("UIntPtr", testLensLaws[uintptr](10))
+	t.Run("Float32", testLensLaws[float32](10.0))
+	t.Run("Float64", testLensLaws[float64](10.0))
+	t.Run("Complex64", testLensLaws[complex64](10.0+11.0i))
+	t.Run("Complex128", testLensLaws[complex128](10.0+11.0i))
 
 	type Struct struct{ A string }
-	t.Run("StructNoName", testLaws[struct{ A string }](struct{ A string }{A: "string"}))
-	t.Run("Struct", testLaws[Struct](Struct{A: "string"}))
+	t.Run("StructNoName", testLensLaws[struct{ A string }](struct{ A string }{A: "string"}))
+	t.Run("Struct", testLensLaws[Struct](Struct{A: "string"}))
 
-	t.Run("Interface", testLaws[io.Reader](&bytes.Buffer{}))
+	t.Run("Interface", testLensLaws[io.Reader](&bytes.Buffer{}))
 
 	t.Run("Embedded", func(t *testing.T) {
 		type S string
@@ -217,122 +217,6 @@ func TestLensCompose(t *testing.T) {
 
 		it.Then(t).Should(
 			it.Equiv(tt, T{D: &Inner{E: "E", F: "F", G: "G"}}),
-		)
-	})
-}
-
-func TestShape(t *testing.T) {
-	type T struct{ F1, F2, F3, F4, F5, F6, F7, F8, F9 int }
-
-	t.Run("Shape2", func(t *testing.T) {
-		ln := optics.ForShape2[T, int, int]("F1", "F2")
-
-		tt := T{}
-		a, b := ln.Get(
-			ln.Put(&tt, 1, 2),
-		)
-
-		it.Then(t).Should(
-			it.Equiv(tt, T{1, 2, 0, 0, 0, 0, 0, 0, 0}),
-			it.Seq([]int{a, b}).Equal(1, 2),
-		)
-	})
-
-	t.Run("Shape3", func(t *testing.T) {
-		ln := optics.ForShape3[T, int, int, int]("F1", "F2", "F3")
-
-		tt := T{}
-		a, b, c := ln.Get(
-			ln.Put(&tt, 1, 2, 3),
-		)
-
-		it.Then(t).Should(
-			it.Equiv(tt, T{1, 2, 3, 0, 0, 0, 0, 0, 0}),
-			it.Seq([]int{a, b, c}).Equal(1, 2, 3),
-		)
-	})
-
-	t.Run("Shape4", func(t *testing.T) {
-		ln := optics.ForShape4[T, int, int, int, int]("F1", "F2", "F3", "F4")
-
-		tt := T{}
-		a, b, c, d := ln.Get(
-			ln.Put(&tt, 1, 2, 3, 4),
-		)
-
-		it.Then(t).Should(
-			it.Equiv(tt, T{1, 2, 3, 4, 0, 0, 0, 0, 0}),
-			it.Seq([]int{a, b, c, d}).Equal(1, 2, 3, 4),
-		)
-	})
-
-	t.Run("Shape5", func(t *testing.T) {
-		ln := optics.ForShape5[T, int, int, int, int, int]("F1", "F2", "F3", "F4", "F5")
-
-		tt := T{}
-		a, b, c, d, e := ln.Get(
-			ln.Put(&tt, 1, 2, 3, 4, 5),
-		)
-
-		it.Then(t).Should(
-			it.Equiv(tt, T{1, 2, 3, 4, 5, 0, 0, 0, 0}),
-			it.Seq([]int{a, b, c, d, e}).Equal(1, 2, 3, 4, 5),
-		)
-	})
-
-	t.Run("Shape6", func(t *testing.T) {
-		ln := optics.ForShape6[T, int, int, int, int, int, int]("F1", "F2", "F3", "F4", "F5", "F6")
-
-		tt := T{}
-		a, b, c, d, e, f := ln.Get(
-			ln.Put(&tt, 1, 2, 3, 4, 5, 6),
-		)
-
-		it.Then(t).Should(
-			it.Equiv(tt, T{1, 2, 3, 4, 5, 6, 0, 0, 0}),
-			it.Seq([]int{a, b, c, d, e, f}).Equal(1, 2, 3, 4, 5, 6),
-		)
-	})
-
-	t.Run("Shape7", func(t *testing.T) {
-		ln := optics.ForShape7[T, int, int, int, int, int, int, int]("F1", "F2", "F3", "F4", "F5", "F6", "F7")
-
-		tt := T{}
-		a, b, c, d, e, f, g := ln.Get(
-			ln.Put(&tt, 1, 2, 3, 4, 5, 6, 7),
-		)
-
-		it.Then(t).Should(
-			it.Equiv(tt, T{1, 2, 3, 4, 5, 6, 7, 0, 0}),
-			it.Seq([]int{a, b, c, d, e, f, g}).Equal(1, 2, 3, 4, 5, 6, 7),
-		)
-	})
-
-	t.Run("Shape8", func(t *testing.T) {
-		ln := optics.ForShape8[T, int, int, int, int, int, int, int, int]("F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8")
-
-		tt := T{}
-		a, b, c, d, e, f, g, h := ln.Get(
-			ln.Put(&tt, 1, 2, 3, 4, 5, 6, 7, 8),
-		)
-
-		it.Then(t).Should(
-			it.Equiv(tt, T{1, 2, 3, 4, 5, 6, 7, 8, 0}),
-			it.Seq([]int{a, b, c, d, e, f, g, h}).Equal(1, 2, 3, 4, 5, 6, 7, 8),
-		)
-	})
-
-	t.Run("Shape9", func(t *testing.T) {
-		ln := optics.ForShape9[T, int, int, int, int, int, int, int, int, int]("F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9")
-
-		tt := T{}
-		a, b, c, d, e, f, g, h, i := ln.Get(
-			ln.Put(&tt, 1, 2, 3, 4, 5, 6, 7, 8, 9),
-		)
-
-		it.Then(t).Should(
-			it.Equiv(tt, T{1, 2, 3, 4, 5, 6, 7, 8, 9}),
-			it.Seq([]int{a, b, c, d, e, f, g, h, i}).Equal(1, 2, 3, 4, 5, 6, 7, 8, 9),
 		)
 	})
 }
