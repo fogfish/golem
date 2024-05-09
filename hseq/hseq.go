@@ -11,6 +11,7 @@ package hseq
 import (
 	"fmt"
 	"reflect"
+	"strings"
 )
 
 // Type element of product type, a type safe wrapper of reflect.StructField
@@ -198,7 +199,8 @@ func ForType[A, T any](seq Seq[T]) Type[T] {
 // Lookup type in heterogenous sequence by name of member
 func ForName[T any](seq Seq[T], field string) Type[T] {
 	for _, f := range seq {
-		if f.Name == field {
+		tag := strings.Split(f.StructField.Tag.Get("hseq"), ",")[0]
+		if f.Name == field || tag == field {
 			return f
 		}
 	}
