@@ -23,7 +23,7 @@ func isomorphism[A any](t *testing.T, some A) {
 	type B struct{ A A }
 	type S struct{ S A }
 	type T struct{ T A }
-	type M = map[string]A
+	type M map[string]A
 
 	getter := optics.Getter(
 		optics.ForProduct1[S, A](),
@@ -48,7 +48,7 @@ func isomorphism[A any](t *testing.T, some A) {
 
 	isoM := optics.Iso(
 		optics.ForProduct1[S, A](),
-		optics.NewLensM[string, A]("S"),
+		optics.NewLensM[M]("S"),
 	)
 
 	morphism := optics.Morphism(iso, iso, iso)

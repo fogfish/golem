@@ -51,18 +51,18 @@ func (lens *lens[S, A]) Get(s *S) A {
 }
 
 // NewLens instantiates a typed Lens[S, A] for map[K]A
-func NewLensM[K comparable, A any](key K) Lens[map[K]A, A] {
-	return &lensM[K, A]{key}
+func NewLensM[S interface{ ~map[K]A }, K comparable, A any](key K) Lens[S, A] {
+	return &lensM[S, K, A]{key}
 }
 
-type lensM[K comparable, A any] struct{ key K }
+type lensM[S interface{ ~map[K]A }, K comparable, A any] struct{ key K }
 
-func (lens *lensM[K, A]) Put(s *map[K]A, a A) *map[K]A {
+func (lens *lensM[S, K, A]) Put(s *S, a A) *S {
 	(*s)[lens.key] = a
 	return s
 }
 
-func (lens *lensM[K, A]) Get(s *map[K]A) A {
+func (lens *lensM[S, K, A]) Get(s *S) A {
 	return (*s)[lens.key]
 }
 
