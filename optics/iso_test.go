@@ -9,15 +9,6 @@ import (
 	"github.com/fogfish/it/v2"
 )
 
-// import (
-// 	"bytes"
-// 	"io"
-// 	"testing"
-
-// 	"github.com/fogfish/golem/optics"
-// 	"github.com/fogfish/it/v2"
-// )
-
 func isomorphism[A any](t *testing.T, some A) {
 	t.Helper()
 
