@@ -24,6 +24,15 @@ type Type[T any] struct {
 	ID       int
 }
 
+// Unique identity of key associated with type
+func (t Type[T]) FieldKey() string {
+	tag := strings.Split(t.StructField.Tag.Get("hseq"), ",")[0]
+	if tag != "" {
+		return tag
+	}
+	return t.Name
+}
+
 // Heterogenous projection of product type
 type Seq[T any] []Type[T]
 
@@ -199,14 +208,24 @@ func ForType[A, T any](seq Seq[T]) Type[T] {
 // Lookup type in heterogenous sequence by name of member
 func ForName[T any](seq Seq[T], field string) Type[T] {
 	for _, f := range seq {
-		tag := strings.Split(f.StructField.Tag.Get("hseq"), ",")[0]
-		if f.Name == field || tag == field {
+		if f.FieldKey() == field {
 			return f
 		}
 	}
 
 	cat := reflect.TypeOf(new(T)).Elem()
 	panic(fmt.Errorf("%s is not member of %s type", field, cat.Name()))
+}
+
+// Lookup type in heterogenous sequence by name of member
+func ForNameMaybe[T any](seq Seq[T], field string) (Type[T], bool) {
+	for _, f := range seq {
+		if f.FieldKey() == field {
+			return f, true
+		}
+	}
+
+	return Type[T]{}, false
 }
 
 // Transform heterogenous sequence to something else
