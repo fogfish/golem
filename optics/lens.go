@@ -26,8 +26,6 @@ type Lens[S, A any] interface {
 	Put(*S, A) *S
 }
 
-type lens[S, A any] struct{ hseq.Type[S] }
-
 // NewLens instantiates a typed Lens[S, A] for hseq.Type[S]
 func NewLens[S, A any](t hseq.Type[S]) Lens[S, A] {
 	ft := t.Type
@@ -41,6 +39,8 @@ func NewLens[S, A any](t hseq.Type[S]) Lens[S, A] {
 	panic(fmt.Errorf("invalid type: Lens[%s, %s] not compatible with %s", cat.Name(), ft.Name(), fv.Name()))
 }
 
+type lens[S, A any] struct{ hseq.Type[S] }
+
 func (lens *lens[S, A]) Put(s *S, a A) *S {
 	*(*A)(unsafe.Pointer(uintptr(unsafe.Pointer(s)) + lens.Offset + lens.RootOffs)) = a
 	return s
@@ -48,6 +48,43 @@ func (lens *lens[S, A]) Put(s *S, a A) *S {
 
 func (lens *lens[S, A]) Get(s *S) A {
 	return *(*A)(unsafe.Pointer(uintptr(unsafe.Pointer(s)) + lens.Offset + lens.RootOffs))
+}
+
+// NewLens instantiates a typed Lens[S, A] for map[K]A
+func NewLensM[S interface{ ~map[K]A }, K comparable, A any](key K) Lens[S, A] {
+	return &lensM[S, K, A]{key}
+}
+
+type lensM[S interface{ ~map[K]A }, K comparable, A any] struct{ key K }
+
+func (lens *lensM[S, K, A]) Put(s *S, a A) *S {
+	(*s)[lens.key] = a
+	return s
+}
+
+func (lens *lensM[S, K, A]) Get(s *S) A {
+	return (*s)[lens.key]
+}
+
+func Join[S, A, B any](a Lens[S, A], b Lens[A, B]) Lens[S, B] {
+	return join[S, A, B]{a, b}
+}
+
+type join[S, A, B any] struct {
+	a Lens[S, A]
+	b Lens[A, B]
+}
+
+func (lens join[S, A, B]) Put(s *S, b B) *S {
+	va := lens.a.Get(s)
+	lens.b.Put(&va, b)
+	lens.a.Put(s, va)
+	return s
+}
+
+func (lens join[S, A, B]) Get(s *S) B {
+	va := lens.a.Get(s)
+	return lens.b.Get(&va)
 }
 
 // ForProduct1 unfold 1 attribute of type T
