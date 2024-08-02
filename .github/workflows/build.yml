@@ -1,16 +1,16 @@
 ##
-## Unit Tests & Coverage
+## Build the main branch
 ##
-name: test
+name: build
 on:
-  pull_request:
-    types:
-      - opened
-      - synchronize
+  push:
+    branches:
+      - main
+      - /refs/heads/main
 
 jobs:
 
-  unit:
+  build:
     runs-on: ubuntu-latest
     steps:
 
@@ -32,3 +32,12 @@ jobs:
         continue-on-error: true
         with:
           path-to-profile: profile.cov
+
+      - name: publish
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          for mod in `grep -roh "const Version = \".*" * | grep -oh "[[:alnum:]]*/*v[0-9]*\.[0-9]*\.[0-9]*"`
+          do
+            git tag $mod 2> /dev/null && git push origin -u $mod 2> /dev/null && echo "[+] $mod" || echo "[ ] $mod"
+          done
