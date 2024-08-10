@@ -12,6 +12,10 @@ jobs:
 
   unit:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        module: ["hseq", "optics", "pipe", "pure", "trait"]
+        
     steps:
 
       - uses: actions/setup-go@v5
@@ -21,14 +25,22 @@ jobs:
       - uses: actions/checkout@v4
      
       - name: go build
+        working-directory: ${{ matrix.module }}
         run: |
-          find . -name go.mod -execdir go build ./... \;
+          go build ./...
     
       - name: go test
+        working-directory: ${{ matrix.module }}
         run: |
-          find . -name go.mod -execdir go test -coverprofile=profile.cov ./... \;
+          go test -v -coverprofile=profile.cov $(go list ./... | grep -v /examples/)
 
       - uses: shogo82148/actions-goveralls@v1
         continue-on-error: true
+        working-directory: ${{ matrix.module }}
         with:
           path-to-profile: profile.cov
+
+      - uses: dominikh/staticcheck-action@v1.3.0
+        with:
+          install-go: false
+          working-directory: ${{ matrix.module }}
