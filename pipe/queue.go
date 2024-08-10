@@ -8,7 +8,9 @@
 
 package pipe
 
-import "sync"
+import (
+	"sync"
+)
 
 type queue[A any] struct {
 	head *q[A]

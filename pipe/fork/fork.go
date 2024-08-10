@@ -6,60 +6,32 @@
 // https://github.com/fogfish/golem
 //
 
-// Package pipe simplify the creation of streaming data pipelines using
-// sequential channel workers. The package is semantically compatible with fork.
-package pipe
+// Package fork simplify the creation of streaming data pipelines using
+// parallel channel workers. The package is semantically compatible with pipe.
+package fork
 
 import (
 	"context"
-	"log/slog"
 	"sync"
 	"time"
 
+	"github.com/fogfish/golem/pipe"
 	"github.com/fogfish/golem/pure/monoid"
 )
 
 // Emit creates a channel and takes a function that emits data at a specified frequency.
 func Emit[T any](ctx context.Context, cap int, frequency time.Duration, emit func() (T, error)) (<-chan T, <-chan error) {
-	out := make(chan T, cap)
-	exx := make(chan error, 1)
-
-	go func() {
-		defer close(out)
-		defer close(exx)
-
-		var (
-			val T
-			err error
-		)
-
-		for {
-			time.Sleep(frequency)
-
-			val, err = emit()
-			if err != nil {
-				exx <- err
-				return
-			}
-
-			select {
-			case out <- val:
-			case <-ctx.Done():
-				return
-			}
-		}
-	}()
-
-	return out, exx
+	return pipe.Emit(ctx, cap, frequency, emit)
 }
 
 // Filter returns a newly-allocated channel that contains only those elements x
 // of the input channel for which predicate is true.
-func Filter[A any](ctx context.Context, in <-chan A, f func(A) bool) <-chan A {
-	out := make(chan A, cap(in))
+func Filter[A any](ctx context.Context, par int, in <-chan A, f func(A) bool) <-chan A {
+	var wg sync.WaitGroup
+	out := make(chan A, par)
 
-	go func() {
-		defer close(out)
+	pf := func() {
+		defer wg.Done()
 
 		var a A
 		for a = range in {
@@ -71,27 +43,48 @@ func Filter[A any](ctx context.Context, in <-chan A, f func(A) bool) <-chan A {
 				}
 			}
 		}
+	}
+
+	wg.Add(par)
+	for i := 1; i <= par; i++ {
+		go pf()
+	}
+
+	go func() {
+		wg.Wait()
+		close(out)
 	}()
 
 	return out
 }
 
 // ForEach applies function for each message in the channel
-func ForEach[A any](ctx context.Context, in <-chan A, f func(A)) <-chan struct{} {
+func ForEach[A any](ctx context.Context, par int, in <-chan A, f func(A)) <-chan struct{} {
+	var wg sync.WaitGroup
 	done := make(chan struct{})
 
-	go func() {
-		defer close(done)
+	fmap := func() {
+		defer wg.Done()
 
-		var x A
-		for x = range in {
-			f(x)
+		var a A
+		for a = range in {
+			f(a)
 			select {
 			case <-ctx.Done():
 				return
 			default:
 			}
 		}
+	}
+
+	wg.Add(par)
+	for i := 1; i <= par; i++ {
+		go fmap()
+	}
+
+	go func() {
+		wg.Wait()
+		close(done)
 	}()
 
 	return done
@@ -99,13 +92,13 @@ func ForEach[A any](ctx context.Context, in <-chan A, f func(A)) <-chan struct{}
 
 // FMap applies function over channel messages, flatten the output channel and
 // emits it result to new channel.
-func FMap[A, B any](ctx context.Context, in <-chan A, fmap func(A) (<-chan B, error)) (<-chan B, <-chan error) {
-	out := make(chan B, cap(in))
-	exx := make(chan error, 1)
+func FMap[A, B any](ctx context.Context, par int, in <-chan A, fmap func(A) (<-chan B, error)) (<-chan B, <-chan error) {
+	var wg sync.WaitGroup
+	out := make(chan B, par)
+	exx := make(chan error, par)
 
-	go func() {
-		defer close(out)
-		defer close(exx)
+	pmap := func() {
+		defer wg.Done()
 
 		var (
 			a   A
@@ -128,6 +121,17 @@ func FMap[A, B any](ctx context.Context, in <-chan A, fmap func(A) (<-chan B, er
 				}
 			}
 		}
+	}
+
+	wg.Add(par)
+	for i := 1; i <= par; i++ {
+		go pmap()
+	}
+
+	go func() {
+		wg.Wait()
+		close(out)
+		close(exx)
 	}()
 
 	return out, exx
@@ -135,15 +139,17 @@ func FMap[A, B any](ctx context.Context, in <-chan A, fmap func(A) (<-chan B, er
 
 // Fold applies a monoid operation to the values in a channel. The final value is
 // emitted though return channel when the end of the input channel is reached.
-func Fold[A any](ctx context.Context, in <-chan A, m monoid.Monoid[A]) <-chan A {
+func Fold[A any](ctx context.Context, par int, in <-chan A, m monoid.Monoid[A]) <-chan A {
+	var wg sync.WaitGroup
+	vals := make(chan A, par)
 	done := make(chan A, 1)
 
-	go func() {
+	pfold := func() {
 		acc := m.Empty()
 
 		defer func() {
-			done <- acc
-			close(done)
+			vals <- acc
+			wg.Done()
 		}()
 
 		var x A
@@ -155,19 +161,36 @@ func Fold[A any](ctx context.Context, in <-chan A, m monoid.Monoid[A]) <-chan A 
 			default:
 			}
 		}
+	}
+
+	wg.Add(par)
+	for i := 1; i <= par; i++ {
+		go pfold()
+	}
+
+	go func() {
+		wg.Wait()
+
+		var acc A
+		for i := 1; i <= par; i++ {
+			acc = m.Combine(acc, <-vals)
+		}
+		done <- acc
+		close(vals)
+		close(done)
 	}()
 
 	return done
 }
 
 // Map applies function over channel messages, emits result to new channel
-func Map[A, B any](ctx context.Context, in <-chan A, fmap func(A) (B, error)) (<-chan B, <-chan error) {
-	out := make(chan B, cap(in))
-	exx := make(chan error, 1)
+func Map[A, B any](ctx context.Context, par int, in <-chan A, fmap func(A) (B, error)) (<-chan B, <-chan error) {
+	var wg sync.WaitGroup
+	out := make(chan B, par)
+	exx := make(chan error, par)
 
-	go func() {
-		defer close(out)
-		defer close(exx)
+	pmap := func() {
+		defer wg.Done()
 
 		var (
 			a   A
@@ -188,19 +211,30 @@ func Map[A, B any](ctx context.Context, in <-chan A, fmap func(A) (B, error)) (<
 				return
 			}
 		}
+	}
+
+	wg.Add(par)
+	for i := 1; i <= par; i++ {
+		go pmap()
+	}
+
+	go func() {
+		wg.Wait()
+		close(out)
+		close(exx)
 	}()
 
 	return out, exx
 }
 
 // Partition channel into two channels according to predicate
-func Partition[A any](ctx context.Context, in <-chan A, f func(A) bool) (<-chan A, <-chan A) {
-	lout := make(chan A, cap(in))
-	rout := make(chan A, cap(in))
+func Partition[A any](ctx context.Context, par int, in <-chan A, f func(A) bool) (<-chan A, <-chan A) {
+	var wg sync.WaitGroup
+	lout := make(chan A, par)
+	rout := make(chan A, par)
 
-	go func() {
-		defer close(rout)
-		defer close(lout)
+	pf := func() {
+		defer wg.Done()
 
 		sel := func(x bool) chan<- A {
 			if x {
@@ -217,6 +251,17 @@ func Partition[A any](ctx context.Context, in <-chan A, f func(A) bool) (<-chan 
 				return
 			}
 		}
+	}
+
+	wg.Add(par)
+	for i := 1; i <= par; i++ {
+		go pf()
+	}
+
+	go func() {
+		wg.Wait()
+		close(lout)
+		close(rout)
 	}()
 
 	return lout, rout
@@ -225,143 +270,37 @@ func Partition[A any](ctx context.Context, in <-chan A, f func(A) bool) (<-chan 
 // Unfold is the fundamental recursive constructor, it applies a function to
 // each previous seed element in turn to determine the next element.
 func Unfold[A any](ctx context.Context, cap int, seed A, f func(A) (A, error)) (<-chan A, <-chan error) {
-	out := make(chan A, cap)
-	exx := make(chan error, 1)
-
-	go func() {
-		defer close(out)
-		defer close(exx)
-
-		var err error
-		for {
-			select {
-			case out <- seed:
-			case <-ctx.Done():
-				return
-			}
-
-			seed, err = f(seed)
-			if err != nil {
-				exx <- err
-				return
-			}
-		}
-	}()
-
-	return out, exx
+	return pipe.Unfold(ctx, cap, seed, f)
 }
 
 // Join concatenate channels, returns newly-allocated channel composed of
 // elements copied from input channels.
 func Join[A any](ctx context.Context, in ...<-chan A) <-chan A {
-	var wg sync.WaitGroup
-	out := make(chan A, len(in))
-
-	join := func(c <-chan A) {
-		defer wg.Done()
-
-		for x := range c {
-			select {
-			case out <- x:
-			case <-ctx.Done():
-				return
-			}
-		}
-	}
-
-	wg.Add(len(in))
-	for _, c := range in {
-		go join(c)
-	}
-
-	go func() {
-		wg.Wait()
-		close(out)
-	}()
-
-	return out
+	return pipe.Join(ctx, in...)
 }
 
 // returns a newly-allocated channel containing the first n elements of the input channel.
 func Take[A any](ctx context.Context, in <-chan A, n int) <-chan A {
-	out := make(chan A, cap(in))
-
-	go func() {
-		defer close(out)
-
-		var a A
-		for a = range in {
-
-			select {
-			case out <- a:
-			case <-ctx.Done():
-				return
-			}
-
-			n--
-			if n == 0 {
-				return
-			}
-		}
-	}()
-
-	return out
+	return pipe.Take(ctx, in, n)
 }
 
 // Filter returns a newly-allocated channel that contains only those elements x
 // of the input channel for which predicate is true.
 func TakeWhile[A any](ctx context.Context, in <-chan A, f func(A) bool) <-chan A {
-	out := make(chan A, cap(in))
-
-	go func() {
-		defer close(out)
-
-		var a A
-		for a = range in {
-			if !f(a) {
-				return
-			}
-
-			select {
-			case out <- a:
-			case <-ctx.Done():
-				return
-			}
-		}
-	}()
-
-	return out
+	return pipe.TakeWhile(ctx, in, f)
 }
 
 // Lift sequence of values into channel
 func Seq[T any](xs ...T) <-chan T {
-	out := make(chan T, len(xs))
-	for _, x := range xs {
-		out <- x
-	}
-	close(out)
-	return out
+	return pipe.Seq(xs...)
 }
 
 // ToSeq collects elements of channel into the sequence (slice)
 func ToSeq[T any](ch <-chan T) []T {
-	seq := make([]T, 0)
-	for x := range ch {
-		seq = append(seq, x)
-	}
-	return seq
+	return pipe.ToSeq(ch)
 }
 
 // Standard error logger
 func StdErr[T any](out <-chan T, exx <-chan error) <-chan T {
-	go func() {
-		var err error
-		for err = range exx {
-			if err != nil {
-				slog.Error("pipe stage failed.", "error", err)
-			}
-		}
-	}()
-
-	return out
+	return pipe.StdErr(out, exx)
 }

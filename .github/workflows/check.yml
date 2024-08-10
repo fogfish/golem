@@ -1,21 +1,21 @@
 ##
-## Build the main branch
+## Unit Tests & Coverage
 ##
-name: build
+name: check
 on:
-  push:
-    branches:
-      - main
-      - /refs/heads/main
+  pull_request:
+    types:
+      - opened
+      - synchronize
 
 jobs:
 
-  build:
+  unit:
     runs-on: ubuntu-latest
     strategy:
       matrix:
         module: ["hseq", "optics", "pipe", "pure", "trait"]
-
+        
     steps:
       - uses: actions/setup-go@v5
         with:
@@ -41,18 +41,15 @@ jobs:
           flag-name: ${{ matrix.module }}
           parallel: true
 
+      - uses: dominikh/staticcheck-action@v1.3.0
+        with:
+          install-go: false
+          working-directory: ${{ matrix.module }}
+
   finish:
-    needs: build
+    needs: unit
     runs-on: ubuntu-latest
     steps:
       - uses: shogo82148/actions-goveralls@v1
         with:
           parallel-finished: true
-      - name: publish
-        run: |
-          git config user.name "GitHub Actions"
-          git config user.email "github-actions@users.noreply.github.com"
-          for mod in `grep -roh "const Version = \".*" * | grep -oh "[[:alnum:]]*/*v[0-9]*\.[0-9]*\.[0-9]*"`
-          do
-            git tag $mod 2> /dev/null && git push origin -u $mod 2> /dev/null && echo "[+] $mod" || echo "[ ] $mod"
-          done

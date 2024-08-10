@@ -9,149 +9,244 @@
 package pipe_test
 
 import (
-	"math/rand"
+	"context"
+	"fmt"
 	"strconv"
 	"testing"
 	"time"
 
 	"github.com/fogfish/golem/pipe"
-	"github.com/fogfish/it"
+	"github.com/fogfish/golem/pure/monoid"
+	"github.com/fogfish/it/v2"
 )
 
-func TestPipeNew(t *testing.T) {
-	t.Run("Empty.Recv", func(t *testing.T) {
-		in, eg := pipe.New[int](0)
-		select {
-		case <-in:
-			panic("Must Not Recv Anything")
-		case <-time.After(10 * time.Millisecond):
-		}
-		close(eg)
+func TestEmit(t *testing.T) {
+	seq := 0
+	emit := func() (int, error) {
+		seq++
+		return seq, nil
+	}
+
+	t.Run("Emit", func(t *testing.T) {
+		ctx, close := context.WithCancel(context.Background())
+		eg := pipe.StdErr(pipe.Emit(ctx, 0, 10*time.Microsecond, emit))
+
+		it.Then(t).Should(
+			it.Equal(<-eg, 1),
+			it.Equal(<-eg, 2),
+			it.Equal(<-eg, 3),
+			it.Equal(<-eg, 4),
+			it.Equal(<-eg, 5),
+			it.Equal(<-eg, 6),
+		)
+		close()
 	})
 
-	t.Run("Empty.Send", func(t *testing.T) {
-		_, eg := pipe.New[int](0)
-		select {
-		case eg <- 0:
-			break
-		case <-time.After(10 * time.Millisecond):
-			panic("Must Not Blocked")
-		}
-		close(eg)
-	})
+	t.Run("Err", func(t *testing.T) {
+		ctx, close := context.WithCancel(context.Background())
+		_, exx := pipe.Emit(ctx, 0, 10*time.Millisecond, func() (int, error) { return 0, fmt.Errorf("fail") })
 
-	t.Run("Send.Recv", func(t *testing.T) {
-		in, eg := pipe.New[int](0)
-		eg <- 100
-		it.Ok(t).If(<-in).Equal(100)
-		close(eg)
-	})
+		it.Then(t).ShouldNot(
+			it.Nil(<-exx),
+		)
 
-	t.Run("Send.Batch.Recv", func(t *testing.T) {
-		in, eg := pipe.New[int](0)
-		for i := 0; i < 1000; i++ {
-			eg <- i
-		}
-		for i := 0; i < 1000; i++ {
-			it.Ok(t).If(<-in).Equal(i)
-		}
-		close(eg)
-	})
-
-	t.Run("Recv.Async.Send", func(t *testing.T) {
-		in, eg := pipe.New[int](0)
-		go func() {
-			for i := 0; i < 1000; i++ {
-				time.Sleep(time.Duration(rand.Intn(4)) * time.Millisecond)
-				it.Ok(t).If(<-in).Equal(i)
-			}
-		}()
-		for i := 0; i < 1000; i++ {
-			eg <- i
-			time.Sleep(time.Duration(rand.Intn(9)) * time.Millisecond)
-		}
-		close(eg)
+		close()
 	})
 }
 
-func TestPipeFrom(t *testing.T) {
-	t.Run("Generate", func(t *testing.T) {
-		eg := pipe.From(1, 10*time.Millisecond, func() (int, error) { return 10, nil })
-		it.Ok(t).If(<-eg).Equal(10)
-		it.Ok(t).If(<-eg).Equal(10)
-		it.Ok(t).If(<-eg).Equal(10)
-		close(eg)
+func TestFilter(t *testing.T) {
+	ctx, close := context.WithCancel(context.Background())
+	seq := pipe.Seq(1, 2, 3, 4, 5)
+	out := pipe.Filter(ctx, seq,
+		func(x int) bool { return x%2 == 1 },
+	)
+
+	it.Then(t).Should(
+		it.Seq(pipe.ToSeq(out)).Equal(1, 3, 5),
+	)
+
+	close()
+}
+
+func TestForEach(t *testing.T) {
+	ctx, close := context.WithCancel(context.Background())
+
+	seq := pipe.Seq(1, 2, 3, 4, 5)
+
+	n := 0
+	<-pipe.ForEach(ctx, seq, func(a int) { n = n + a })
+
+	it.Then(t).Should(
+		it.Equal(n, 15),
+	)
+
+	close()
+}
+
+func TestFMap(t *testing.T) {
+	t.Run("FMap", func(t *testing.T) {
+		ctx, close := context.WithCancel(context.Background())
+		seq := pipe.Seq(1, 2, 3, 4, 5)
+		out := pipe.StdErr(pipe.FMap(ctx, seq,
+			func(x int) (<-chan string, error) {
+				return pipe.Seq(strconv.Itoa(x)), nil
+			}),
+		)
+
+		it.Then(t).Should(
+			it.Seq(pipe.ToSeq(out)).Equal("1", "2", "3", "4", "5"),
+		)
+
+		close()
 	})
 
-	t.Run("NoPanic", func(t *testing.T) {
-		eg := pipe.From(0, 10*time.Millisecond, func() (int, error) { return 10, nil })
-		time.Sleep(30 * time.Millisecond)
-		close(eg)
+	t.Run("Err", func(t *testing.T) {
+		ctx, close := context.WithCancel(context.Background())
+		seq := pipe.Seq(1, 2, 3, 4, 5)
+		_, exx := pipe.FMap(ctx, seq,
+			func(x int) (<-chan string, error) {
+				return nil, fmt.Errorf("fail")
+			},
+		)
+
+		it.Then(t).ShouldNot(
+			it.Nil(<-exx),
+		)
+
+		close()
 	})
 }
 
-func TestPipeMap(t *testing.T) {
+func TestFold(t *testing.T) {
+	seq := pipe.Seq(1, 2, 3, 4, 5)
+	n := <-pipe.Fold(context.Background(), seq,
+		monoid.FromOp(0, func(a, b int) int { return a + b }),
+	)
+
+	it.Then(t).Should(
+		it.Equal(n, 15),
+	)
+}
+
+func TestMap(t *testing.T) {
 	t.Run("Map", func(t *testing.T) {
-		eg := make(chan int)
-		in := pipe.Map(eg, strconv.Itoa)
+		ctx, close := context.WithCancel(context.Background())
+		seq := pipe.Seq(1, 2, 3, 4, 5)
+		out := pipe.StdErr(pipe.Map(ctx, seq,
+			func(x int) (string, error) { return strconv.Itoa(x), nil },
+		))
 
-		eg <- 100
-		it.Ok(t).If(<-in).Equal("100")
-		close(eg)
+		it.Then(t).Should(
+			it.Seq(pipe.ToSeq(out)).Equal("1", "2", "3", "4", "5"),
+		)
+		close()
 	})
 
-	t.Run("Close", func(t *testing.T) {
-		eg := make(chan int)
-		in := pipe.Map(eg, strconv.Itoa)
+	t.Run("Err", func(t *testing.T) {
+		ctx, close := context.WithCancel(context.Background())
+		seq := pipe.Seq(1, 2, 3, 4, 5)
+		_, exx := pipe.Map(ctx, seq,
+			func(x int) (string, error) { return "", fmt.Errorf("fail") },
+		)
 
-		close(in)
-		close(eg)
-	})
-}
+		it.Then(t).ShouldNot(
+			it.Nil(<-exx),
+		)
 
-func TestPipeMaybeMap(t *testing.T) {
-	t.Run("Map", func(t *testing.T) {
-		eg := make(chan string)
-		in := pipe.MaybeMap(eg, strconv.Atoi)
-
-		eg <- "100"
-		it.Ok(t).If(<-in).Equal(100)
-		close(eg)
-	})
-
-	t.Run("Map.Fail", func(t *testing.T) {
-		eg := make(chan string)
-		in := pipe.MaybeMap(eg, strconv.Atoi)
-
-		eg <- "test"
-		eg <- "100"
-		it.Ok(t).If(<-in).Equal(100)
-		close(eg)
-	})
-
-	t.Run("Close", func(t *testing.T) {
-		eg := make(chan string)
-		in := pipe.MaybeMap(eg, strconv.Atoi)
-
-		close(in)
-		close(eg)
+		close()
 	})
 }
 
-func TestPipeForEach(t *testing.T) {
-	t.Run("ForEach", func(t *testing.T) {
-		n := 0
-		eg := make(chan int)
-		pipe.ForEach(eg, func(a int) { n = n + a })
+func TestPartition(t *testing.T) {
+	ctx, close := context.WithCancel(context.Background())
+	seq := pipe.Seq(1, 2, 3, 4, 5)
+	lo, ro := pipe.Partition(ctx, seq,
+		func(x int) bool { return x%2 == 1 },
+	)
 
-		eg <- 100
-		it.Ok(t).If(n).Equal(100)
-		close(eg)
+	it.Then(t).Should(
+		it.Seq(pipe.ToSeq(lo)).Equal(1, 3, 5),
+		it.Seq(pipe.ToSeq(ro)).Equal(2, 4),
+	)
+
+	close()
+}
+
+func TestUnfold(t *testing.T) {
+	t.Run("Unfold", func(t *testing.T) {
+		ctx, close := context.WithCancel(context.Background())
+		seq := pipe.StdErr(pipe.Unfold(ctx, 1, 0, func(x int) (int, error) { return x + 1, nil }))
+
+		it.Then(t).Should(
+			it.Equal(<-seq, 0),
+			it.Equal(<-seq, 1),
+			it.Equal(<-seq, 2),
+			it.Equal(<-seq, 3),
+			it.Equal(<-seq, 4),
+			it.Equal(<-seq, 5),
+		)
+		close()
 	})
+
+	t.Run("Err", func(t *testing.T) {
+		ctx, close := context.WithCancel(context.Background())
+		out, exx := pipe.Unfold(ctx, 1, 0, func(x int) (int, error) { return x, fmt.Errorf("fail") })
+
+		it.Then(t).Should(
+			it.Equal(<-out, 0),
+		).
+			ShouldNot(
+				it.Nil(<-exx),
+			)
+
+		close()
+	})
+}
+
+func TestJoin(t *testing.T) {
+	ctx, close := context.WithCancel(context.Background())
+
+	a := pipe.Seq(1, 2, 3)
+	b := pipe.Seq(4, 5, 6)
+	c := pipe.Seq(7, 8, 9)
+
+	out := pipe.Join(ctx, a, b, c)
+
+	it.Then(t).Should(
+		it.Seq(pipe.ToSeq(out)).Contain().AllOf(1, 2, 3, 4, 5, 6, 7, 8, 9),
+	)
+
+	close()
+}
+
+func TestTake(t *testing.T) {
+	ctx, close := context.WithCancel(context.Background())
+	seq := pipe.Seq(1, 2, 3, 4, 5, 6)
+	out := pipe.Take(ctx, seq, 3)
+
+	it.Then(t).Should(
+		it.Seq(pipe.ToSeq(out)).Equal(1, 2, 3),
+	)
+
+	close()
+}
+
+func TestTakeWhile(t *testing.T) {
+	ctx, close := context.WithCancel(context.Background())
+	seq := pipe.Seq(1, 2, 3, 4, 5, 6)
+	out := pipe.TakeWhile(ctx, seq, func(x int) bool { return x < 4 })
+
+	it.Then(t).Should(
+		it.Seq(pipe.ToSeq(out)).Equal(1, 2, 3),
+	)
+
+	close()
 }
 
 func BenchmarkPipe(b *testing.B) {
-	in, eg := pipe.New[int](1)
+	ctx, close := context.WithCancel(context.Background())
+	in, eg := pipe.New[int](ctx, 0)
+
 	b.ReportAllocs()
 	b.ResetTimer()
 
@@ -160,5 +255,5 @@ func BenchmarkPipe(b *testing.B) {
 		<-in
 	}
 
-	close(eg)
+	close()
 }
