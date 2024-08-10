@@ -12,8 +12,11 @@ jobs:
 
   build:
     runs-on: ubuntu-latest
-    steps:
+    strategy:
+      matrix:
+        module: ["hseq", "optics", "pipe", "pure", "trait"]
 
+    steps:
       - uses: actions/setup-go@v5
         with:
           go-version: "1.22"
@@ -21,18 +24,30 @@ jobs:
       - uses: actions/checkout@v4
      
       - name: go build
+        working-directory: ${{ matrix.module }}
         run: |
-          find . -name go.mod -execdir go build ./... \;
+          go build ./...
     
       - name: go test
+        working-directory: ${{ matrix.module }}
         run: |
-          find . -name go.mod -execdir go test -coverprofile=profile.cov ./... \;
+          go test -coverprofile=profile.cov $(go list ./... | grep -v /examples/)
 
       - uses: shogo82148/actions-goveralls@v1
         continue-on-error: true
         with:
+          working-directory: ${{ matrix.module }}
           path-to-profile: profile.cov
+          flag-name: ${{ matrix.module }}
+          parallel: true
 
+  finish:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: shogo82148/actions-goveralls@v1
+        with:
+          parallel-finished: true
       - name: publish
         run: |
           git config user.name "GitHub Actions"
