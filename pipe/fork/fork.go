@@ -6,7 +6,7 @@
 // https://github.com/fogfish/golem
 //
 
-// Package pipe simplify the creation of streaming data pipelines using
+// Package fork simplify the creation of streaming data pipelines using
 // parallel channel workers. The package is semantically compatible with pipe.
 package fork
 
