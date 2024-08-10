@@ -41,14 +41,8 @@ jobs:
           flag-name: ${{ matrix.module }}
           parallel: true
 
-  finish:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - uses: shogo82148/actions-goveralls@v1
-        with:
-          parallel-finished: true
-      - name: publish
+      - name: release
+        working-directory: ${{ matrix.module }}
         run: |
           git config user.name "GitHub Actions"
           git config user.email "github-actions@users.noreply.github.com"
@@ -56,3 +50,11 @@ jobs:
           do
             git tag $mod 2> /dev/null && git push origin -u $mod 2> /dev/null && echo "[+] $mod" || echo "[ ] $mod"
           done
+ 
+  finish:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: shogo82148/actions-goveralls@v1
+        with:
+          parallel-finished: true
