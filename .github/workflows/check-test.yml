@@ -17,7 +17,6 @@ jobs:
         module: ["hseq", "optics", "pipe", "pure", "trait"]
         
     steps:
-
       - uses: actions/setup-go@v5
         with:
           go-version: "1.22"
@@ -36,9 +35,8 @@ jobs:
 
       - uses: shogo82148/actions-goveralls@v1
         continue-on-error: true
-        working-directory: ${{ matrix.module }}
         with:
-          path-to-profile: profile.cov
+          path-to-profile: ${{ matrix.module }}/profile.cov
 
       - uses: dominikh/staticcheck-action@v1.3.0
         with:
