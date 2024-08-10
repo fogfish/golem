@@ -31,12 +31,13 @@ jobs:
       - name: go test
         working-directory: ${{ matrix.module }}
         run: |
-          go test -coverprofile=../${{ matrix.module }}.cov $(go list ./... | grep -v /examples/)
+          go test -coverprofile=profile.cov.cov $(go list ./... | grep -v /examples/)
 
       - uses: shogo82148/actions-goveralls@v1
         continue-on-error: true
         with:
-          path-to-profile: ${{ matrix.module }}.cov
+          working-directory: ${{ matrix.module }}
+          path-to-profile: profile.cov
           flag-name: ${{ matrix.module }}
           parallel: true
 
