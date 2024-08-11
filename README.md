@@ -4,17 +4,9 @@
   <p align="center"><strong>"Scrap Your Boilerplate" for Go</strong></p>
 
   <p align="center">
-    <!-- Version -->
-    <a href="https://github.com/fogfish/golem/releases">
-      <img src="https://img.shields.io/github/v/tag/fogfish/golem?label=version" />
-    </a> 
-    <!-- Documentation -->
-    <a href="https://pkg.go.dev/github.com/fogfish/golem">
-      <img src="https://pkg.go.dev/badge/github.com/fogfish/golem" />
-    </a>
     <!-- Build Status  -->
     <a href="https://github.com/fogfish/golem/actions/">
-      <img src="https://github.com/fogfish/golem/workflows/test/badge.svg" />
+      <img src="https://github.com/fogfish/golem/workflows/build/badge.svg" />
     </a>
     <!-- GitHub -->
     <a href="http://github.com/fogfish/golem">
@@ -28,11 +20,47 @@
     <a href="https://goreportcard.com/report/github.com/fogfish/golem">
       <img src="https://goreportcard.com/badge/github.com/fogfish/golem" />
     </a>
-    <!-- Maintainability -->
-    <a href="https://codeclimate.com/github/fogfish/golem/maintainability">
-      <img src="https://api.codeclimate.com/v1/badges/ee132d36361127fa99c9/maintainability" />
-    </a>
   </p>
+  <table align="center">
+    <thead><tr><th></th><th></th></tr></thead>
+    <tbody>
+    <!-- Module hseq -->
+    <tr><td><a href="https://github.com/fogfish/golem/releases">
+      <img src="https://img.shields.io/github/v/tag/fogfish/golem?label=mod&style=flat-square&filter=hseq/*"/>
+    </a></td>
+    <td><a href="https://pkg.go.dev/github.com/fogfish/golem/hseq">
+      <img src="https://img.shields.io/badge/doc-hseq-007d9c?logo=go&logoColor=white&style=flat-square" />
+    </a></td></tr>
+    <!-- Module optics -->
+    <tr><td><a href="https://github.com/fogfish/golem/releases">
+      <img src="https://img.shields.io/github/v/tag/fogfish/golem?label=mod&style=flat-square&filter=optics/*" />
+    </a></td>
+    <td><a href="https://pkg.go.dev/github.com/fogfish/golem/optics">
+      <img src="https://img.shields.io/badge/doc-optics-007d9c?logo=go&logoColor=white&style=flat-square" />
+    </a></td></tr>
+    <!-- Module pipe -->
+    <tr><td><a href="https://github.com/fogfish/golem/releases">
+      <img src="https://img.shields.io/github/v/tag/fogfish/golem?label=mod&style=flat-square&filter=pipe/*" />
+    </a></td>
+    <td><a href="https://pkg.go.dev/github.com/fogfish/golem/pipe">
+      <img src="https://img.shields.io/badge/doc-pipe-007d9c?logo=go&logoColor=white&style=flat-square" />
+    </a></td></tr>
+    <!-- Module pure -->
+    <tr><td><a href="https://github.com/fogfish/golem/releases">
+      <img src="https://img.shields.io/github/v/tag/fogfish/golem?label=mod&style=flat-square&filter=pure/*" />
+    </a></td>
+    <td><a href="https://pkg.go.dev/github.com/fogfish/golem/pure">
+      <img src="https://img.shields.io/badge/doc-pure-007d9c?logo=go&logoColor=white&style=flat-square" />
+    </a></td></tr>
+    <!-- Module trait -->
+    <tr><td><a href="https://github.com/fogfish/golem/releases">
+      <img src="https://img.shields.io/github/v/tag/fogfish/golem?label=mod&style=flat-square&filter=trait/*" />
+    </a></td>
+    <td><a href="https://pkg.go.dev/github.com/fogfish/golem/trait">
+      <img src="https://img.shields.io/badge/doc-trait-007d9c?logo=go&logoColor=white&style=flat-square" />
+    </a></td></tr>
+    </tbody>
+  </table>
 </p>
 
 --- 
