@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="./doc/logo.svg" height="180" />
+  <img src="./doc/golem.svg" height="240" />
   <h3 align="center">Golem</h3>
   <p align="center"><strong>"Scrap Your Boilerplate" for Go</strong></p>
 
