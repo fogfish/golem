@@ -22,7 +22,7 @@
     </a>
   </p>
   <table align="center">
-    <thead><tr><th></th><th></th></tr></thead>
+    <thead><tr><th>sub-module</th><th>doc</th><th>about</th></tr></thead>
     <tbody>
     <!-- Module hseq -->
     <tr><td><a href="https://github.com/fogfish/golem/releases">
@@ -30,35 +30,50 @@
     </a></td>
     <td><a href="https://pkg.go.dev/github.com/fogfish/golem/hseq">
       <img src="https://img.shields.io/badge/doc-hseq-007d9c?logo=go&logoColor=white&style=flat-square" />
-    </a></td></tr>
+    </a></td>
+    <td>
+    Heterogenous sequence of types
+    </td></tr>
     <!-- Module optics -->
     <tr><td><a href="https://github.com/fogfish/golem/releases">
       <img src="https://img.shields.io/github/v/tag/fogfish/golem?label=mod&style=flat-square&filter=optics/*" />
     </a></td>
     <td><a href="https://pkg.go.dev/github.com/fogfish/golem/optics">
       <img src="https://img.shields.io/badge/doc-optics-007d9c?logo=go&logoColor=white&style=flat-square" />
-    </a></td></tr>
+    </a></td>
+    <td>
+    Composable getters and setters (lenses) for manipulating data structures 
+    </td></tr>
     <!-- Module pipe -->
     <tr><td><a href="https://github.com/fogfish/golem/releases">
       <img src="https://img.shields.io/github/v/tag/fogfish/golem?label=mod&style=flat-square&filter=pipe/*" />
     </a></td>
     <td><a href="https://pkg.go.dev/github.com/fogfish/golem/pipe">
       <img src="https://img.shields.io/badge/doc-pipe-007d9c?logo=go&logoColor=white&style=flat-square" />
-    </a></td></tr>
+    </a></td>
+    <td>
+    Type safe channels and data pipeline combinator.
+    </td></tr>
     <!-- Module pure -->
     <tr><td><a href="https://github.com/fogfish/golem/releases">
       <img src="https://img.shields.io/github/v/tag/fogfish/golem?label=mod&style=flat-square&filter=pure/*" />
     </a></td>
     <td><a href="https://pkg.go.dev/github.com/fogfish/golem/pure">
       <img src="https://img.shields.io/badge/doc-pure-007d9c?logo=go&logoColor=white&style=flat-square" />
-    </a></td></tr>
+    </a></td>
+    <td>
+    Generic purely functional abstractions (e.g. HKT, Monoid, etc).
+    </td></tr>
     <!-- Module trait -->
     <tr><td><a href="https://github.com/fogfish/golem/releases">
       <img src="https://img.shields.io/github/v/tag/fogfish/golem?label=mod&style=flat-square&filter=trait/*" />
     </a></td>
     <td><a href="https://pkg.go.dev/github.com/fogfish/golem/trait">
       <img src="https://img.shields.io/badge/doc-trait-007d9c?logo=go&logoColor=white&style=flat-square" />
-    </a></td></tr>
+    </a></td>
+    <td>
+    Generic behavior traits.
+    </td></tr>
     </tbody>
   </table>
 </p>
