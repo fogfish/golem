@@ -1,20 +1,12 @@
 <p align="center">
-  <img src="./doc/logo.svg" height="180" />
+  <img src="./doc/golem.svg" height="240" />
   <h3 align="center">Golem</h3>
   <p align="center"><strong>"Scrap Your Boilerplate" for Go</strong></p>
 
   <p align="center">
-    <!-- Version -->
-    <a href="https://github.com/fogfish/golem/releases">
-      <img src="https://img.shields.io/github/v/tag/fogfish/golem?label=version" />
-    </a> 
-    <!-- Documentation -->
-    <a href="https://pkg.go.dev/github.com/fogfish/golem">
-      <img src="https://pkg.go.dev/badge/github.com/fogfish/golem" />
-    </a>
     <!-- Build Status  -->
     <a href="https://github.com/fogfish/golem/actions/">
-      <img src="https://github.com/fogfish/golem/workflows/test/badge.svg" />
+      <img src="https://github.com/fogfish/golem/workflows/build/badge.svg" />
     </a>
     <!-- GitHub -->
     <a href="http://github.com/fogfish/golem">
@@ -28,11 +20,62 @@
     <a href="https://goreportcard.com/report/github.com/fogfish/golem">
       <img src="https://goreportcard.com/badge/github.com/fogfish/golem" />
     </a>
-    <!-- Maintainability -->
-    <a href="https://codeclimate.com/github/fogfish/golem/maintainability">
-      <img src="https://api.codeclimate.com/v1/badges/ee132d36361127fa99c9/maintainability" />
-    </a>
   </p>
+  <table align="center">
+    <thead><tr><th>sub-module</th><th>doc</th><th>about</th></tr></thead>
+    <tbody>
+    <!-- Module hseq -->
+    <tr><td><a href="./hseq/">
+      <img src="https://img.shields.io/github/v/tag/fogfish/golem?label=mod&style=flat-square&filter=hseq/*"/>
+    </a></td>
+    <td><a href="https://pkg.go.dev/github.com/fogfish/golem/hseq">
+      <img src="https://img.shields.io/badge/doc-hseq-007d9c?logo=go&logoColor=white&style=flat-square" />
+    </a></td>
+    <td>
+    Heterogenous sequence of types
+    </td></tr>
+    <!-- Module optics -->
+    <tr><td><a href="./optics/">
+      <img src="https://img.shields.io/github/v/tag/fogfish/golem?label=mod&style=flat-square&filter=optics/*" />
+    </a></td>
+    <td><a href="https://pkg.go.dev/github.com/fogfish/golem/optics">
+      <img src="https://img.shields.io/badge/doc-optics-007d9c?logo=go&logoColor=white&style=flat-square" />
+    </a></td>
+    <td>
+    Composable getters and setters (lenses) for manipulating data structures 
+    </td></tr>
+    <!-- Module pipe -->
+    <tr><td><a href="./pipe/">
+      <img src="https://img.shields.io/github/v/tag/fogfish/golem?label=mod&style=flat-square&filter=pipe/*" />
+    </a></td>
+    <td><a href="https://pkg.go.dev/github.com/fogfish/golem/pipe">
+      <img src="https://img.shields.io/badge/doc-pipe-007d9c?logo=go&logoColor=white&style=flat-square" />
+    </a></td>
+    <td>
+    Type safe channels and data pipeline combinator.
+    </td></tr>
+    <!-- Module pure -->
+    <tr><td><a href="./pure/">
+      <img src="https://img.shields.io/github/v/tag/fogfish/golem?label=mod&style=flat-square&filter=pure/*" />
+    </a></td>
+    <td><a href="https://pkg.go.dev/github.com/fogfish/golem/pure">
+      <img src="https://img.shields.io/badge/doc-pure-007d9c?logo=go&logoColor=white&style=flat-square" />
+    </a></td>
+    <td>
+    Generic purely functional abstractions (e.g. HKT, Monoid, etc).
+    </td></tr>
+    <!-- Module trait -->
+    <tr><td><a href="./trait/">
+      <img src="https://img.shields.io/github/v/tag/fogfish/golem?label=mod&style=flat-square&filter=trait/*" />
+    </a></td>
+    <td><a href="https://pkg.go.dev/github.com/fogfish/golem/trait">
+      <img src="https://img.shields.io/badge/doc-trait-007d9c?logo=go&logoColor=white&style=flat-square" />
+    </a></td>
+    <td>
+    Generic behavior traits.
+    </td></tr>
+    </tbody>
+  </table>
 </p>
 
 --- 
@@ -42,7 +85,7 @@
 > You could do this with a macro, but...
 > the best macro is a macro you don't maintain
 
-**Golem** is a purely functional and generic programming library for Go. It has its origins in [Purely Functional Data Structures](okasaki.pdf) by Chris Okasaki, and implements various functional abstractions and patterns, deals with [scrap your boilerplate](https://www.microsoft.com/en-us/research/publication/scrap-your-boilerplate-with-class/) and benefits from the experience of other functional languages, primary Scala, Haskell and also heavily inspired by the Erlang library [datum](https://github.com/fogfish/datum). Golem is testing the limits of functional abstractions in Go.
+**Golem** is a purely functional and generic programming library for Go. It has its origins in [Purely Functional Data Structures](./doc/okasaki.pdf) by Chris Okasaki, and implements various functional abstractions and patterns, deals with [scrap your boilerplate](https://www.microsoft.com/en-us/research/publication/scrap-your-boilerplate-with-class/) and benefits from the experience of other functional languages, primary Scala, Haskell and also heavily inspired by the Erlang library [datum](https://github.com/fogfish/datum). Golem is testing the limits of functional abstractions in Go.
 
 
 ## Inspiration
@@ -55,12 +98,6 @@ This is because functions describe the solution to your problem. If your code co
 
 Functional style programming can be achieved in any language, including Go. Golang's [structural type system](https://en.wikipedia.org/wiki/Structural_type_system) helps to reject invalid programs at compilation time. One of the challenge here is, that Go's structures, arrays, slices and maps embrace mutability rather than restricting it. Scala is a good example of the language that uses an imperative runtime but provides data structure implementations that inherently avoid mutation. This is a perfect approach to achieve immutability and performance through well-defined scopes. All-in-all, Go is a general purpose language with simple building blocks. This library uses these blocks to implement a functional style of development with the goal of simplicity in mind.
 
-## Key features
-
-* [Type classes](doc/typeclass.md) and [higher-kinded polymorphism](doc/higher-kinded-polymorphism.md)
-* [Type combinators](doc/combinator.md) deliver powerful patterns for functional programming.
-* [Monoid](doc/monoid.md) for structural transformation.
-* [Seq](https://godoc.org/github.com/fogfish/golem/hseq) is a special case for slice that support convenient methods. 
 
 ## Getting started
 
@@ -82,14 +119,17 @@ import (
 )
 ```
 
-## Submodules
-
-See the [library documentation](https://pkg.go.dev/github.com/fogfish/golem)
-
-* [hseq](hseq/README.md) Heterogeneous sequence
-* [optics](optics/README.md) Optics for Golang
-* [pipe](pipe/README.md) Type safe channels
-* [pure](pure/README.md) Purely functional abstractions
+## Examples and show cases 
+* [Type classes](doc/typeclass.md)
+* [Higher-kinded polymorphism](doc/higher-kinded-polymorphism.md)
+* [A Guide To Higher-Kinded Type Classes with Golang](https://towardsdev.com/a-guide-to-higher-kinded-type-classes-with-golang-36dab6c9ecc4)
+* [Why higher-kinded polymorphism is vital functional abstraction and How to implement type classes with Golang](https://medium.com/@dmkolesnikov/why-higher-kinded-polymorphism-is-vital-functional-abstraction-and-how-to-implement-type-classes-b30ee0576dd5)
+* [Type combinators](doc/combinator.md) deliver powerful patterns for functional programming.
+* [A Guide To Pure Type Combinators in Golang or How to Stop Worrying and Love the Functional Programming](https://medium.com/@dmkolesnikov/a-guide-to-pure-type-combinators-in-golang-or-how-to-stop-worrying-and-love-the-functional-e14f7f8cf35c)
+* [Monoid](doc/monoid.md) for structural transformation.
+* [Abstract over Golang structure fields using optics](doc/abstract-over-struct-fields-using-optics.md)
+* [Heterogenous Sequence of Types](/hseq/)
+* [Golang Optics](/optics/)
 
 
 ## How To Contribute
@@ -103,14 +143,14 @@ The library is [MIT](LICENSE) licensed and accepts contributions via GitHub pull
 5. Create new Pull Request
 
 
-The build and testing process requires [Go](https://golang.org) version 1.13 or later.
+The build and testing process requires [Go](https://golang.org) version 1.18 or later.
 
 **Build** and **run** in your development console.
 
 ```bash
 git clone https://github.com/fogfish/golem
-cd golem
-go test -cover ./...
+cd golem/{submodule}
+go test ./...
 ```
 
 ## License
