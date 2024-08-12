@@ -143,14 +143,14 @@ The library is [MIT](LICENSE) licensed and accepts contributions via GitHub pull
 5. Create new Pull Request
 
 
-The build and testing process requires [Go](https://golang.org) version 1.13 or later.
+The build and testing process requires [Go](https://golang.org) version 1.18 or later.
 
 **Build** and **run** in your development console.
 
 ```bash
 git clone https://github.com/fogfish/golem
-cd golem
-go test -cover ./...
+cd golem/{submodule}
+go test ./...
 ```
 
 ## License
