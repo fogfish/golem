@@ -8,4 +8,4 @@
 
 package pipe
 
-const Version = "pipe/v1.1.0"
+const Version = "pipe/v1.1.1"

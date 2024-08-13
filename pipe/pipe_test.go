@@ -88,8 +88,9 @@ func TestFMap(t *testing.T) {
 		ctx, close := context.WithCancel(context.Background())
 		seq := pipe.Seq(1, 2, 3, 4, 5)
 		out := pipe.StdErr(pipe.FMap(ctx, seq,
-			func(x int) (<-chan string, error) {
-				return pipe.Seq(strconv.Itoa(x)), nil
+			func(ctx context.Context, x int, ch chan<- string) error {
+				ch <- strconv.Itoa(x)
+				return nil
 			}),
 		)
 
@@ -104,8 +105,8 @@ func TestFMap(t *testing.T) {
 		ctx, close := context.WithCancel(context.Background())
 		seq := pipe.Seq(1, 2, 3, 4, 5)
 		_, exx := pipe.FMap(ctx, seq,
-			func(x int) (<-chan string, error) {
-				return nil, fmt.Errorf("fail")
+			func(ctx context.Context, x int, ch chan<- string) error {
+				return fmt.Errorf("fail")
 			},
 		)
 
@@ -114,6 +115,30 @@ func TestFMap(t *testing.T) {
 		)
 
 		close()
+	})
+
+	t.Run("Cancel", func(t *testing.T) {
+		acc := 0
+		emit := func() (int, error) {
+			acc++
+			return acc, nil
+		}
+
+		ctx, close := context.WithCancel(context.Background())
+		seq := pipe.StdErr(pipe.Emit(ctx, 1000, 10*time.Microsecond, emit))
+		out := pipe.StdErr(pipe.FMap(ctx, seq,
+			func(ctx context.Context, x int, ch chan<- int) error {
+				ch <- x
+				return nil
+			}),
+		)
+
+		vals := pipe.ToSeq(pipe.Take(ctx, out, 10))
+		close()
+
+		it.Then(t).Should(
+			it.Seq(vals).Contain().AllOf(1, 2, 3, 4, 5, 6, 7, 8, 9, 10),
+		)
 	})
 }
 
