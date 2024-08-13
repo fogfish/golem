@@ -99,7 +99,7 @@ func ForEach[A any](ctx context.Context, in <-chan A, f func(A)) <-chan struct{}
 
 // FMap applies function over channel messages, flatten the output channel and
 // emits it result to new channel.
-func FMap[A, B any](ctx context.Context, in <-chan A, fmap func(A) (<-chan B, error)) (<-chan B, <-chan error) {
+func FMap[A, B any](ctx context.Context, in <-chan A, fmap func(context.Context, A, chan<- B) error) (<-chan B, <-chan error) {
 	out := make(chan B, cap(in))
 	exx := make(chan error, 1)
 
@@ -107,25 +107,17 @@ func FMap[A, B any](ctx context.Context, in <-chan A, fmap func(A) (<-chan B, er
 		defer close(out)
 		defer close(exx)
 
-		var (
-			a   A
-			ch  <-chan B
-			err error
-		)
-
+		var a A
 		for a = range in {
-			ch, err = fmap(a)
-			if err != nil {
+			if err := fmap(ctx, a, out); err != nil {
 				exx <- err
 				return
 			}
 
-			for x := range ch {
-				select {
-				case out <- x:
-				case <-ctx.Done():
-					return
-				}
+			select {
+			case <-ctx.Done():
+				return
+			default:
 			}
 		}
 	}()

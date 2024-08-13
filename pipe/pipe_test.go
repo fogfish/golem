@@ -88,8 +88,9 @@ func TestFMap(t *testing.T) {
 		ctx, close := context.WithCancel(context.Background())
 		seq := pipe.Seq(1, 2, 3, 4, 5)
 		out := pipe.StdErr(pipe.FMap(ctx, seq,
-			func(x int) (<-chan string, error) {
-				return pipe.Seq(strconv.Itoa(x)), nil
+			func(ctx context.Context, x int, ch chan<- string) error {
+				ch <- strconv.Itoa(x)
+				return nil
 			}),
 		)
 
@@ -104,8 +105,8 @@ func TestFMap(t *testing.T) {
 		ctx, close := context.WithCancel(context.Background())
 		seq := pipe.Seq(1, 2, 3, 4, 5)
 		_, exx := pipe.FMap(ctx, seq,
-			func(x int) (<-chan string, error) {
-				return nil, fmt.Errorf("fail")
+			func(ctx context.Context, x int, ch chan<- string) error {
+				return fmt.Errorf("fail")
 			},
 		)
 

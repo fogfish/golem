@@ -83,8 +83,9 @@ func TestFMap(t *testing.T) {
 		ctx, close := context.WithCancel(context.Background())
 		seq := fork.Seq(1, 2, 3, 4, 5)
 		out := fork.StdErr(fork.FMap(ctx, par, seq,
-			func(x int) (<-chan string, error) {
-				return fork.Seq(strconv.Itoa(x)), nil
+			func(ctx context.Context, x int, ch chan<- string) error {
+				ch <- strconv.Itoa(x)
+				return nil
 			}),
 		)
 
@@ -99,8 +100,8 @@ func TestFMap(t *testing.T) {
 		ctx, close := context.WithCancel(context.Background())
 		seq := fork.Seq(1, 2, 3, 4, 5)
 		_, exx := fork.FMap(ctx, par, seq,
-			func(x int) (<-chan string, error) {
-				return nil, fmt.Errorf("fail")
+			func(ctx context.Context, x int, ch chan<- string) error {
+				return fmt.Errorf("fail")
 			},
 		)
 
