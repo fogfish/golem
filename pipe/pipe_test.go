@@ -133,11 +133,11 @@ func TestFMap(t *testing.T) {
 			}),
 		)
 
-		time.Sleep(100 * time.Microsecond)
+		vals := pipe.ToSeq(pipe.Take(ctx, out, 10))
 		close()
 
 		it.Then(t).Should(
-			it.Seq(pipe.ToSeq(out)).Contain().AllOf(1, 2, 3, 4),
+			it.Seq(vals).Contain().AllOf(1, 2, 3, 4, 5, 6, 7, 8, 9, 10),
 		)
 	})
 }

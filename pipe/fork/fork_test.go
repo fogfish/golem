@@ -128,11 +128,11 @@ func TestFMap(t *testing.T) {
 			}),
 		)
 
-		time.Sleep(100 * time.Microsecond)
+		vals := fork.ToSeq(fork.Take(ctx, out, 10))
 		close()
 
 		it.Then(t).Should(
-			it.Seq(fork.ToSeq(out)).Contain().AllOf(1, 2, 3, 4),
+			it.Seq(vals).Contain().AllOf(1, 2, 3, 4, 5, 6, 7, 8, 9, 10),
 		)
 	})
 }
