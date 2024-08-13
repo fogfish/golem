@@ -116,6 +116,30 @@ func TestFMap(t *testing.T) {
 
 		close()
 	})
+
+	t.Run("Cancel", func(t *testing.T) {
+		acc := 0
+		emit := func() (int, error) {
+			acc++
+			return acc, nil
+		}
+
+		ctx, close := context.WithCancel(context.Background())
+		seq := pipe.StdErr(pipe.Emit(ctx, 1000, 10*time.Microsecond, emit))
+		out := pipe.StdErr(pipe.FMap(ctx, seq,
+			func(ctx context.Context, x int, ch chan<- int) error {
+				ch <- x
+				return nil
+			}),
+		)
+
+		time.Sleep(100 * time.Microsecond)
+		close()
+
+		it.Then(t).Should(
+			it.Seq(pipe.ToSeq(out)).Contain().AllOf(1, 2, 3, 4),
+		)
+	})
 }
 
 func TestFold(t *testing.T) {
