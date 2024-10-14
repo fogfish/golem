@@ -41,7 +41,7 @@ jobs:
           flag-name: ${{ matrix.module }}
           parallel: true
 
-      - uses: dominikh/staticcheck-action@v1.3.0
+      - uses: dominikh/staticcheck-action@v1.3.1
         with:
           install-go: false
           working-directory: ${{ matrix.module }}
