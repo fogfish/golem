@@ -282,6 +282,11 @@ func TakeWhile[A any](ctx context.Context, in <-chan A, f func(A) bool) <-chan A
 	return pipe.TakeWhile(ctx, in, f)
 }
 
+// Throttling the channel to ops per time interval
+func Throttling[A any](ctx context.Context, in <-chan A, ops int, interval time.Duration) <-chan A {
+	return pipe.Throttling(ctx, in, ops, interval)
+}
+
 // Lift sequence of values into channel
 func Seq[T any](xs ...T) <-chan T {
 	return pipe.Seq(xs...)
