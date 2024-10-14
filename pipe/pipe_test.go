@@ -268,6 +268,28 @@ func TestTakeWhile(t *testing.T) {
 	close()
 }
 
+func TestThrottling(t *testing.T) {
+	ctx, close := context.WithCancel(context.Background())
+	seq := pipe.Seq(1, 2, 3, 4, 5, 6, 7, 8, 9, 0)
+	slowSeq := pipe.Throttling(ctx, seq, 1, 100*time.Millisecond)
+	out := pipe.StdErr(pipe.Map(ctx, slowSeq,
+		func(_ int) (time.Time, error) {
+			return time.Now(), nil
+		},
+	))
+	wt := pipe.ToSeq(out)
+	for i := 1; i < len(wt); i++ {
+		diff := wt[i].Sub(wt[i-1])
+
+		it.Then(t).Should(
+			it.Less(diff, 110*time.Millisecond),
+			it.Greater(diff, 99*time.Millisecond),
+		)
+	}
+
+	close()
+}
+
 func BenchmarkPipe(b *testing.B) {
 	ctx, close := context.WithCancel(context.Background())
 	in, eg := pipe.New[int](ctx, 0)

@@ -246,3 +246,25 @@ func TestTakeWhile(t *testing.T) {
 
 	close()
 }
+
+func TestThrottling(t *testing.T) {
+	ctx, close := context.WithCancel(context.Background())
+	seq := fork.Seq(1, 2, 3, 4, 5, 6, 7, 8, 9, 0)
+	slowSeq := fork.Throttling(ctx, seq, 1, 100*time.Millisecond)
+	out := fork.StdErr(fork.Map(ctx, par, slowSeq,
+		func(_ int) (time.Time, error) {
+			return time.Now(), nil
+		},
+	))
+	wt := fork.ToSeq(out)
+	for i := 1; i < len(wt); i++ {
+		diff := wt[i].Sub(wt[i-1])
+
+		it.Then(t).Should(
+			it.Less(diff, 110*time.Millisecond),
+			it.Greater(diff, 99*time.Millisecond),
+		)
+	}
+
+	close()
+}

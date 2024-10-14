@@ -325,6 +325,52 @@ func TakeWhile[A any](ctx context.Context, in <-chan A, f func(A) bool) <-chan A
 	return out
 }
 
+// Throttling the channel to ops per time interval
+func Throttling[A any](ctx context.Context, in <-chan A, ops int, interval time.Duration) <-chan A {
+	out := make(chan A, cap(in))
+	ctl := make(chan struct{}, ops)
+
+	go func() {
+		defer close(ctl)
+
+		for {
+			for i := 0; i < ops; i++ {
+				select {
+				case ctl <- struct{}{}:
+				case <-ctx.Done():
+					return
+				}
+			}
+			select {
+			case <-time.After(interval):
+			case <-ctx.Done():
+				return
+			}
+		}
+	}()
+
+	go func() {
+		defer close(out)
+
+		var a A
+		for a = range in {
+			select {
+			case <-ctl:
+			case <-ctx.Done():
+				return
+			}
+
+			select {
+			case out <- a:
+			case <-ctx.Done():
+				return
+			}
+		}
+	}()
+
+	return out
+}
+
 // Lift sequence of values into channel
 func Seq[T any](xs ...T) <-chan T {
 	out := make(chan T, len(xs))
