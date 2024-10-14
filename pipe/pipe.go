@@ -325,7 +325,7 @@ func TakeWhile[A any](ctx context.Context, in <-chan A, f func(A) bool) <-chan A
 	return out
 }
 
-// Throttling the channel to ops per time interval
+// Throttling the channel to ops per time interval.
 func Throttling[A any](ctx context.Context, in <-chan A, ops int, interval time.Duration) <-chan A {
 	out := make(chan A, cap(in))
 	ctl := make(chan struct{}, ops)
