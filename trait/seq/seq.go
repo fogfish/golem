@@ -20,12 +20,33 @@ type Seq[T any] interface {
 }
 
 // Lift instance of T into Seq[T] trait
-func From[T any](x T) Seq[T] { return element[T]{x} }
+func From[T any](xs T) Seq[T] { return element[T]{xs} }
 
 type element[T any] struct{ v T }
 
 func (v element[T]) Value() T   { return v.v }
 func (v element[T]) Next() bool { return false }
+
+// List instance of []T into Seq[T] trait
+func FromSlice[T any](xs []T) Seq[T] {
+	if len(xs) == 0 {
+		return nil
+	}
+
+	return &seqOf[T]{xs}
+}
+
+type seqOf[T any] struct{ el []T }
+
+func (s *seqOf[T]) Value() T { return s.el[0] }
+func (s *seqOf[T]) Next() bool {
+	if len(s.el) == 1 {
+		return false
+	}
+
+	s.el = s.el[1:]
+	return true
+}
 
 // Take values from iterator while predicate function true
 func TakeWhile[T any](seq Seq[T], f func(T) bool) Seq[T] {
