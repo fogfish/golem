@@ -16,26 +16,6 @@ import (
 	"github.com/fogfish/it/v2"
 )
 
-type seqOf[T any] struct{ el []T }
-
-func newSeqOf[T any](s []T) seq.Seq[T] {
-	if len(s) == 0 {
-		return nil
-	}
-
-	return &seqOf[T]{s}
-}
-
-func (s *seqOf[T]) Value() T { return s.el[0] }
-func (s *seqOf[T]) Next() bool {
-	if len(s.el) == 1 {
-		return false
-	}
-
-	s.el = s.el[1:]
-	return true
-}
-
 func toSlice[T any](e seq.Seq[T]) []T {
 	r := make([]T, 0)
 	for has := e != nil; has; has = e.Next() {
@@ -53,7 +33,7 @@ func TestTakeWhile(t *testing.T) {
 		{10}:             {},
 		{}:               {},
 	} {
-		e := seq.TakeWhile(newSeqOf(*input),
+		e := seq.TakeWhile(seq.FromSlice(*input),
 			func(v int) bool { return v < 10 },
 		)
 
@@ -72,7 +52,7 @@ func TestDropWhile(t *testing.T) {
 		{10, 1, 2, 3, 4}: {10, 1, 2, 3, 4},
 		{}:               {},
 	} {
-		e := seq.DropWhile(newSeqOf(*input),
+		e := seq.DropWhile(seq.FromSlice(*input),
 			func(v int) bool { return v < 10 },
 		)
 
@@ -91,7 +71,7 @@ func TestFilter(t *testing.T) {
 		{2, 4, 6, 8}:       {2, 4, 6, 8},
 		{}:                 {},
 	} {
-		e := seq.Filter(newSeqOf(*input),
+		e := seq.Filter(seq.FromSlice(*input),
 			func(v int) bool { return v%2 == 0 },
 		)
 
@@ -109,7 +89,7 @@ func TestForEach(t *testing.T) {
 		{}:                 {},
 	} {
 		e := make([]int, 0)
-		seq.ForEach(newSeqOf(*input),
+		seq.ForEach(seq.FromSlice(*input),
 			func(v int) error {
 				e = append(e, v)
 				return nil
@@ -129,7 +109,7 @@ func TestMap(t *testing.T) {
 		{2}:                {"2"},
 		{}:                 {},
 	} {
-		e := seq.Map(newSeqOf(*input), strconv.Itoa)
+		e := seq.Map(seq.FromSlice(*input), strconv.Itoa)
 
 		it.Then(t).Should(
 			it.Seq(toSlice(e)).Equal(expect...),
@@ -144,19 +124,19 @@ func TestPlus(t *testing.T) {
 		{2}:       {2, 2},
 		{}:        {},
 	} {
-		e := seq.Plus(newSeqOf(*input), newSeqOf(*input))
+		e := seq.Plus(seq.FromSlice(*input), seq.FromSlice(*input))
 
 		it.Then(t).Should(
 			it.Seq(toSlice(e)).Equal(expect...),
 		)
 
-		e = seq.Plus(newSeqOf(*input), nil)
+		e = seq.Plus(seq.FromSlice(*input), nil)
 
 		it.Then(t).Should(
 			it.Seq(toSlice(e)).Equal(*input...),
 		)
 
-		e = seq.Plus(nil, newSeqOf(*input))
+		e = seq.Plus(nil, seq.FromSlice(*input))
 
 		it.Then(t).Should(
 			it.Seq(toSlice(e)).Equal(*input...),
@@ -171,7 +151,7 @@ func TestJoin(t *testing.T) {
 		{2}:       {"2"},
 		{}:        {},
 	} {
-		e := seq.Join(newSeqOf(*input),
+		e := seq.Join(seq.FromSlice(*input),
 			func(x int) seq.Seq[string] {
 				return seq.From(strconv.Itoa(x))
 			},
@@ -190,7 +170,7 @@ func TestJoinNil(t *testing.T) {
 		{2}:       {},
 		{}:        {},
 	} {
-		e := seq.Join(newSeqOf(*input),
+		e := seq.Join(seq.FromSlice(*input),
 			func(x int) seq.Seq[string] { return nil },
 		)
 
