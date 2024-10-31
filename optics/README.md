@@ -106,6 +106,8 @@ See runnable examples to play with the library
 
 * optics/v0.10 and earlier uses `reflect` 
 * optics/v0.11 and later uses `unsafe` pointers
+* optics/v0.12 `isomorphism`
+* optics/v0.13 auto `bimap` for superset category
 
 ## References
 
