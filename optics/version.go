@@ -8,4 +8,4 @@
 
 package optics
 
-const Version = "optics/v0.12.1"
+const Version = "optics/v0.13.0"
