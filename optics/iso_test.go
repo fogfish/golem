@@ -194,3 +194,74 @@ func TestIsomorphism(t *testing.T) {
 
 	t.Run("Interface", testIsomorphism[io.Reader](&bytes.Buffer{}))
 }
+
+func TestBiMapX(t *testing.T) {
+	t.Run("String", func(t *testing.T) {
+		type A string
+		type B string
+		type S struct{ A }
+
+		bimap := optics.BiMapS[S, A, B]()
+
+		s := S{}
+		bimap.Put(&s, "some")
+		b := bimap.Get(&s)
+
+		it.Then(t).Should(
+			it.Equal(b, "some"),
+			it.Equal(s.A, "some"),
+		)
+	})
+
+	t.Run("Byte", func(t *testing.T) {
+		type A []byte
+		type B []byte
+		type S struct{ A }
+
+		bimap := optics.BiMapB[S, A, B]()
+
+		s := S{}
+		bimap.Put(&s, []byte("some"))
+		b := bimap.Get(&s)
+
+		it.Then(t).Should(
+			it.Equiv(b, []byte("some")),
+			it.Equiv(s.A, []byte("some")),
+		)
+	})
+
+	t.Run("Int", func(t *testing.T) {
+		type A int
+		type B int
+		type S struct{ A }
+
+		bimap := optics.BiMapI[S, A, B]()
+
+		s := S{}
+		bimap.Put(&s, 100)
+		b := bimap.Get(&s)
+
+		it.Then(t).Should(
+			it.Equal(b, 100),
+			it.Equal(s.A, 100),
+		)
+	})
+
+	t.Run("Float", func(t *testing.T) {
+		type A float64
+		type B float64
+		type S struct{ A }
+
+		bimap := optics.BiMapF[S, A, B]()
+
+		s := S{}
+		bimap.Put(&s, 100.0)
+		b := bimap.Get(&s)
+
+		it.Then(t).Should(
+			it.Equal(b, 100.0),
+			it.Equal(s.A, 100.0),
+		)
+	})
+
+}

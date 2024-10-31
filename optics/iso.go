@@ -52,6 +52,62 @@ type codec[S, A, B any] struct {
 func (c codec[S, A, B]) Put(s *S, b B) *S { return c.lens.Put(s, c.cmap(b)) }
 func (c codec[S, A, B]) Get(s *S) B       { return c.fmap(c.lens.Get(s)) }
 
+// Automatic transformer for string superset, preserve mapping between
+// two categories A, B, where both rooted to strings
+func BiMapS[S any, A, B String](attr ...string) Lens[S, B] {
+	return BiMap(
+		ForProduct1[S, A](attr...),
+		func(a A) B { return B(a) },
+		func(b B) A { return A(b) },
+	)
+}
+
+type String interface {
+	~string
+}
+
+// Automatic transformer for []byte superset, preserve mapping between
+// two categories A, B, where both rooted to []byte
+func BiMapB[S any, A, B Byte](attr ...string) Lens[S, B] {
+	return BiMap(
+		ForProduct1[S, A](attr...),
+		func(a A) B { return B(a) },
+		func(b B) A { return A(b) },
+	)
+}
+
+type Byte interface {
+	~[]byte
+}
+
+// Automatic transformer for int superset, preserve mapping between
+// two categories A, B, where both rooted to int
+func BiMapI[S any, A, B Int](attr ...string) Lens[S, B] {
+	return BiMap(
+		ForProduct1[S, A](attr...),
+		func(a A) B { return B(a) },
+		func(b B) A { return A(b) },
+	)
+}
+
+type Int interface {
+	~int | ~int8 | ~int16 | ~int32 | ~int64
+}
+
+// Automatic transformer for float32 superset, preserve mapping between
+// two categories A, B, where both rooted to float
+func BiMapF[S any, A, B Float](attr ...string) Lens[S, B] {
+	return BiMap(
+		ForProduct1[S, A](attr...),
+		func(a A) B { return B(a) },
+		func(b B) A { return A(b) },
+	)
+}
+
+type Float interface {
+	~float32 | ~float64
+}
+
 // An isomorphism is a structure-preserving mapping between two structures
 // of the same shape that can be reversed by an inverse mapping.
 type Isomorphism[S, T any] interface {
