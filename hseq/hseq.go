@@ -67,6 +67,12 @@ func unfold[T any](cat reflect.Type, seq Seq[T], offset uintptr) Seq[T] {
 		}
 
 		if fv.Anonymous && ft.Kind() == reflect.Struct {
+			seq = append(seq, Type[T]{
+				StructField: fv,
+				RootOffs:    offset,
+				PureType:    ft,
+				ID:          len(seq),
+			})
 			seq = unfold(ft, seq, offset+fv.Offset)
 		} else {
 			seq = append(seq, Type[T]{
@@ -189,6 +195,16 @@ func New9[T, A, B, C, D, E, F, G, H, I any]() Seq[T] {
 	}
 }
 
+type errType struct {
+	Issue string
+	FixIt string
+}
+
+func (err errType) Error() string {
+	return fmt.Sprintf("\n==> Critical Error:\n❌ %s\n\n🛠️ %s\n",
+		err.Issue, err.FixIt)
+}
+
 // Lookup type heterogenous sequence by "witness" type
 func ForType[A, T any](seq Seq[T]) Type[T] {
 	// Note: new(A) always create pointer to A (*A)
@@ -202,7 +218,22 @@ func ForType[A, T any](seq Seq[T]) Type[T] {
 	}
 
 	cat := reflect.TypeOf(new(T)).Elem()
-	panic(fmt.Errorf("%s is not member of %s type", val.Name(), cat.Name()))
+
+	innerT := val.Name()
+	if val.Kind() == reflect.Pointer {
+		innerT = "*" + val.Elem().Name()
+	}
+
+	outerT := cat.Name()
+	if cat.Kind() == reflect.Pointer {
+		outerT = cat.Elem().Name()
+	}
+
+	err := errType{
+		Issue: fmt.Sprintf("type `%s` is not field of a struct `%s`", innerT, outerT),
+		FixIt: fmt.Sprintf("How To Fix:\n- check for typos in type names.\n- add or embed `%s` as a field to struct `%s`\n\n `type %s struct { %s }`\n `type %s struct { x %s }`\n\n", innerT, outerT, outerT, innerT, outerT, innerT),
+	}
+	panic(err)
 }
 
 // Lookup type in heterogenous sequence by name of member
@@ -214,7 +245,16 @@ func ForName[T any](seq Seq[T], field string) Type[T] {
 	}
 
 	cat := reflect.TypeOf(new(T)).Elem()
-	panic(fmt.Errorf("%s is not member of %s type", field, cat.Name()))
+	outerT := cat.Name()
+	if cat.Kind() == reflect.Pointer {
+		outerT = cat.Elem().Name()
+	}
+	err := errType{
+		Issue: fmt.Sprintf("field `%s` is not member of a struct `%s`", field, outerT),
+		FixIt: fmt.Sprintf("How To Fix:\n- check for typos in field name.\n- add a field `%s` to struct `%s`\n\n `type %s struct { %s any }`\n\n", field, outerT, outerT, field),
+	}
+
+	panic(err)
 }
 
 // Lookup type in heterogenous sequence by name of member

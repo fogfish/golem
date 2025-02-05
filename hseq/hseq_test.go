@@ -89,11 +89,25 @@ func TestForType(t *testing.T) {
 		for expect, tt := range map[string]hseq.Type[T]{
 			"S": hseq.ForType[S, T](seq),
 			"I": hseq.ForType[I, T](seq),
+			"A": hseq.ForType[A, T](seq),
+			"B": hseq.ForType[*B, T](seq),
 		} {
 			it.Then(t).Should(
 				it.Equal(tt.Name, expect),
 			)
 		}
+	})
+
+	t.Run("Unknown", func(t *testing.T) {
+		type A string
+		type T struct{ A }
+
+		seq := hseq.New[T]()
+		it.Then(t).Should(
+			it.Fail(
+				func() { hseq.ForType[int](seq) },
+			).Contain("Critical Error"),
+		)
 	})
 }
 
@@ -172,8 +186,23 @@ func TestForName(t *testing.T) {
 		it.Then(t).Should(
 			it.Equal(hseq.ForName[T](seq, "S").Name, "S"),
 			it.Equal(hseq.ForName[T](seq, "I").Name, "I"),
+			it.Equal(hseq.ForName[T](seq, "A").Name, "A"),
+			it.Equal(hseq.ForName[T](seq, "B").Name, "B"),
 		)
 	})
+
+	t.Run("Unknown", func(t *testing.T) {
+		type A string
+		type T struct{ A }
+
+		seq := hseq.New[T]()
+		it.Then(t).Should(
+			it.Fail(
+				func() { hseq.ForName(seq, "xxx") },
+			).Contain("Critical Error"),
+		)
+	})
+
 }
 
 //
@@ -200,7 +229,7 @@ type Bar struct {
 	FA Boo
 }
 
-var FIELDS = []string{"T1", "T2", "F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "FA"}
+var FIELDS = []string{"Foo", "T1", "Poo", "T2", "F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "FA"}
 
 func TestNew(t *testing.T) {
 
