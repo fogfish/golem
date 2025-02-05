@@ -97,6 +97,18 @@ func TestForType(t *testing.T) {
 			)
 		}
 	})
+
+	t.Run("Unknown", func(t *testing.T) {
+		type A string
+		type T struct{ A }
+
+		seq := hseq.New[T]()
+		it.Then(t).Should(
+			it.Fail(
+				func() { hseq.ForType[int](seq) },
+			).Contain("Critical Error"),
+		)
+	})
 }
 
 //
@@ -178,6 +190,19 @@ func TestForName(t *testing.T) {
 			it.Equal(hseq.ForName[T](seq, "B").Name, "B"),
 		)
 	})
+
+	t.Run("Unknown", func(t *testing.T) {
+		type A string
+		type T struct{ A }
+
+		seq := hseq.New[T]()
+		it.Then(t).Should(
+			it.Fail(
+				func() { hseq.ForName(seq, "xxx") },
+			).Contain("Critical Error"),
+		)
+	})
+
 }
 
 //
