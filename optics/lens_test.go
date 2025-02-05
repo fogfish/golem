@@ -116,14 +116,20 @@ func TestLensLaws(t *testing.T) {
 			// Note: lens package does not support embedded pointers
 		}
 
-		la := optics.ForProduct1[T, S]()
-		lb := optics.ForProduct1[T, I]("I")
+		ls := optics.ForProduct1[T, S]()
+		li := optics.ForProduct1[T, I]("I")
+		la := optics.ForProduct1[T, A]()
 
 		t.Run("GetPut", func(t *testing.T) {
 			tt := T{A: A{"string"}, B: B{10}}
-			la.Put(&tt, la.Get(&tt))
-			lb.Put(&tt, lb.Get(&tt))
+			ls.Put(&tt, ls.Get(&tt))
+			li.Put(&tt, li.Get(&tt))
 
+			it.Then(t).Should(
+				it.Equiv(tt, T{A: A{"string"}, B: B{10}}),
+			)
+
+			la.Put(&tt, la.Get(&tt))
 			it.Then(t).Should(
 				it.Equiv(tt, T{A: A{"string"}, B: B{10}}),
 			)
@@ -131,23 +137,36 @@ func TestLensLaws(t *testing.T) {
 
 		t.Run("PutGet", func(t *testing.T) {
 			tt := T{}
-			va := la.Get(la.Put(&tt, "string"))
-			vb := lb.Get(lb.Put(&tt, 10))
+			vs := ls.Get(ls.Put(&tt, "string"))
+			vi := li.Get(li.Put(&tt, 10))
 
 			it.Then(t).Should(
-				it.Equal(va, "string"),
-				it.Equal(vb, 10),
+				it.Equal(vs, "string"),
+				it.Equal(vi, 10),
 				it.Equiv(tt, T{A: A{"string"}, B: B{10}}),
+			)
+
+			tt = T{}
+			va := la.Get(la.Put(&tt, A{"string"}))
+			it.Then(t).Should(
+				it.Equal(va, A{"string"}),
+				it.Equiv(tt, T{A: A{"string"}}),
 			)
 		})
 
 		t.Run("PutPut", func(t *testing.T) {
 			tt := T{}
-			la.Put(la.Put(&tt, "foobar"), "string")
-			lb.Put(lb.Put(&tt, 11), 10)
+			ls.Put(ls.Put(&tt, "foobar"), "string")
+			li.Put(li.Put(&tt, 11), 10)
 
 			it.Then(t).Should(
 				it.Equiv(tt, T{A: A{"string"}, B: B{10}}),
+			)
+
+			tt = T{}
+			la.Put(la.Put(&tt, A{"foobar"}), A{"string"})
+			it.Then(t).Should(
+				it.Equiv(tt, T{A: A{"string"}}),
 			)
 		})
 	})
