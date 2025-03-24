@@ -126,7 +126,7 @@ func (node AstMap) Apply(depth int, v Visitor) error {
 type AstSeq struct {
 	Root     bool
 	Deferred bool
-	seq      []Ast
+	Seq      []Ast
 }
 
 func (n AstSeq) Apply(depth int, v Visitor) error {
@@ -140,7 +140,7 @@ func (n AstSeq) Apply(depth int, v Visitor) error {
 		}
 	}
 
-	for _, x := range n.seq {
+	for _, x := range n.Seq {
 		if err := x.Apply(depth+1, v); err != nil {
 			return err
 		}
@@ -164,14 +164,14 @@ func (f *AstSeq) unit() bool {
 		return false
 	}
 
-	if len(f.seq) == 0 {
+	if len(f.Seq) == 0 {
 		if !f.Root {
 			f.Deferred = false
 		}
 		return true
 	}
 
-	switch v := f.seq[len(f.seq)-1].(type) {
+	switch v := f.Seq[len(f.Seq)-1].(type) {
 	case *AstSeq:
 		if ok := v.unit(); ok {
 			return true
@@ -189,18 +189,18 @@ func (f *AstSeq) append(n Ast) bool {
 		return false
 	}
 
-	if len(f.seq) == 0 {
-		f.seq = append(f.seq, n)
+	if len(f.Seq) == 0 {
+		f.Seq = append(f.Seq, n)
 		return true
 	}
 
-	switch v := f.seq[len(f.seq)-1].(type) {
+	switch v := f.Seq[len(f.Seq)-1].(type) {
 	case *AstSeq:
 		if ok := v.append(n); ok {
 			return true
 		}
 	}
 
-	f.seq = append(f.seq, n)
+	f.Seq = append(f.Seq, n)
 	return true
 }

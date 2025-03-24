@@ -39,7 +39,7 @@ func From[A any](source T[A]) Morphism[A, A] {
 	code := &AstSeq{
 		Root:     true,
 		Deferred: true,
-		seq:      make([]Ast, 0),
+		Seq:      make([]Ast, 0),
 	}
 
 	in := &AstFrom{
@@ -81,7 +81,7 @@ func LiftF[A, B, C any](f F[B, C], m Morphism[A, []B]) Morphism[A, C] {
 	inner := &AstSeq{
 		Root:     false,
 		Deferred: true,
-		seq:      make([]Ast, 0),
+		Seq:      make([]Ast, 0),
 	}
 
 	join := &AstMap{
@@ -106,7 +106,7 @@ func WrapF[A, B any](m Morphism[A, []B]) Morphism[A, B] {
 	inner := &AstSeq{
 		Root:     false,
 		Deferred: true,
-		seq:      make([]Ast, 0),
+		Seq:      make([]Ast, 0),
 	}
 
 	code := m.code
