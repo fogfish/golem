@@ -1,5 +1,7 @@
 # Metaprogramming of computations (`duct`)
 
+> syntax represented by the free monad for a functor that provides a signature.
+
 The `duct` module provides a **composition pattern** for declaring **monadic computation** using abstract morphisms. It offers a **category-theory-inspired algebra** that enables structured composition of transformations (`ƒ: A ⟼ B`), forming **composable computation pipelines** (`𝑚: A ⟼ B`). Instead of executing computations directly, `duct` constructs an **abstract syntax tree (AST)** that represents the computation **declaratively**.
 
 ```mermaid
@@ -53,6 +55,7 @@ With `duct`, computations are **first-class entities**, enabling dynamic modific
     - [Unit(𝑚) = 𝜂 ∘ 𝑚⁺ : 𝓕⁺(A) ⟼ 𝓕(B)](#unit𝑚--𝜂--𝑚--𝓕a--𝓕b)
     - [Yield(𝑚) = ⟘ᴮ ∘ 𝑚 : B ⟼ 𝑻](#yield𝑚--ᴮ--𝑚--b--𝑻)
     - [Examples](#examples)
+  - [Why This Abstraction Implements a Free Monad Structure](#why-this-abstraction-implements-a-free-monad-structure)
   - [How To Contribute](#how-to-contribute)
   - [License](#license)
 
@@ -160,6 +163,38 @@ e := duct.Yield(duct.L1(/* target */), d)
 ```
 
 The declaration result abstract syntax tree. The application defines own principles of its materialization (e.g it can use infrastructure as a code to deploy the computation pipeline).
+
+## Why This Abstraction Implements a Free Monad Structure
+
+This module provides an AST-based Free Monad, enabling composable and deferred computations while preserving functorial transformations. The structure adheres to category theory principles and satisfies the definition of a Free Monad as follows:
+
+A Free Monad over a functor 𝓕 is defined as:
+
+```
+Free 𝓕 A = A + 𝓕(Free 𝓕 A)
+```
+This definition implies:
+1. It consists of either `A` pure value (Pure) representing an already computed result or inner computation, capturing a functorial transformation without immediate execution.
+2. It enables chained computations (flatMap) without collapsing intermediate steps prematurely.
+3. It maintains compositional structure until explicitly resolved.
+
+This API implements a Free Monad using an AST-based execution model, where transformations are staged and composed before execution. The core functions that establish this structure are:
+
+1. `LiftF(f, m): Morphism[A, C]`  Lifts a functorial transformation `𝑓: B ⟼ C` into a deferred computation. This is analogous to `𝓕(Free 𝓕 A)`, capturing computations without execution. 
+
+2. `Join(f, m): Morphism[A, C]` composes a transformation `𝑓: B ⟼ C`  with an existing morphism `𝑚: A ⟼ B`, producing a new staged computation. This behaves like `flatMap`, applying a function inside the monadic context.
+
+3. `Unit(m): Morphism[A, []B]` resolves and finalizes all staged transformations.
+This collapses the monadic structure, much like evaluating a Free monad via an interpreter.
+
+The abstraction satisfies the monad laws:
+**Left Identity** (`return x >>= f` behaves the same as `f(x)`). `Unit(Join(𝑓, WrapF(𝑚)))` ensures that lifting and joining a function preserves its behavior.
+
+**Right Identity** (`m >>= return` behaves the same as `m`.). Since `Join(id, 𝑚) == 𝑚`, composing with an identity function preserves structure.
+
+**Associativity** (`(m >>= f) >>= g` behaves the same as `m >>= (fun x -> f x >>= g)`). `Unit(Join(g, LiftF(f))) == flatMap(f ∘ g)`, ensuring that function composition follows monadic associativity.
+
+Read [How the Free Monad and Functors Represent Syntax](https://interjectedfuture.com/how-the-free-monad-and-functors-represent-syntax/) if your are looking deep-diving into Free Monands for a powerful way to build expressions in a domain-specific language. 
 
 
 ## How To Contribute
