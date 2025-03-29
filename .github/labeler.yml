@@ -8,6 +8,10 @@
  - 'doc/**/*'
  - 'examples/**/*'
 
+"[#] duct":
+ - 'duct/*'
+ - 'duct/**/*'
+
 "[#] hseq":
  - 'hseq/*'
  - 'hseq/**/*'

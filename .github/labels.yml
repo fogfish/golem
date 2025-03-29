@@ -135,6 +135,11 @@
   aliases: []
   description: changes to documentation
 
+- name: "[#] duct"
+  color: "3978e1"
+  aliases: []
+  description: duct module
+
 - name: "[#] hseq"
   color: "3978e1"
   aliases: []

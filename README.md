@@ -24,6 +24,16 @@
   <table align="center">
     <thead><tr><th>sub-module</th><th>doc</th><th>about</th></tr></thead>
     <tbody>
+    <!-- Module duct -->
+    <tr><td><a href="./duct/">
+      <img src="https://img.shields.io/github/v/tag/fogfish/golem?label=mod&style=flat-square&filter=duct/*"/>
+    </a></td>
+    <td><a href="https://pkg.go.dev/github.com/fogfish/golem/duct">
+      <img src="https://img.shields.io/badge/doc-duct-007d9c?logo=go&logoColor=white&style=flat-square" />
+    </a></td>
+    <td>
+    Metaprogramming of computations 
+    </td></tr>
     <!-- Module hseq -->
     <tr><td><a href="./hseq/">
       <img src="https://img.shields.io/github/v/tag/fogfish/golem?label=mod&style=flat-square&filter=hseq/*"/>
