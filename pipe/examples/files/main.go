@@ -19,7 +19,7 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/fogfish/golem/pipe/fork"
+	"github.com/fogfish/golem/pipe/v2/fork"
 )
 
 var (
@@ -33,10 +33,15 @@ func main() {
 
 	// Parallel SHA1 digest
 	seq, errf := walk(ctx)
-	sha, errh := fork.Map(ctx, threads, seq, digest)
-	str, errs := fork.Map(ctx, threads, sha, stringify)
+	sha, errh := fork.Map(ctx, threads, seq, fork.Lift(digest))
+	str, errs := fork.Map(ctx, threads, sha, fork.Lift(stringify))
 	<-fork.ForEach(ctx, threads, str,
-		func(x string) { fmt.Printf("==> %s\n", x) },
+		fork.Pure(
+			func(x string) string {
+				fmt.Printf("==> %s\n", x)
+				return x
+			},
+		),
 	)
 
 	if err := <-fork.Join(ctx, errf, errh, errs); err != nil {

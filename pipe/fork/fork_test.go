@@ -16,7 +16,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/fogfish/golem/pipe/fork"
+	"github.com/fogfish/golem/pipe/v2/fork"
 	"github.com/fogfish/golem/pure/monoid"
 	"github.com/fogfish/it/v2"
 )
@@ -24,32 +24,54 @@ import (
 const par = 4
 
 func TestEmit(t *testing.T) {
-	seq := 0
-	emit := func() (int, error) {
-		seq++
-		return seq, nil
-	}
+	t.Run("Emit", func(t *testing.T) {
+		emit := fork.Pure(func(x int) int { return x })
 
-	ctx, close := context.WithCancel(context.Background())
-	eg := fork.StdErr(fork.Emit(ctx, 0, 10*time.Microsecond, emit))
+		ctx, close := context.WithCancel(context.Background())
+		eg := fork.StdErr(fork.Emit(ctx, 0, 10*time.Microsecond, emit))
 
-	it.Then(t).Should(
-		it.Equal(<-eg, 1),
-		it.Equal(<-eg, 2),
-		it.Equal(<-eg, 3),
-		it.Equal(<-eg, 4),
-		it.Equal(<-eg, 5),
-		it.Equal(<-eg, 6),
-	)
-	close()
+		it.Then(t).Should(
+			it.Equal(<-eg, 0),
+			it.Equal(<-eg, 1),
+			it.Equal(<-eg, 2),
+			it.Equal(<-eg, 3),
+			it.Equal(<-eg, 4),
+			it.Equal(<-eg, 5),
+		)
+		close()
+	})
+
+	t.Run("Try", func(t *testing.T) {
+		emit := fork.Try(
+			func(x int) (int, error) {
+				if x%2 == 1 {
+					return x, fmt.Errorf("odd")
+				}
+				return x, nil
+			},
+		)
+
+		ctx, close := context.WithCancel(context.Background())
+		eg, ex := fork.Emit(ctx, 0, 10*time.Microsecond, emit)
+
+		it.Then(t).Should(
+			it.Equal(<-eg, 0),
+			it.Fail(func() error { return <-ex }).Contain("odd"),
+			it.Equal(<-eg, 2),
+			it.Fail(func() error { return <-ex }).Contain("odd"),
+			it.Equal(<-eg, 4),
+			it.Fail(func() error { return <-ex }).Contain("odd"),
+		)
+		close()
+	})
 }
 
 func TestFilter(t *testing.T) {
+	fun := fork.Pure(func(x int) bool { return x%2 == 1 })
+
 	ctx, close := context.WithCancel(context.Background())
 	seq := fork.Seq(1, 2, 3, 4, 5)
-	out := fork.Filter(ctx, par, seq,
-		func(x int) bool { return x%2 == 1 },
-	)
+	out := fork.Filter(ctx, par, seq, fun)
 
 	it.Then(t).Should(
 		it.Seq(fork.ToSeq(out)).Contain().AllOf(1, 3, 5),
@@ -59,17 +81,18 @@ func TestFilter(t *testing.T) {
 }
 
 func TestForEach(t *testing.T) {
-	ctx, close := context.WithCancel(context.Background())
-
-	seq := fork.Seq(1, 2, 3, 4, 5)
-
 	var m sync.Mutex
 	n := 0
-	<-fork.ForEach(ctx, par, seq, func(a int) {
+	fun := fork.Pure(func(a int) int {
 		m.Lock()
 		defer m.Unlock()
 		n = n + a
+		return n
 	})
+
+	ctx, close := context.WithCancel(context.Background())
+	seq := fork.Seq(1, 2, 3, 4, 5)
+	<-fork.ForEach(ctx, par, seq, fun)
 
 	it.Then(t).Should(
 		it.Equal(n, 15),
@@ -80,14 +103,16 @@ func TestForEach(t *testing.T) {
 
 func TestFMap(t *testing.T) {
 	t.Run("FMap", func(t *testing.T) {
-		ctx, close := context.WithCancel(context.Background())
-		seq := fork.Seq(1, 2, 3, 4, 5)
-		out := fork.StdErr(fork.FMap(ctx, par, seq,
+		fun := fork.LiftF(
 			func(ctx context.Context, x int, ch chan<- string) error {
 				ch <- strconv.Itoa(x)
 				return nil
-			}),
+			},
 		)
+
+		ctx, close := context.WithCancel(context.Background())
+		seq := fork.Seq(1, 2, 3, 4, 5)
+		out := fork.StdErr(fork.FMap(ctx, par, seq, fun))
 
 		it.Then(t).Should(
 			it.Seq(fork.ToSeq(out)).Contain().AllOf("1", "2", "3", "4", "5"),
@@ -97,13 +122,15 @@ func TestFMap(t *testing.T) {
 	})
 
 	t.Run("Err", func(t *testing.T) {
-		ctx, close := context.WithCancel(context.Background())
-		seq := fork.Seq(1, 2, 3, 4, 5)
-		_, exx := fork.FMap(ctx, par, seq,
+		fun := fork.LiftF(
 			func(ctx context.Context, x int, ch chan<- string) error {
 				return fmt.Errorf("fail")
 			},
 		)
+
+		ctx, close := context.WithCancel(context.Background())
+		seq := fork.Seq(1, 2, 3, 4, 5)
+		_, exx := fork.FMap(ctx, par, seq, fun)
 
 		it.Then(t).ShouldNot(
 			it.Nil(<-exx),
@@ -112,36 +139,53 @@ func TestFMap(t *testing.T) {
 		close()
 	})
 
-	t.Run("Cancel", func(t *testing.T) {
-		acc := 0
-		emit := func() (int, error) {
-			acc++
-			return acc, nil
-		}
+	t.Run("Try", func(t *testing.T) {
+		fun := fork.TryF(
+			func(ctx context.Context, x int, ch chan<- string) error {
+				if x%2 == 1 {
+					return fmt.Errorf("odd")
+				}
+				ch <- strconv.Itoa(x)
+				return nil
+			},
+		)
 
 		ctx, close := context.WithCancel(context.Background())
-		seq := fork.StdErr(fork.Emit(ctx, 1000, 10*time.Microsecond, emit))
-		out := fork.StdErr(fork.FMap(ctx, par, seq,
+		seq := fork.Seq(1, 2, 3, 4, 5)
+		out, err := fork.FMap(ctx, par, seq, fun)
+
+		it.Then(t).Should(
+			it.Seq(fork.ToSeq(out)).Contain().OneOf("2", "4"),
+			it.Seq(fork.ToSeq(err)).Contain().OneOf(fmt.Errorf("odd")),
+		)
+		close()
+	})
+
+	t.Run("Cancel", func(t *testing.T) {
+		emit := fork.Pure(func(x int) int { return x })
+		fun := fork.LiftF(
 			func(ctx context.Context, x int, ch chan<- int) error {
 				ch <- x
 				return nil
-			}),
+			},
 		)
 
+		ctx, close := context.WithCancel(context.Background())
+		seq := fork.StdErr(fork.Emit(ctx, 1000, 10*time.Microsecond, emit))
+		out := fork.StdErr(fork.FMap(ctx, par, seq, fun))
 		vals := fork.ToSeq(fork.Take(ctx, out, 10))
 		close()
 
 		it.Then(t).Should(
-			it.Seq(vals).Contain().AllOf(1, 2, 3, 4, 5, 6, 7, 8, 9, 10),
+			it.Seq(vals).Contain().AllOf(0, 1, 2, 3, 4, 5, 6, 7, 8, 9),
 		)
 	})
 }
 
 func TestFold(t *testing.T) {
+	acc := monoid.FromOp(0, func(a, b int) int { return a + b })
 	seq := fork.Seq(1, 2, 3, 4, 5)
-	n := <-fork.Fold(context.Background(), par, seq,
-		monoid.FromOp(0, func(a, b int) int { return a + b }),
-	)
+	n := <-fork.Fold(context.Background(), par, seq, acc)
 
 	it.Then(t).Should(
 		it.Equal(n, 15),
@@ -150,11 +194,11 @@ func TestFold(t *testing.T) {
 
 func TestMap(t *testing.T) {
 	t.Run("Map", func(t *testing.T) {
+		fun := fork.Pure(strconv.Itoa)
+
 		ctx, close := context.WithCancel(context.Background())
 		seq := fork.Seq(1, 2, 3, 4, 5)
-		out := fork.StdErr(fork.Map(ctx, par, seq,
-			func(x int) (string, error) { return strconv.Itoa(x), nil },
-		))
+		out := fork.StdErr(fork.Map(ctx, par, seq, fun))
 
 		it.Then(t).Should(
 			it.Seq(fork.ToSeq(out)).Contain().AllOf("1", "2", "3", "4", "5"),
@@ -163,11 +207,11 @@ func TestMap(t *testing.T) {
 	})
 
 	t.Run("Err", func(t *testing.T) {
+		fun := fork.Lift(func(x int) (string, error) { return "", fmt.Errorf("fail") })
+
 		ctx, close := context.WithCancel(context.Background())
 		seq := fork.Seq(1, 2, 3, 4, 5)
-		_, exx := fork.Map(ctx, par, seq,
-			func(x int) (string, error) { return "", fmt.Errorf("fail") },
-		)
+		_, exx := fork.Map(ctx, par, seq, fun)
 
 		it.Then(t).ShouldNot(
 			it.Nil(<-exx),
@@ -178,11 +222,11 @@ func TestMap(t *testing.T) {
 }
 
 func TestPartition(t *testing.T) {
+	fun := fork.Pure(func(x int) bool { return x%2 == 1 })
+
 	ctx, close := context.WithCancel(context.Background())
 	seq := fork.Seq(1, 2, 3, 4, 5)
-	lo, ro := fork.Partition(ctx, par, seq,
-		func(x int) bool { return x%2 == 1 },
-	)
+	lo, ro := fork.Partition(ctx, par, seq, fun)
 
 	it.Then(t).Should(
 		it.Seq(fork.ToSeq(lo)).Equal(1, 3, 5),
@@ -193,8 +237,10 @@ func TestPartition(t *testing.T) {
 }
 
 func TestUnfold(t *testing.T) {
+	fun := fork.Pure(func(x int) int { return x + 1 })
+
 	ctx, close := context.WithCancel(context.Background())
-	seq := fork.StdErr(fork.Unfold(ctx, 1, 0, func(x int) (int, error) { return x + 1, nil }))
+	seq := fork.StdErr(fork.Unfold(ctx, 1, 0, fun))
 
 	it.Then(t).Should(
 		it.Equal(<-seq, 0),
@@ -236,9 +282,11 @@ func TestTake(t *testing.T) {
 }
 
 func TestTakeWhile(t *testing.T) {
+	fun := fork.Pure(func(x int) bool { return x < 4 })
+
 	ctx, close := context.WithCancel(context.Background())
 	seq := fork.Seq(1, 2, 3, 4, 5, 6)
-	out := fork.TakeWhile(ctx, seq, func(x int) bool { return x < 4 })
+	out := fork.TakeWhile(ctx, seq, fun)
 
 	it.Then(t).Should(
 		it.Seq(fork.ToSeq(out)).Equal(1, 2, 3),
@@ -252,9 +300,9 @@ func TestThrottling(t *testing.T) {
 	seq := fork.Seq(1, 2, 3, 4, 5, 6, 7, 8, 9, 0)
 	slowSeq := fork.Throttling(ctx, seq, 1, 100*time.Millisecond)
 	out := fork.StdErr(fork.Map(ctx, par, slowSeq,
-		func(_ int) (time.Time, error) {
+		fork.Lift(func(_ int) (time.Time, error) {
 			return time.Now(), nil
-		},
+		}),
 	))
 	wt := fork.ToSeq(out)
 	for i := 1; i < len(wt); i++ {

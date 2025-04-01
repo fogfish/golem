@@ -1,6 +1,6 @@
 # Type Safe Channels (`pipe`)
 
-Go's concurrency features simplify the creation of streaming data pipelines that effectively utilize I/O and multiple CPUs. [Go Concurrency Patterns: Pipelines and cancellation](https://go.dev/blog/pipelines) explains the topic in-depth. Despite the simplicity, the boilerplate code is required to build channels and establish "chrome" for its management. This module offers consistent operation over channels to form a processing pipelines in a clean and effective manner. 
+Go's concurrency features simplify the creation of streaming data pipelines that effectively utilize I/O and multiple CPUs. [Go Concurrency Patterns: Pipelines and cancellation](https://go.dev/blog/pipelines) explains the topic in-depth. Despite the simplicity, the boilerplate code is required to build channels and establish "chrome" for its management. This module offers consistent operation over channels to form a processing pipelines in a clean and type safe manner. 
 
 The module support sequential `pipe` and parallel `fork` type safe channels  for building pipelines. The module consider channels as "sequential data structure" trying to derive semantic from [stream interface](http://srfi.schemers.org/srfi-41/srfi-41.html)
 
@@ -19,27 +19,32 @@ func main() {
 
   // Generate sequence of integers
   ints := pipe.StdErr(pipe.Unfold(ctx, cap, 0,
-    func(x int) (int, error) { return x + 1, nil },
+    pipe.Pure(func(x int) int { return x + 1 }),
   ))
 
   // Limit sequence of integers
   ints10 := pipe.TakeWhile(ctx, ints,
-    func(x int) bool { return x <= 10 },
+    pipe.Pure(func(x int) bool { return x <= 10 }),
   )
 
   // Calculate squares
   sqrt := pipe.StdErr(pipe.Map(ctx, ints10,
-    func(x int) (int, error) { return x * x, nil },
+    pipe.Pure(func(x int) int { return x * x }),
   ))
 
   // Numbers to string
   vals := pipe.StdErr(pipe.Map(ctx, sqrt,
-    func(x int) (string, error) { return strconv.Itoa(x), nil },
+    pipe.Pure(strconv.Itoa),
   ))
 
   // Output strings
   <-pipe.ForEach(ctx, vals,
-    func(x string) { fmt.Printf("==> %s\n", x) },
+    pipe.Pure(
+      func(x string) string {
+        fmt.Printf("==> %s\n", x)
+        return x
+      },
+    ),
   )
 
   close()

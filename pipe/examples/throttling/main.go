@@ -14,7 +14,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/fogfish/golem/pipe"
+	"github.com/fogfish/golem/pipe/v2"
 )
 
 const (
@@ -27,7 +27,7 @@ func main() {
 
 	// Generate sequence of integers
 	fast := pipe.StdErr(pipe.Unfold(ctx, fastProducer, 0,
-		func(x int) (int, error) { return x + 1, nil },
+		pipe.Pure(func(x int) int { return x + 1 }),
 	))
 
 	// Throttle the "fast" pipe
@@ -35,14 +35,17 @@ func main() {
 
 	// Numbers to string
 	vals := pipe.StdErr(pipe.Map(ctx, slow,
-		func(x int) (string, error) { return strconv.Itoa(x), nil },
+		pipe.Pure(strconv.Itoa),
 	))
 
 	// Output strings
 	<-pipe.ForEach(ctx, vals,
-		func(x string) {
-			fmt.Printf("==> %s | %s\n", time.Now().Format(time.StampMilli), x)
-		},
+		pipe.Pure(
+			func(x string) string {
+				fmt.Printf("==> %s | %s\n", time.Now().Format(time.StampMilli), x)
+				return x
+			},
+		),
 	)
 
 	close()
