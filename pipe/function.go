@@ -40,14 +40,17 @@ func Lift[A, B any](f EitherE[A, B]) F[A, B] {
 
 type pure[A, B any] EitherE[A, B]
 
+//lint:ignore U1000 false positive
 func (f pure[A, B]) apply(a A) (B, error) {
 	return EitherE[A, B](f)(a)
 }
 
+//lint:ignore U1000 false positive
 func (f pure[A, B]) errch(_ int) chan error {
 	return make(chan error, 1)
 }
 
+//lint:ignore U1000 false positive
 func (f pure[A, B]) catch(ctx context.Context, err error, exx chan<- error) bool {
 	exx <- err
 	return false
@@ -61,14 +64,17 @@ func Try[A, B any](f EitherE[A, B]) F[A, B] {
 
 type try[A, B any] EitherE[A, B]
 
+//lint:ignore U1000 false positive
 func (f try[A, B]) apply(a A) (B, error) {
 	return EitherE[A, B](f)(a)
 }
 
+//lint:ignore U1000 false positive
 func (f try[A, B]) errch(cap int) chan error {
 	return make(chan error, cap)
 }
 
+//lint:ignore U1000 false positive
 func (f try[A, B]) catch(ctx context.Context, err error, exx chan<- error) bool {
 	select {
 	case exx <- err:
@@ -95,14 +101,17 @@ func LiftF[A, B any](f Arrow[A, B]) FF[A, B] {
 
 type puref[A, B any] Arrow[A, B]
 
+//lint:ignore U1000 false positive
 func (f puref[A, B]) apply(ctx context.Context, a A, b chan<- B) error {
 	return Arrow[A, B](f)(ctx, a, b)
 }
 
+//lint:ignore U1000 false positive
 func (f puref[A, B]) errch(_ int) chan error {
 	return make(chan error, 1)
 }
 
+//lint:ignore U1000 false positive
 func (f puref[A, B]) catch(ctx context.Context, err error, exx chan<- error) bool {
 	exx <- err
 	return false
@@ -116,14 +125,17 @@ func TryF[A, B any](f Arrow[A, B]) FF[A, B] {
 
 type tryf[A, B any] Arrow[A, B]
 
+//lint:ignore U1000 false positive
 func (f tryf[A, B]) apply(ctx context.Context, a A, b chan<- B) error {
 	return Arrow[A, B](f)(ctx, a, b)
 }
 
+//lint:ignore U1000 false positive
 func (f tryf[A, B]) errch(cap int) chan error {
 	return make(chan error, cap)
 }
 
+//lint:ignore U1000 false positive
 func (f tryf[A, B]) catch(ctx context.Context, err error, exx chan<- error) bool {
 	select {
 	case exx <- err:
