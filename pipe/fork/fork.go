@@ -15,18 +15,18 @@ import (
 	"sync"
 	"time"
 
-	"github.com/fogfish/golem/pipe"
+	"github.com/fogfish/golem/pipe/v2"
 	"github.com/fogfish/golem/pure/monoid"
 )
 
 // Emit creates a channel and takes a function that emits data at a specified frequency.
-func Emit[T any](ctx context.Context, cap int, frequency time.Duration, emit func() (T, error)) (<-chan T, <-chan error) {
-	return pipe.Emit(ctx, cap, frequency, emit)
+func Emit[T any](ctx context.Context, cap int, frequency time.Duration, emit F[int, T]) (<-chan T, <-chan error) {
+	return pipe.Emit(ctx, cap, frequency, emit.pipef())
 }
 
 // Filter returns a newly-allocated channel that contains only those elements x
 // of the input channel for which predicate is true.
-func Filter[A any](ctx context.Context, par int, in <-chan A, f func(A) bool) <-chan A {
+func Filter[A any](ctx context.Context, par int, in <-chan A, f F[A, bool]) <-chan A {
 	var wg sync.WaitGroup
 	out := make(chan A, par)
 
@@ -35,7 +35,7 @@ func Filter[A any](ctx context.Context, par int, in <-chan A, f func(A) bool) <-
 
 		var a A
 		for a = range in {
-			if f(a) {
+			if take, err := f.apply(a); take && err == nil {
 				select {
 				case out <- a:
 				case <-ctx.Done():
@@ -59,7 +59,7 @@ func Filter[A any](ctx context.Context, par int, in <-chan A, f func(A) bool) <-
 }
 
 // ForEach applies function for each message in the channel
-func ForEach[A any](ctx context.Context, par int, in <-chan A, f func(A)) <-chan struct{} {
+func ForEach[A any](ctx context.Context, par int, in <-chan A, f F[A, A]) <-chan struct{} {
 	var wg sync.WaitGroup
 	done := make(chan struct{})
 
@@ -68,7 +68,7 @@ func ForEach[A any](ctx context.Context, par int, in <-chan A, f func(A)) <-chan
 
 		var a A
 		for a = range in {
-			f(a)
+			f.apply(a)
 			select {
 			case <-ctx.Done():
 				return
@@ -92,7 +92,7 @@ func ForEach[A any](ctx context.Context, par int, in <-chan A, f func(A)) <-chan
 
 // FMap applies function over channel messages, flatten the output channel and
 // emits it result to new channel.
-func FMap[A, B any](ctx context.Context, par int, in <-chan A, fmap func(context.Context, A, chan<- B) error) (<-chan B, <-chan error) {
+func FMap[A, B any](ctx context.Context, par int, in <-chan A, fmap FF[A, B]) (<-chan B, <-chan error) {
 	var wg sync.WaitGroup
 	out := make(chan B, par)
 	exx := make(chan error, par)
@@ -102,9 +102,11 @@ func FMap[A, B any](ctx context.Context, par int, in <-chan A, fmap func(context
 
 		var a A
 		for a = range in {
-			if err := fmap(ctx, a, out); err != nil {
-				exx <- err
-				return
+			if err := fmap.apply(ctx, a, out); err != nil {
+				if !fmap.catch(ctx, err, exx) {
+					return
+				}
+				continue
 			}
 
 			select {
@@ -176,7 +178,7 @@ func Fold[A any](ctx context.Context, par int, in <-chan A, m monoid.Monoid[A]) 
 }
 
 // Map applies function over channel messages, emits result to new channel
-func Map[A, B any](ctx context.Context, par int, in <-chan A, fmap func(A) (B, error)) (<-chan B, <-chan error) {
+func Map[A, B any](ctx context.Context, par int, in <-chan A, f F[A, B]) (<-chan B, <-chan error) {
 	var wg sync.WaitGroup
 	out := make(chan B, par)
 	exx := make(chan error, par)
@@ -191,10 +193,12 @@ func Map[A, B any](ctx context.Context, par int, in <-chan A, fmap func(A) (B, e
 		)
 
 		for a = range in {
-			val, err = fmap(a)
+			val, err = f.apply(a)
 			if err != nil {
-				exx <- err
-				return
+				if !f.catch(ctx, err, exx) {
+					return
+				}
+				continue
 			}
 
 			select {
@@ -220,7 +224,7 @@ func Map[A, B any](ctx context.Context, par int, in <-chan A, fmap func(A) (B, e
 }
 
 // Partition channel into two channels according to predicate
-func Partition[A any](ctx context.Context, par int, in <-chan A, f func(A) bool) (<-chan A, <-chan A) {
+func Partition[A any](ctx context.Context, par int, in <-chan A, f F[A, bool]) (<-chan A, <-chan A) {
 	var wg sync.WaitGroup
 	lout := make(chan A, par)
 	rout := make(chan A, par)
@@ -228,8 +232,8 @@ func Partition[A any](ctx context.Context, par int, in <-chan A, f func(A) bool)
 	pf := func() {
 		defer wg.Done()
 
-		sel := func(x bool) chan<- A {
-			if x {
+		sel := func(x bool, err error) chan<- A {
+			if x && err == nil {
 				return lout
 			}
 			return rout
@@ -238,7 +242,7 @@ func Partition[A any](ctx context.Context, par int, in <-chan A, f func(A) bool)
 		var a A
 		for a = range in {
 			select {
-			case sel(f(a)) <- a:
+			case sel(f.apply(a)) <- a:
 			case <-ctx.Done():
 				return
 			}
@@ -261,8 +265,8 @@ func Partition[A any](ctx context.Context, par int, in <-chan A, f func(A) bool)
 
 // Unfold is the fundamental recursive constructor, it applies a function to
 // each previous seed element in turn to determine the next element.
-func Unfold[A any](ctx context.Context, cap int, seed A, f func(A) (A, error)) (<-chan A, <-chan error) {
-	return pipe.Unfold(ctx, cap, seed, f)
+func Unfold[A any](ctx context.Context, cap int, seed A, f F[A, A]) (<-chan A, <-chan error) {
+	return pipe.Unfold(ctx, cap, seed, f.pipef())
 }
 
 // Join concatenate channels, returns newly-allocated channel composed of
@@ -278,8 +282,8 @@ func Take[A any](ctx context.Context, in <-chan A, n int) <-chan A {
 
 // Filter returns a newly-allocated channel that contains only those elements x
 // of the input channel for which predicate is true.
-func TakeWhile[A any](ctx context.Context, in <-chan A, f func(A) bool) <-chan A {
-	return pipe.TakeWhile(ctx, in, f)
+func TakeWhile[A any](ctx context.Context, in <-chan A, f F[A, bool]) <-chan A {
+	return pipe.TakeWhile(ctx, in, f.pipef())
 }
 
 // Throttling the channel to ops per time interval

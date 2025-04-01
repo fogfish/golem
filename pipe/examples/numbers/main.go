@@ -13,7 +13,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/fogfish/golem/pipe"
+	"github.com/fogfish/golem/pipe/v2"
 )
 
 const (
@@ -25,27 +25,32 @@ func main() {
 
 	// Generate sequence of integers
 	ints := pipe.StdErr(pipe.Unfold(ctx, cap, 0,
-		func(x int) (int, error) { return x + 1, nil },
+		pipe.Pure(func(x int) int { return x + 1 }),
 	))
 
 	// Limit sequence of integers
 	ints10 := pipe.TakeWhile(ctx, ints,
-		func(x int) bool { return x <= 10 },
+		pipe.Pure(func(x int) bool { return x <= 10 }),
 	)
 
 	// Calculate squares
 	sqrt := pipe.StdErr(pipe.Map(ctx, ints10,
-		func(x int) (int, error) { return x * x, nil },
+		pipe.Pure(func(x int) int { return x * x }),
 	))
 
 	// Numbers to string
 	vals := pipe.StdErr(pipe.Map(ctx, sqrt,
-		func(x int) (string, error) { return strconv.Itoa(x), nil },
+		pipe.Pure(strconv.Itoa),
 	))
 
 	// Output strings
 	<-pipe.ForEach(ctx, vals,
-		func(x string) { fmt.Printf("==> %s\n", x) },
+		pipe.Pure(
+			func(x string) string {
+				fmt.Printf("==> %s\n", x)
+				return x
+			},
+		),
 	)
 
 	close()

@@ -14,7 +14,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/fogfish/golem/pipe"
+	"github.com/fogfish/golem/pipe/v2"
 	"github.com/fogfish/it/v2"
 )
 

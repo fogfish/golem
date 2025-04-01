@@ -20,9 +20,9 @@ import (
 )
 
 // Emit creates a channel and takes a function that emits data at a specified frequency.
-func Emit[T any](ctx context.Context, cap int, frequency time.Duration, emit func() (T, error)) (<-chan T, <-chan error) {
+func Emit[T any](ctx context.Context, cap int, frequency time.Duration, f F[int, T]) (<-chan T, <-chan error) {
 	out := make(chan T, cap)
-	exx := make(chan error, 1)
+	exx := f.errch(cap)
 
 	go func() {
 		defer close(out)
@@ -33,13 +33,15 @@ func Emit[T any](ctx context.Context, cap int, frequency time.Duration, emit fun
 			err error
 		)
 
-		for {
+		for i := 0; true; i++ {
 			time.Sleep(frequency)
 
-			val, err = emit()
+			val, err = f.apply(i)
 			if err != nil {
-				exx <- err
-				return
+				if !f.catch(ctx, err, exx) {
+					return
+				}
+				continue
 			}
 
 			select {
@@ -55,7 +57,7 @@ func Emit[T any](ctx context.Context, cap int, frequency time.Duration, emit fun
 
 // Filter returns a newly-allocated channel that contains only those elements x
 // of the input channel for which predicate is true.
-func Filter[A any](ctx context.Context, in <-chan A, f func(A) bool) <-chan A {
+func Filter[A any](ctx context.Context, in <-chan A, f F[A, bool]) <-chan A {
 	out := make(chan A, cap(in))
 
 	go func() {
@@ -63,7 +65,7 @@ func Filter[A any](ctx context.Context, in <-chan A, f func(A) bool) <-chan A {
 
 		var a A
 		for a = range in {
-			if f(a) {
+			if take, err := f.apply(a); take && err == nil {
 				select {
 				case out <- a:
 				case <-ctx.Done():
@@ -77,7 +79,7 @@ func Filter[A any](ctx context.Context, in <-chan A, f func(A) bool) <-chan A {
 }
 
 // ForEach applies function for each message in the channel
-func ForEach[A any](ctx context.Context, in <-chan A, f func(A)) <-chan struct{} {
+func ForEach[A any](ctx context.Context, in <-chan A, f F[A, A]) <-chan struct{} {
 	done := make(chan struct{})
 
 	go func() {
@@ -85,7 +87,7 @@ func ForEach[A any](ctx context.Context, in <-chan A, f func(A)) <-chan struct{}
 
 		var x A
 		for x = range in {
-			f(x)
+			f.apply(x)
 			select {
 			case <-ctx.Done():
 				return
@@ -99,9 +101,9 @@ func ForEach[A any](ctx context.Context, in <-chan A, f func(A)) <-chan struct{}
 
 // FMap applies function over channel messages, flatten the output channel and
 // emits it result to new channel.
-func FMap[A, B any](ctx context.Context, in <-chan A, fmap func(context.Context, A, chan<- B) error) (<-chan B, <-chan error) {
+func FMap[A, B any](ctx context.Context, in <-chan A, fmap FF[A, B]) (<-chan B, <-chan error) {
 	out := make(chan B, cap(in))
-	exx := make(chan error, 1)
+	exx := fmap.errch(cap(in))
 
 	go func() {
 		defer close(out)
@@ -109,9 +111,11 @@ func FMap[A, B any](ctx context.Context, in <-chan A, fmap func(context.Context,
 
 		var a A
 		for a = range in {
-			if err := fmap(ctx, a, out); err != nil {
-				exx <- err
-				return
+			if err := fmap.apply(ctx, a, out); err != nil {
+				if !fmap.catch(ctx, err, exx) {
+					return
+				}
+				continue
 			}
 
 			select {
@@ -153,9 +157,9 @@ func Fold[A any](ctx context.Context, in <-chan A, m monoid.Monoid[A]) <-chan A 
 }
 
 // Map applies function over channel messages, emits result to new channel
-func Map[A, B any](ctx context.Context, in <-chan A, fmap func(A) (B, error)) (<-chan B, <-chan error) {
+func Map[A, B any](ctx context.Context, in <-chan A, f F[A, B]) (<-chan B, <-chan error) {
 	out := make(chan B, cap(in))
-	exx := make(chan error, 1)
+	exx := f.errch(cap(in))
 
 	go func() {
 		defer close(out)
@@ -168,10 +172,12 @@ func Map[A, B any](ctx context.Context, in <-chan A, fmap func(A) (B, error)) (<
 		)
 
 		for a = range in {
-			val, err = fmap(a)
+			val, err = f.apply(a)
 			if err != nil {
-				exx <- err
-				return
+				if !f.catch(ctx, err, exx) {
+					return
+				}
+				continue
 			}
 
 			select {
@@ -186,7 +192,7 @@ func Map[A, B any](ctx context.Context, in <-chan A, fmap func(A) (B, error)) (<
 }
 
 // Partition channel into two channels according to predicate
-func Partition[A any](ctx context.Context, in <-chan A, f func(A) bool) (<-chan A, <-chan A) {
+func Partition[A any](ctx context.Context, in <-chan A, f F[A, bool]) (<-chan A, <-chan A) {
 	lout := make(chan A, cap(in))
 	rout := make(chan A, cap(in))
 
@@ -194,8 +200,8 @@ func Partition[A any](ctx context.Context, in <-chan A, f func(A) bool) (<-chan 
 		defer close(rout)
 		defer close(lout)
 
-		sel := func(x bool) chan<- A {
-			if x {
+		sel := func(x bool, err error) chan<- A {
+			if x && err == nil {
 				return lout
 			}
 			return rout
@@ -204,7 +210,7 @@ func Partition[A any](ctx context.Context, in <-chan A, f func(A) bool) (<-chan 
 		var a A
 		for a = range in {
 			select {
-			case sel(f(a)) <- a:
+			case sel(f.apply(a)) <- a:
 			case <-ctx.Done():
 				return
 			}
@@ -216,9 +222,9 @@ func Partition[A any](ctx context.Context, in <-chan A, f func(A) bool) (<-chan 
 
 // Unfold is the fundamental recursive constructor, it applies a function to
 // each previous seed element in turn to determine the next element.
-func Unfold[A any](ctx context.Context, cap int, seed A, f func(A) (A, error)) (<-chan A, <-chan error) {
+func Unfold[A any](ctx context.Context, cap int, seed A, f F[A, A]) (<-chan A, <-chan error) {
 	out := make(chan A, cap)
-	exx := make(chan error, 1)
+	exx := f.errch(cap)
 
 	go func() {
 		defer close(out)
@@ -232,10 +238,12 @@ func Unfold[A any](ctx context.Context, cap int, seed A, f func(A) (A, error)) (
 				return
 			}
 
-			seed, err = f(seed)
+			seed, err = f.apply(seed)
 			if err != nil {
-				exx <- err
-				return
+				if !f.catch(ctx, err, exx) {
+					return
+				}
+				continue
 			}
 		}
 	}()
@@ -302,7 +310,7 @@ func Take[A any](ctx context.Context, in <-chan A, n int) <-chan A {
 
 // Filter returns a newly-allocated channel that contains only those elements x
 // of the input channel for which predicate is true.
-func TakeWhile[A any](ctx context.Context, in <-chan A, f func(A) bool) <-chan A {
+func TakeWhile[A any](ctx context.Context, in <-chan A, f F[A, bool]) <-chan A {
 	out := make(chan A, cap(in))
 
 	go func() {
@@ -310,7 +318,7 @@ func TakeWhile[A any](ctx context.Context, in <-chan A, f func(A) bool) <-chan A
 
 		var a A
 		for a = range in {
-			if !f(a) {
+			if take, err := f.apply(a); !take || err != nil {
 				return
 			}
 
