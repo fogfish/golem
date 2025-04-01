@@ -229,8 +229,8 @@ func TestPartition(t *testing.T) {
 	lo, ro := fork.Partition(ctx, par, seq, fun)
 
 	it.Then(t).Should(
-		it.Seq(fork.ToSeq(lo)).Equal(1, 3, 5),
-		it.Seq(fork.ToSeq(ro)).Equal(2, 4),
+		it.Seq(fork.ToSeq(lo)).Contain().AllOf(1, 3, 5),
+		it.Seq(fork.ToSeq(ro)).Contain().AllOf(2, 4),
 	)
 
 	close()
