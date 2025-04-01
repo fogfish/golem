@@ -50,6 +50,30 @@ func TestEmit(t *testing.T) {
 
 		close()
 	})
+
+	t.Run("Try", func(t *testing.T) {
+		emit := pipe.Try(
+			func(x int) (int, error) {
+				if x%2 == 1 {
+					return x, fmt.Errorf("odd")
+				}
+				return x, nil
+			},
+		)
+
+		ctx, close := context.WithCancel(context.Background())
+		eg, ex := pipe.Emit(ctx, 0, 10*time.Microsecond, emit)
+
+		it.Then(t).Should(
+			it.Equal(<-eg, 0),
+			it.Fail(func() error { return <-ex }).Contain("odd"),
+			it.Equal(<-eg, 2),
+			it.Fail(func() error { return <-ex }).Contain("odd"),
+			it.Equal(<-eg, 4),
+			it.Fail(func() error { return <-ex }).Contain("odd"),
+		)
+		close()
+	})
 }
 
 func TestFilter(t *testing.T) {
@@ -119,6 +143,28 @@ func TestFMap(t *testing.T) {
 			it.Nil(<-exx),
 		)
 
+		close()
+	})
+
+	t.Run("Try", func(t *testing.T) {
+		fun := pipe.TryF(
+			func(ctx context.Context, x int, ch chan<- string) error {
+				if x%2 == 1 {
+					return fmt.Errorf("odd")
+				}
+				ch <- strconv.Itoa(x)
+				return nil
+			},
+		)
+
+		ctx, close := context.WithCancel(context.Background())
+		seq := pipe.Seq(1, 2, 3, 4, 5)
+		out, err := pipe.FMap(ctx, seq, fun)
+
+		it.Then(t).Should(
+			it.Seq(pipe.ToSeq(out)).Equal("2", "4"),
+			it.Seq(pipe.ToSeq(err)).Equal(fmt.Errorf("odd"), fmt.Errorf("odd"), fmt.Errorf("odd")),
+		)
 		close()
 	})
 

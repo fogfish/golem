@@ -24,20 +24,46 @@ import (
 const par = 4
 
 func TestEmit(t *testing.T) {
-	emit := fork.Pure(func(x int) int { return x })
+	t.Run("Emit", func(t *testing.T) {
+		emit := fork.Pure(func(x int) int { return x })
 
-	ctx, close := context.WithCancel(context.Background())
-	eg := fork.StdErr(fork.Emit(ctx, 0, 10*time.Microsecond, emit))
+		ctx, close := context.WithCancel(context.Background())
+		eg := fork.StdErr(fork.Emit(ctx, 0, 10*time.Microsecond, emit))
 
-	it.Then(t).Should(
-		it.Equal(<-eg, 0),
-		it.Equal(<-eg, 1),
-		it.Equal(<-eg, 2),
-		it.Equal(<-eg, 3),
-		it.Equal(<-eg, 4),
-		it.Equal(<-eg, 5),
-	)
-	close()
+		it.Then(t).Should(
+			it.Equal(<-eg, 0),
+			it.Equal(<-eg, 1),
+			it.Equal(<-eg, 2),
+			it.Equal(<-eg, 3),
+			it.Equal(<-eg, 4),
+			it.Equal(<-eg, 5),
+		)
+		close()
+	})
+
+	t.Run("Try", func(t *testing.T) {
+		emit := fork.Try(
+			func(x int) (int, error) {
+				if x%2 == 1 {
+					return x, fmt.Errorf("odd")
+				}
+				return x, nil
+			},
+		)
+
+		ctx, close := context.WithCancel(context.Background())
+		eg, ex := fork.Emit(ctx, 0, 10*time.Microsecond, emit)
+
+		it.Then(t).Should(
+			it.Equal(<-eg, 0),
+			it.Fail(func() error { return <-ex }).Contain("odd"),
+			it.Equal(<-eg, 2),
+			it.Fail(func() error { return <-ex }).Contain("odd"),
+			it.Equal(<-eg, 4),
+			it.Fail(func() error { return <-ex }).Contain("odd"),
+		)
+		close()
+	})
 }
 
 func TestFilter(t *testing.T) {
@@ -110,6 +136,28 @@ func TestFMap(t *testing.T) {
 			it.Nil(<-exx),
 		)
 
+		close()
+	})
+
+	t.Run("Try", func(t *testing.T) {
+		fun := fork.TryF(
+			func(ctx context.Context, x int, ch chan<- string) error {
+				if x%2 == 1 {
+					return fmt.Errorf("odd")
+				}
+				ch <- strconv.Itoa(x)
+				return nil
+			},
+		)
+
+		ctx, close := context.WithCancel(context.Background())
+		seq := fork.Seq(1, 2, 3, 4, 5)
+		out, err := fork.FMap(ctx, par, seq, fun)
+
+		it.Then(t).Should(
+			it.Seq(fork.ToSeq(out)).Contain().OneOf("2", "4"),
+			it.Seq(fork.ToSeq(err)).Contain().OneOf(fmt.Errorf("odd")),
+		)
 		close()
 	})
 

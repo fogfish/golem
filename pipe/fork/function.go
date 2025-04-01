@@ -96,7 +96,7 @@ func (f try[A, B]) catch(ctx context.Context, err error, exx chan<- error) bool 
 
 //lint:ignore U1000 false positive
 func (f try[A, B]) pipef() pipe.F[A, B] {
-	return pipe.Lift(f)
+	return pipe.Try(f)
 }
 
 //------------------------------------------------------------------------------
