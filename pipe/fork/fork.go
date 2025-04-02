@@ -35,7 +35,7 @@ func Filter[A any](ctx context.Context, par int, in <-chan A, f F[A, bool]) <-ch
 
 		var a A
 		for a = range in {
-			if take, err := f.apply(a); take && err == nil {
+			if take, err := f.Apply(a); take && err == nil {
 				select {
 				case out <- a:
 				case <-ctx.Done():
@@ -68,7 +68,7 @@ func ForEach[A any](ctx context.Context, par int, in <-chan A, f F[A, A]) <-chan
 
 		var a A
 		for a = range in {
-			f.apply(a)
+			f.Apply(a)
 			select {
 			case <-ctx.Done():
 				return
@@ -102,7 +102,7 @@ func FMap[A, B any](ctx context.Context, par int, in <-chan A, fmap FF[A, B]) (<
 
 		var a A
 		for a = range in {
-			if err := fmap.apply(ctx, a, out); err != nil {
+			if err := fmap.Apply(ctx, a, out); err != nil {
 				if !fmap.catch(ctx, err, exx) {
 					return
 				}
@@ -193,7 +193,7 @@ func Map[A, B any](ctx context.Context, par int, in <-chan A, f F[A, B]) (<-chan
 		)
 
 		for a = range in {
-			val, err = f.apply(a)
+			val, err = f.Apply(a)
 			if err != nil {
 				if !f.catch(ctx, err, exx) {
 					return
@@ -242,7 +242,7 @@ func Partition[A any](ctx context.Context, par int, in <-chan A, f F[A, bool]) (
 		var a A
 		for a = range in {
 			select {
-			case sel(f.apply(a)) <- a:
+			case sel(f.Apply(a)) <- a:
 			case <-ctx.Done():
 				return
 			}

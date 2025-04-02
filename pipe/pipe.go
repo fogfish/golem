@@ -36,7 +36,7 @@ func Emit[T any](ctx context.Context, cap int, frequency time.Duration, f F[int,
 		for i := 0; true; i++ {
 			time.Sleep(frequency)
 
-			val, err = f.apply(i)
+			val, err = f.Apply(i)
 			if err != nil {
 				if !f.catch(ctx, err, exx) {
 					return
@@ -65,7 +65,7 @@ func Filter[A any](ctx context.Context, in <-chan A, f F[A, bool]) <-chan A {
 
 		var a A
 		for a = range in {
-			if take, err := f.apply(a); take && err == nil {
+			if take, err := f.Apply(a); take && err == nil {
 				select {
 				case out <- a:
 				case <-ctx.Done():
@@ -87,7 +87,7 @@ func ForEach[A any](ctx context.Context, in <-chan A, f F[A, A]) <-chan struct{}
 
 		var x A
 		for x = range in {
-			f.apply(x)
+			f.Apply(x)
 			select {
 			case <-ctx.Done():
 				return
@@ -111,7 +111,7 @@ func FMap[A, B any](ctx context.Context, in <-chan A, fmap FF[A, B]) (<-chan B, 
 
 		var a A
 		for a = range in {
-			if err := fmap.apply(ctx, a, out); err != nil {
+			if err := fmap.Apply(ctx, a, out); err != nil {
 				if !fmap.catch(ctx, err, exx) {
 					return
 				}
@@ -172,7 +172,7 @@ func Map[A, B any](ctx context.Context, in <-chan A, f F[A, B]) (<-chan B, <-cha
 		)
 
 		for a = range in {
-			val, err = f.apply(a)
+			val, err = f.Apply(a)
 			if err != nil {
 				if !f.catch(ctx, err, exx) {
 					return
@@ -210,7 +210,7 @@ func Partition[A any](ctx context.Context, in <-chan A, f F[A, bool]) (<-chan A,
 		var a A
 		for a = range in {
 			select {
-			case sel(f.apply(a)) <- a:
+			case sel(f.Apply(a)) <- a:
 			case <-ctx.Done():
 				return
 			}
@@ -238,7 +238,7 @@ func Unfold[A any](ctx context.Context, cap int, seed A, f F[A, A]) (<-chan A, <
 				return
 			}
 
-			seed, err = f.apply(seed)
+			seed, err = f.Apply(seed)
 			if err != nil {
 				if !f.catch(ctx, err, exx) {
 					return
@@ -318,7 +318,7 @@ func TakeWhile[A any](ctx context.Context, in <-chan A, f F[A, bool]) <-chan A {
 
 		var a A
 		for a = range in {
-			if take, err := f.apply(a); !take || err != nil {
+			if take, err := f.Apply(a); !take || err != nil {
 				return
 			}
 
