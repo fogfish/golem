@@ -99,6 +99,25 @@ func ForEach[A any](ctx context.Context, in <-chan A, f F[A, A]) <-chan struct{}
 	return done
 }
 
+// Void applies nothing for each message in the channel, making channel empty
+func Void[A any](ctx context.Context, in <-chan A) <-chan struct{} {
+	done := make(chan struct{})
+
+	go func() {
+		defer close(done)
+
+		for range in {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+			}
+		}
+	}()
+
+	return done
+}
+
 // FMap applies function over channel messages, flatten the output channel and
 // emits it result to new channel.
 func FMap[A, B any](ctx context.Context, in <-chan A, fmap FF[A, B]) (<-chan B, <-chan error) {

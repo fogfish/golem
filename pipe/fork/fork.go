@@ -90,6 +90,36 @@ func ForEach[A any](ctx context.Context, par int, in <-chan A, f F[A, A]) <-chan
 	return done
 }
 
+// Void applies nothing for each message in the channel, making channel empty
+func Void[A any](ctx context.Context, par int, in <-chan A) <-chan struct{} {
+	var wg sync.WaitGroup
+	done := make(chan struct{})
+
+	fmap := func() {
+		defer wg.Done()
+
+		for range in {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+			}
+		}
+	}
+
+	wg.Add(par)
+	for i := 1; i <= par; i++ {
+		go fmap()
+	}
+
+	go func() {
+		wg.Wait()
+		close(done)
+	}()
+
+	return done
+}
+
 // FMap applies function over channel messages, flatten the output channel and
 // emits it result to new channel.
 func FMap[A, B any](ctx context.Context, par int, in <-chan A, fmap FF[A, B]) (<-chan B, <-chan error) {

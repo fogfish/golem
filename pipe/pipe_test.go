@@ -108,6 +108,14 @@ func TestForEach(t *testing.T) {
 	close()
 }
 
+func TestVoid(t *testing.T) {
+	ctx, close := context.WithCancel(context.Background())
+	seq := pipe.Seq(1, 2, 3, 4, 5)
+	<-pipe.Void(ctx, seq)
+
+	close()
+}
+
 func TestFMap(t *testing.T) {
 	t.Run("FMap", func(t *testing.T) {
 		fun := pipe.LiftF(

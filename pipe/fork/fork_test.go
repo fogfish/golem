@@ -101,6 +101,14 @@ func TestForEach(t *testing.T) {
 	close()
 }
 
+func TestVoid(t *testing.T) {
+	ctx, close := context.WithCancel(context.Background())
+	seq := fork.Seq(1, 2, 3, 4, 5)
+	<-fork.Void(ctx, par, seq)
+
+	close()
+}
+
 func TestFMap(t *testing.T) {
 	t.Run("FMap", func(t *testing.T) {
 		fun := fork.LiftF(
