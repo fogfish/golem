@@ -21,7 +21,7 @@ type Arrow[A, B any] = func(context.Context, A, chan<- B) error
 
 // Go channel morphism 𝑓: A ⟼ B
 type F[A, B any] interface {
-	apply(A) (B, error)
+	Apply(A) (B, error)
 	errch(cap int) chan error
 	catch(context.Context, error, chan<- error) bool
 }
@@ -40,8 +40,7 @@ func Lift[A, B any](f EitherE[A, B]) F[A, B] {
 
 type pure[A, B any] EitherE[A, B]
 
-//lint:ignore U1000 false positive
-func (f pure[A, B]) apply(a A) (B, error) {
+func (f pure[A, B]) Apply(a A) (B, error) {
 	return EitherE[A, B](f)(a)
 }
 
@@ -64,8 +63,7 @@ func Try[A, B any](f EitherE[A, B]) F[A, B] {
 
 type try[A, B any] EitherE[A, B]
 
-//lint:ignore U1000 false positive
-func (f try[A, B]) apply(a A) (B, error) {
+func (f try[A, B]) Apply(a A) (B, error) {
 	return EitherE[A, B](f)(a)
 }
 
@@ -88,7 +86,7 @@ func (f try[A, B]) catch(ctx context.Context, err error, exx chan<- error) bool 
 
 // Go channel functor 𝓕: A ⟼ B
 type FF[A, B any] interface {
-	apply(context.Context, A, chan<- B) error
+	Apply(context.Context, A, chan<- B) error
 	errch(cap int) chan error
 	catch(context.Context, error, chan<- error) bool
 }
@@ -101,8 +99,7 @@ func LiftF[A, B any](f Arrow[A, B]) FF[A, B] {
 
 type puref[A, B any] Arrow[A, B]
 
-//lint:ignore U1000 false positive
-func (f puref[A, B]) apply(ctx context.Context, a A, b chan<- B) error {
+func (f puref[A, B]) Apply(ctx context.Context, a A, b chan<- B) error {
 	return Arrow[A, B](f)(ctx, a, b)
 }
 
@@ -125,8 +122,7 @@ func TryF[A, B any](f Arrow[A, B]) FF[A, B] {
 
 type tryf[A, B any] Arrow[A, B]
 
-//lint:ignore U1000 false positive
-func (f tryf[A, B]) apply(ctx context.Context, a A, b chan<- B) error {
+func (f tryf[A, B]) Apply(ctx context.Context, a A, b chan<- B) error {
 	return Arrow[A, B](f)(ctx, a, b)
 }
 
