@@ -32,6 +32,10 @@ func NewLens[S, A any](t hseq.Type[S]) Lens[S, A] {
 	fv := reflect.TypeOf(new(A)).Elem()
 
 	if ft.String() == fv.String() && ft.AssignableTo(fv) {
+		cat := reflect.TypeOf(new(S)).Elem()
+		if cat.Kind() == reflect.Pointer {
+			return &lensP[S, A]{t}
+		}
 		return &lens[S, A]{t}
 	}
 
@@ -48,6 +52,20 @@ func (lens *lens[S, A]) Put(s *S, a A) *S {
 
 func (lens *lens[S, A]) Get(s *S) A {
 	return *(*A)(unsafe.Pointer(uintptr(unsafe.Pointer(s)) + lens.Offset + lens.RootOffs))
+}
+
+// lensP handles the case where S is already a pointer type.
+// When S = *T, the interface methods receive **T, so we must dereference
+// to reach the underlying struct before applying field offsets.
+type lensP[S, A any] struct{ hseq.Type[S] }
+
+func (lens *lensP[S, A]) Put(s *S, a A) *S {
+	*(*A)(unsafe.Pointer(uintptr(*(*unsafe.Pointer)(unsafe.Pointer(s))) + lens.Offset + lens.RootOffs)) = a
+	return s
+}
+
+func (lens *lensP[S, A]) Get(s *S) A {
+	return *(*A)(unsafe.Pointer(uintptr(*(*unsafe.Pointer)(unsafe.Pointer(s))) + lens.Offset + lens.RootOffs))
 }
 
 // NewLens instantiates a typed Lens[S, A] for map[K]A

@@ -105,6 +105,40 @@ func TestLensLaws(t *testing.T) {
 
 	t.Run("Interface", testLensLaws[io.Reader](&bytes.Buffer{}))
 
+	t.Run("PointerType", func(t *testing.T) {
+		type T struct{ A string }
+		la := optics.ForProduct1[*T, string]()
+
+		t.Run("GetPut", func(t *testing.T) {
+			tt := &T{A: "string"}
+			la.Put(&tt, la.Get(&tt))
+
+			it.Then(t).Should(
+				it.Equiv(tt, &T{A: "string"}),
+			)
+		})
+
+		t.Run("PutGet", func(t *testing.T) {
+			tt := &T{}
+			vv := la.Get(la.Put(&tt, "string"))
+
+			it.Then(t).Should(
+				it.Equal(vv, "string"),
+				it.Equiv(tt, &T{A: "string"}),
+			)
+		})
+
+		t.Run("PutPut", func(t *testing.T) {
+			tt := &T{}
+			vv := la.Put(la.Put(&tt, "foobar"), "string")
+
+			it.Then(t).Should(
+				it.Equiv(*vv, &T{A: "string"}),
+				it.Equiv(tt, &T{A: "string"}),
+			)
+		})
+	})
+
 	t.Run("Embedded", func(t *testing.T) {
 		type S string
 		type I int
