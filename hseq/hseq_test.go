@@ -372,6 +372,19 @@ func TestNew(t *testing.T) {
 			it.Seq(seq).Equal("FA"),
 		)
 	})
+
+	t.Run("New1/TypeConflict", func(t *testing.T) {
+		type T struct {
+			F1 string
+			F2 string
+		}
+
+		it.Then(t).Should(
+			it.Fail(
+				func() { hseq.New1[T, string]() },
+			).Contain("Critical Error"),
+		)
+	})
 }
 
 type Getter[S, A any] struct{ hseq.Type[S] }

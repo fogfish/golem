@@ -210,11 +210,17 @@ func ForType[A, T any](seq Seq[T]) Type[T] {
 	// Note: new(A) always create pointer to A (*A)
 	val := reflect.TypeOf(new(A)).Elem()
 
+	var found Type[T]
+	var count int
 	for _, f := range seq {
 		ft := f.Type
 		if ft.String() == val.String() && ft.AssignableTo(val) {
-			return f
+			found = f
+			count++
 		}
+	}
+	if count == 1 {
+		return found
 	}
 
 	cat := reflect.TypeOf(new(T)).Elem()
@@ -229,11 +235,17 @@ func ForType[A, T any](seq Seq[T]) Type[T] {
 		outerT = cat.Elem().Name()
 	}
 
-	err := errType{
+	if count > 1 {
+		panic(errType{
+			Issue: fmt.Sprintf("type `%s` is not unique in struct `%s`", innerT, outerT),
+			FixIt: fmt.Sprintf("How To Fix:\n- define unique named type `type A %s` for the field, `type %s struct { A }`.\n- use hseq.ForName instead. \n\n", innerT, outerT),
+		})
+	}
+
+	panic(errType{
 		Issue: fmt.Sprintf("type `%s` is not field of a struct `%s`", innerT, outerT),
 		FixIt: fmt.Sprintf("How To Fix:\n- check for typos in type names.\n- add or embed `%s` as a field to struct `%s`\n\n `type %s struct { %s }`\n `type %s struct { x %s }`\n\n", innerT, outerT, outerT, innerT, outerT, innerT),
-	}
-	panic(err)
+	})
 }
 
 // Lookup type in heterogenous sequence by name of member
