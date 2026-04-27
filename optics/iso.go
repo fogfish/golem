@@ -8,6 +8,20 @@
 
 package optics
 
+// Read-only lense, get value from structure, but do not modify it
+func View[S, A any](lens Lens[S, A]) Lens[S, A] { return view[S, A]{lens} }
+
+type view[S, A any] struct{ Lens[S, A] }
+
+func (view[S, A]) Put(s *S, a A) *S { return s }
+
+// Write-only lense, modify structure, but do not get value from it
+func Update[S, A any](lens Lens[S, A]) Lens[S, A] { return update[S, A]{lens} }
+
+type update[S, A any] struct{ Lens[S, A] }
+
+func (update[S, A]) Get(s *S) A { return *new(A) }
+
 // Getter composes lense with transform function, making read-only lense
 func Getter[S, A, B any](lens Lens[S, A], f func(A) B) Lens[S, B] {
 	return fmap[S, A, B]{lens, f}
@@ -152,4 +166,34 @@ func (seq morphism[S, T]) Inverse(t *T, s *S) {
 			iso.Inverse(t, s)
 		}
 	}
+}
+
+func CodecS1T1[S, T, A, B any]() Isomorphism[S, T] {
+	sa, sb := ForProduct2[S, A, B]()
+	ta, tb := ForProduct2[T, A, B]()
+	return Morphism(
+		Iso(View(sa), Update(ta)),
+		Iso(Update(sb), View(tb)),
+	)
+}
+
+func CodecS2T1[S, T, A, B, C any]() Isomorphism[S, T] {
+	sa, sb, sc := ForProduct3[S, A, B, C]()
+	ta, tb, tc := ForProduct3[T, A, B, C]()
+	return Morphism(
+		Iso(View(sa), Update(ta)),
+		Iso(View(sb), Update(tb)),
+		Iso(Update(sc), View(tc)),
+	)
+}
+
+func CodecS2T2[S, T, A, B, C, D any]() Isomorphism[S, T] {
+	sa, sb, sc, sd := ForProduct4[S, A, B, C, D]()
+	ta, tb, tc, td := ForProduct4[T, A, B, C, D]()
+	return Morphism(
+		Iso(View(sa), Update(ta)),
+		Iso(View(sb), Update(tb)),
+		Iso(Update(sc), View(tc)),
+		Iso(Update(sd), View(td)),
+	)
 }
