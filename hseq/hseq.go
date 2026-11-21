@@ -87,112 +87,76 @@ func unfold[T any](cat reflect.Type, seq Seq[T], offset uintptr) Seq[T] {
 	return seq
 }
 
-// Unfold type T to heterogenous sequence
+// Unfold type T to heterogenous sequence.
+//
+// If a type is repeated among type arguments, the n-th occurrence binds
+// the n-th field of that type in declaration order.
 func New1[T, A any]() Seq[T] {
-	seq := New[T]()
-	return Seq[T]{
-		ForType[A](seq),
-	}
+	return forTypes(New[T](), witness[A]())
 }
 
-// Unfold type T to heterogenous sequence
+// Unfold type T to heterogenous sequence.
+//
+// If a type is repeated among type arguments, the n-th occurrence binds
+// the n-th field of that type in declaration order.
 func New2[T, A, B any]() Seq[T] {
-	seq := New[T]()
-	return Seq[T]{
-		ForType[A](seq),
-		ForType[B](seq),
-	}
+	return forTypes(New[T](), witness[A](), witness[B]())
 }
 
-// Unfold type T to heterogenous sequence
+// Unfold type T to heterogenous sequence.
+//
+// If a type is repeated among type arguments, the n-th occurrence binds
+// the n-th field of that type in declaration order.
 func New3[T, A, B, C any]() Seq[T] {
-	seq := New[T]()
-	return Seq[T]{
-		ForType[A](seq),
-		ForType[B](seq),
-		ForType[C](seq),
-	}
+	return forTypes(New[T](), witness[A](), witness[B](), witness[C]())
 }
 
-// Unfold type T to heterogenous sequence
+// Unfold type T to heterogenous sequence.
+//
+// If a type is repeated among type arguments, the n-th occurrence binds
+// the n-th field of that type in declaration order.
 func New4[T, A, B, C, D any]() Seq[T] {
-	seq := New[T]()
-	return Seq[T]{
-		ForType[A](seq),
-		ForType[B](seq),
-		ForType[C](seq),
-		ForType[D](seq),
-	}
+	return forTypes(New[T](), witness[A](), witness[B](), witness[C](), witness[D]())
 }
 
-// Unfold type T to heterogenous sequence
+// Unfold type T to heterogenous sequence.
+//
+// If a type is repeated among type arguments, the n-th occurrence binds
+// the n-th field of that type in declaration order.
 func New5[T, A, B, C, D, E any]() Seq[T] {
-	seq := New[T]()
-	return Seq[T]{
-		ForType[A](seq),
-		ForType[B](seq),
-		ForType[C](seq),
-		ForType[D](seq),
-		ForType[E](seq),
-	}
+	return forTypes(New[T](), witness[A](), witness[B](), witness[C](), witness[D](), witness[E]())
 }
 
-// Unfold type T to heterogenous sequence
+// Unfold type T to heterogenous sequence.
+//
+// If a type is repeated among type arguments, the n-th occurrence binds
+// the n-th field of that type in declaration order.
 func New6[T, A, B, C, D, E, F any]() Seq[T] {
-	seq := New[T]()
-	return Seq[T]{
-		ForType[A](seq),
-		ForType[B](seq),
-		ForType[C](seq),
-		ForType[D](seq),
-		ForType[E](seq),
-		ForType[F](seq),
-	}
+	return forTypes(New[T](), witness[A](), witness[B](), witness[C](), witness[D](), witness[E](), witness[F]())
 }
 
-// Unfold type T to heterogenous sequence
+// Unfold type T to heterogenous sequence.
+//
+// If a type is repeated among type arguments, the n-th occurrence binds
+// the n-th field of that type in declaration order.
 func New7[T, A, B, C, D, E, F, G any]() Seq[T] {
-	seq := New[T]()
-	return Seq[T]{
-		ForType[A](seq),
-		ForType[B](seq),
-		ForType[C](seq),
-		ForType[D](seq),
-		ForType[E](seq),
-		ForType[F](seq),
-		ForType[G](seq),
-	}
+	return forTypes(New[T](), witness[A](), witness[B](), witness[C](), witness[D](), witness[E](), witness[F](), witness[G]())
 }
 
-// Unfold type T to heterogenous sequence
+// Unfold type T to heterogenous sequence.
+//
+// If a type is repeated among type arguments, the n-th occurrence binds
+// the n-th field of that type in declaration order.
 func New8[T, A, B, C, D, E, F, G, H any]() Seq[T] {
-	seq := New[T]()
-	return Seq[T]{
-		ForType[A](seq),
-		ForType[B](seq),
-		ForType[C](seq),
-		ForType[D](seq),
-		ForType[E](seq),
-		ForType[F](seq),
-		ForType[G](seq),
-		ForType[H](seq),
-	}
+	return forTypes(New[T](), witness[A](), witness[B](), witness[C](), witness[D](), witness[E](), witness[F](), witness[G](), witness[H]())
 }
 
-// Unfold type T to heterogenous sequence
+// Unfold type T to heterogenous sequence.
+//
+// If a type is repeated among type arguments, the n-th occurrence binds
+// the n-th field of that type in declaration order.
 func New9[T, A, B, C, D, E, F, G, H, I any]() Seq[T] {
-	seq := New[T]()
-	return Seq[T]{
-		ForType[A](seq),
-		ForType[B](seq),
-		ForType[C](seq),
-		ForType[D](seq),
-		ForType[E](seq),
-		ForType[F](seq),
-		ForType[G](seq),
-		ForType[H](seq),
-		ForType[I](seq),
-	}
+	return forTypes(New[T](), witness[A](), witness[B](), witness[C](), witness[D](), witness[E](), witness[F](), witness[G](), witness[H](), witness[I]())
 }
 
 type errType struct {
@@ -205,21 +169,71 @@ func (err errType) Error() string {
 		err.Issue, err.FixIt)
 }
 
-// Lookup type heterogenous sequence by "witness" type
-func ForType[A, T any](seq Seq[T]) Type[T] {
-	// Note: new(A) always create pointer to A (*A)
-	val := reflect.TypeOf(new(A)).Elem()
+// witness returns the reflect.Type of A, (new(A) always creates pointer to A)
+func witness[A any]() reflect.Type {
+	return reflect.TypeOf(new(A)).Elem()
+}
 
+// sameType is the type equality used by lookup functions
+func sameType(ft, val reflect.Type) bool {
+	return ft.String() == val.String() && ft.AssignableTo(val)
+}
+
+// forTypes resolves type arguments of New1..New9 to the fields of the struct.
+// A type used once is resolved as ForType (unique field required). A type
+// repeated k times is resolved ordered: the n-th occurrence binds the n-th field
+// of the type in declaration order.
+func forTypes[T any](seq Seq[T], types ...reflect.Type) Seq[T] {
+	out := make(Seq[T], len(types))
+	for i, val := range types {
+		nth, total := 0, 0
+		for j, other := range types {
+			if sameType(other, val) {
+				total++
+				if j < i {
+					nth++
+				}
+			}
+		}
+
+		if total == 1 {
+			out[i] = lookupType(seq, val, -1)
+		} else {
+			out[i] = lookupType(seq, val, nth)
+		}
+	}
+	return out
+}
+
+// Lookup type heterogenous sequence by "witness" type.
+// It panics if the type is not found or it is not unique in the sequence.
+func ForType[A, T any](seq Seq[T]) Type[T] {
+	return lookupType(seq, witness[A](), -1)
+}
+
+// Lookup the n-th (0-based, in declaration order) field of the "witness" type
+// in heterogenous sequence. It panics if the sequence has less than n+1 fields
+// of the type. Other fields of the same type are not treated as a conflict.
+func ForTypeAt[A, T any](seq Seq[T], n int) Type[T] {
+	return lookupType(seq, witness[A](), n)
+}
+
+// lookupType finds a field by type. If nth < 0, the type is required to be unique,
+// otherwise the nth field of the type is returned.
+func lookupType[T any](seq Seq[T], val reflect.Type, nth int) Type[T] {
 	var found Type[T]
 	var count int
 	for _, f := range seq {
-		ft := f.Type
-		if ft.String() == val.String() && ft.AssignableTo(val) {
-			found = f
-			count++
+		if !sameType(f.Type, val) {
+			continue
 		}
+		if nth >= 0 && count == nth {
+			return f
+		}
+		found = f
+		count++
 	}
-	if count == 1 {
+	if nth < 0 && count == 1 {
 		return found
 	}
 
@@ -235,10 +249,17 @@ func ForType[A, T any](seq Seq[T]) Type[T] {
 		outerT = cat.Elem().Name()
 	}
 
-	if count > 1 {
+	if nth < 0 && count > 1 {
 		panic(errType{
 			Issue: fmt.Sprintf("type `%s` is not unique in struct `%s`", innerT, outerT),
 			FixIt: fmt.Sprintf("How To Fix:\n- define unique named type `type A %s` for the field, `type %s struct { A }`.\n- use hseq.ForName instead. \n\n", innerT, outerT),
+		})
+	}
+
+	if nth >= 0 && count > 0 {
+		panic(errType{
+			Issue: fmt.Sprintf("type `%s` is requested %d times but struct `%s` has only %d field(s) of the type", innerT, nth+1, outerT, count),
+			FixIt: fmt.Sprintf("How To Fix:\n- check the type arguments, each occurrence of `%s` binds the next field of the type in declaration order.\n- add missing fields of type `%s` to struct `%s`.\n\n", innerT, innerT, outerT),
 		})
 	}
 
