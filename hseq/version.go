@@ -8,4 +8,4 @@
 
 package hseq
 
-const Version = "hseq/v1.3.1"
+const Version = "hseq/v1.3.2"

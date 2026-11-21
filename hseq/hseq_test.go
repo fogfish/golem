@@ -454,3 +454,140 @@ func TestFMap(t *testing.T) {
 		)
 	})
 }
+
+//
+// Ordered matching of repeated types
+//
+
+func TestNewOrdered(t *testing.T) {
+	type acc string
+	type thr struct {
+		Author acc
+		Story  string
+		User   acc
+	}
+
+	t.Run("Gouldian/AuthorStoryUser", func(t *testing.T) {
+		seq := hseq.FMap(
+			hseq.New3[thr, acc, string, acc](),
+			func(t hseq.Type[thr]) string { return t.Name },
+		)
+		it.Then(t).Should(
+			it.Seq(seq).Equal("Author", "Story", "User"),
+		)
+	})
+
+	t.Run("Interleaved", func(t *testing.T) {
+		type T3 struct {
+			A string
+			N int
+			B string
+		}
+
+		s3 := hseq.FMap(
+			hseq.New3[T3, string, int, string](),
+			func(t hseq.Type[T3]) string { return t.Name },
+		)
+		it.Then(t).Should(it.Seq(s3).Equal("A", "N", "B"))
+
+		type T struct {
+			A string
+			N int
+			B string
+			F bool
+			C string
+			M int
+		}
+
+		s6 := hseq.FMap(
+			hseq.New6[T, int, string, string, bool, int, string](),
+			func(t hseq.Type[T]) string { return t.Name },
+		)
+		it.Then(t).Should(it.Seq(s6).Equal("N", "A", "B", "F", "M", "C"))
+	})
+
+	t.Run("RepeatedWithPointerAndSlices", func(t *testing.T) {
+		type T struct {
+			A  string
+			P  *string
+			B  string
+			Q  *string
+			L1 []string
+			L2 []string
+		}
+
+		seq := hseq.FMap(
+			hseq.New6[T, *string, string, []string, string, []string, *string](),
+			func(t hseq.Type[T]) string { return t.Name },
+		)
+		it.Then(t).Should(it.Seq(seq).Equal("P", "A", "L1", "B", "L2", "Q"))
+	})
+
+	t.Run("TooManyOccurrences", func(t *testing.T) {
+		type T struct {
+			A string
+			N int
+		}
+
+		it.Then(t).Should(
+			it.Fail(
+				func() { hseq.New3[T, string, int, string]() },
+			).Contain("Critical Error"),
+		)
+		it.Then(t).Should(
+			it.Fail(
+				func() { hseq.New2[T, string, string]() },
+			).Contain("requested 2 times"),
+		)
+	})
+
+	t.Run("UnknownRepeated", func(t *testing.T) {
+		type T struct{ A string }
+
+		it.Then(t).Should(
+			it.Fail(
+				func() { hseq.New2[T, int, int]() },
+			).Contain("is not field of a struct"),
+		)
+	})
+
+	t.Run("SingleOccurrenceAmbiguity", func(t *testing.T) {
+		type T struct {
+			A string
+			B string
+			N int
+		}
+
+		// string is requested once while struct has two: still a conflict
+		it.Then(t).Should(
+			it.Fail(
+				func() { hseq.New2[T, string, int]() },
+			).Contain("is not unique"),
+		)
+	})
+
+	t.Run("SingleOccurrenceUnchanged", func(t *testing.T) {
+		seq := hseq.FMap(
+			hseq.New3[Bar, string, []byte, bool](),
+			func(t hseq.Type[Bar]) string { return t.Name },
+		)
+		it.Then(t).Should(it.Seq(seq).Equal("F1", "F2", "F3"))
+	})
+}
+
+func TestForTypeAt(t *testing.T) {
+	type T struct {
+		A string
+		N int
+		B string
+	}
+	seq := hseq.New[T]()
+
+	it.Then(t).Should(
+		it.Equal(hseq.ForTypeAt[string, T](seq, 0).Name, "A"),
+		it.Equal(hseq.ForTypeAt[string, T](seq, 1).Name, "B"),
+		it.Equal(hseq.ForTypeAt[int, T](seq, 0).Name, "N"),
+		it.Fail(func() { hseq.ForTypeAt[string, T](seq, 2) }).Contain("only 2 field(s)"),
+		it.Fail(func() { hseq.ForTypeAt[bool, T](seq, 0) }).Contain("is not field"),
+	)
+}
